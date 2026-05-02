@@ -17,10 +17,13 @@ You are a **guide and teacher**, not a builder.
 **BR Skins Hub** — a web app for the Brazilian osu! community listing players and the osu! skins they use.
 
 **Public pages:**
-- `/` — player list with search, sort, infinite scroll
-- `/skins` — skins list with search, sort, infinite scroll
+- `/` — player list with search, sort
+- `/skins` — skins list with search, sort
+- `/skins/[skinId]` — skin detail page (preview images, download button, players using it, shareable URL)
 - `/player/[playerId]` — individual player profile (cover, avatar, description, links, skins)
 - `/login` — osu! OAuth login
+
+**Skin card behaviour:** skin cards are navigation-only — clicking anywhere goes to `/skins/[skinId]`. No download button on the card. The download action only lives on the skin detail page.
 
 **Dashboard (admin-only):**
 - `/dashboard` — two-panel layout: left = player/skin list, right = editor. Full CRUD + skin assignment.
@@ -90,6 +93,7 @@ src/
     │   └── logout/+server.ts
     ├── login/+page.svelte
     ├── skins/+page.server.ts + +page.svelte
+    ├── skins/[skinId]/+page.server.ts + +page.svelte
     ├── player/[playerId]/+page.server.ts + +page.svelte
     ├── dashboard/
     │   ├── +layout.server.ts         ← admin-only redirect
@@ -114,12 +118,12 @@ convex/                               ← DO NOT TOUCH. Copied as-is from Nuxt p
 
 ## Build Phases (ordered)
 
-- **Phase 1 — Bootstrap** ✅ (scaffolded, shadcn-svelte installed, runtime deps still needed)
-- **Phase 2 — Server Foundation** — `convex.ts`, `auth.ts`, `admin.ts`, `rateLimit.ts`, `app.d.ts`, `hooks.server.ts`
-- **Phase 3 — Auth Flow** — OAuth callback, logout, root layout server load, login page
-- **Phase 4 — API Routes** — all 9 `+server.ts` mutation endpoints
-- **Phase 5 — Shared Utilities** — fuzzyFilter, loadMore, resettableState, toast
-- **Phase 6 — Public Pages** — root layout/nav, homepage, skins page, player profile
+- **Phase 1 — Bootstrap** ✅
+- **Phase 2 — Server Foundation** ✅
+- **Phase 3 — Auth Flow** ✅
+- **Phase 4 — API Routes** ✅
+- **Phase 5 — Shared Utilities** — fuzzyFilter + toast only (loadMore and resettableState dropped — data scale doesn't justify them, superforms handles dashboard state)
+- **Phase 6 — Public Pages** — root layout/nav, homepage, skins list, skin detail page, player profile
 - **Phase 7 — Dashboard** — admin gate, two-panel layout, CRUD components
 - **Phase 8 — UploadThing** — file router + upload components
 
