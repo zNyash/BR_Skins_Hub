@@ -1,4 +1,4 @@
-import { ConvexHttpClient } from 'convex/browser';
-import { CONVEX_URL } from '$env/static/private';
+import { ConvexHttpClient } from "convex/browser";
+import { PUBLIC_CONVEX_URL } from "$env/static/public";
 
-export const convex = new ConvexHttpClient(CONVEX_URL);
+export const convex = new ConvexHttpClient(PUBLIC_CONVEX_URL);
