@@ -2,20 +2,21 @@
 @import "tw-animate-css";
 @import "shadcn-svelte/tailwind.css";
 @import "@fontsource-variable/inter";
+@plugin "@iconify/tailwind4";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
 	/* ── Hue — change this one value to recolor everything ── */
-	--hue: 250;
+	--hue: 260;
 
 	/* ── Elevation layers ── */
-	--surface: oklch(10% 0.01 var(--hue));
-	--layer-1: oklch(16% 0.014 var(--hue));
-	--layer-2: oklch(22% 0.018 var(--hue));
-	--layer-3: oklch(28% 0.022 var(--hue));
-	--layer-4: oklch(34% 0.026 var(--hue));
-	--layer-5: oklch(40% 0.03 var(--hue));
+	--surface: oklch(13% 0.01 var(--hue));
+	--layer-1: oklch(19% 0.014 var(--hue)); /* card */
+	--layer-2: oklch(25% 0.018 var(--hue)); /* popover */
+	--layer-3: oklch(31% 0.022 var(--hue)); /* accent */
+	--layer-4: oklch(37% 0.026 var(--hue));
+	--layer-5: oklch(43% 0.03 var(--hue));
 
 	/* ── Text ── */
 	--text: oklch(90% 0.035 var(--hue));
@@ -49,11 +50,11 @@
 
 	--destructive: oklch(68% 0.2 25);
 
-	--border: oklch(100% 0 0 / 8%);
+	--border: var(--layer-5);
 	--input: var(--layer-2);
 	--ring: var(--accent-color);
 
-	--radius: 0.625rem;
+	--radius: 0.5rem;
 
 	/* ── Sidebar ── */
 	--sidebar: var(--layer-1);
@@ -140,4 +141,8 @@
 	html {
 		@apply font-sans;
 	}
+}
+
+.main {
+	@apply flex w-full flex-col items-center justify-center;
 }

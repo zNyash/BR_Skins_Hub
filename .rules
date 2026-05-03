@@ -9,6 +9,23 @@ You are a **guide and teacher**, not a builder.
 - When they get stuck or paste broken code, help them understand what went wrong before suggesting the fix.
 - Always explain **SvelteKit-specific patterns** when they appear — e.g. what `load()` does, why `+page.server.ts` exists alongside `+page.svelte`, how `event.locals` works, etc.
 - Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`) are used everywhere. If the developer writes Svelte 4 style code (stores, `export let`), gently point them to the runes equivalent.
+- **The developer builds the UI. The assistant builds the server logic, data layer, and utilities.**
+
+---
+
+## Commit Message Convention
+
+The developer prefers this format:
+
+```
+type(scope): short summary
+
+- Bullet point describing what changed
+- Another bullet point
+- Another bullet point
+```
+
+Always suggest commits in this format.
 
 ---
 
@@ -49,7 +66,7 @@ You are a **guide and teacher**, not a builder.
 
 ## Key Architecture Decisions
 
-1. **Convex is server-side only.** `CONVEX_URL` is a private env var. `ConvexHttpClient` lives in `src/lib/server/convex.ts` and is only ever imported in `+page.server.ts`, `+layout.server.ts`, and `+server.ts` files. The browser never talks to Convex directly.
+1. **Convex is server-side only.** `PUBLIC_CONVEX_URL` is imported from `$env/static/public` but only ever used inside `src/lib/server/convex.ts` — which SvelteKit prevents from being imported client-side. The browser never talks to Convex directly.
 
 2. **All data fetching happens in `load()` functions.** Data is SSR'd into pages as the `data` prop. No client-side fetching for initial page data.
 
@@ -61,13 +78,52 @@ You are a **guide and teacher**, not a builder.
 
 6. **No real-time subscriptions.** Data changes rarely (skin hub, not social feed). `invalidate()` after mutations is enough.
 
+7. **No pagination.** Dataset is small (few hundred players/skins max). All data is fetched at once server-side and Fuse.js searches the full client-side list. Pagination would break fuzzy search.
+
+8. **Dark mode only.** `class="dark"` is hardcoded on `<html>` in `app.html`. No theme toggle, no light mode.
+
+---
+
+## Color System
+
+The app uses a layered oklch color system mapped to shadcn's CSS variable names. Defined in `src/routes/layout.css`.
+
+```css
+--hue: 340; /* change this one value to recolor everything */
+
+/* Elevation layers */
+--surface  → --background       (page background, darkest)
+--layer-1  → --card, --muted    (slightly elevated surfaces)
+--layer-2  → --popover, --secondary, --input
+--layer-3  → --accent, --border (hover states, subtle borders)
+
+/* Tailwind utilities available */
+bg-surface, bg-layer-1 → bg-layer-5
+text-text, text-text-muted
+bg-accent-color, text-accent-color
+text-success, text-warning, text-error
+```
+
+shadcn components use `bg-background`, `bg-card` etc. automatically. Custom components use `bg-surface`, `bg-layer-1` etc.
+
+---
+
+## Convex Schema & Key Mutations
+
+**Tables:** `players`, `skins`, `playerSkins` (N:N), `authUsers`
+
+**Notable design decisions:**
+- `createPlayer` + `updatePlayer` were merged into `upsertPlayer(osu_id, ...fields)` — prevents duplicates, single operation
+- `download_count` was removed from `updateSkin` args — counts only increment via `incrementSkinDownloads(id)`
+- `getPlayersBySkin(skin_id)` was added to `playerSkins.ts` for the skin detail page
+
 ---
 
 ## File Structure
 
 ```
 src/
-├── app.d.ts                          ← App.Locals { user }
+├── app.d.ts                          ← App.Locals { user: { osu_id } | null }
 ├── hooks.server.ts                   ← JWT verification on every request
 ├── lib/
 │   ├── server/                       ← server-only, NEVER imported client-side
@@ -76,10 +132,8 @@ src/
 │   │   ├── admin.ts                  ← requireAdmin(), isAdminId()
 │   │   └── rateLimit.ts              ← in-memory rate limiter
 │   ├── utils/
-│   │   ├── fuzzyFilter.svelte.ts
-│   │   ├── loadMore.svelte.ts
-│   │   ├── resettableState.svelte.ts
-│   │   └── toast.ts
+│   │   ├── fuzzyFilter.svelte.ts     ← Fuse.js wrapped in $derived
+│   │   └── toast.ts                  ← svelte-sonner wrapper
 │   └── components/
 │       ├── ui/                       ← shadcn-svelte primitives
 │       └── [custom components]
@@ -91,9 +145,14 @@ src/
     ├── auth/
     │   ├── callback/+server.ts       ← osu! OAuth exchange
     │   └── logout/+server.ts
-    ├── login/+page.svelte
-    ├── skins/+page.server.ts + +page.svelte
-    ├── skins/[skinId]/+page.server.ts + +page.svelte
+    ├── login/
+    │   ├── +page.server.ts           ← builds osu! OAuth URL
+    │   └── +page.svelte
+    ├── skins/
+    │   ├── +page.server.ts + +page.svelte
+    │   └── [skinId]/
+    │       ├── +page.server.ts       ← fetches skin + players using it
+    │       └── +page.svelte
     ├── player/[playerId]/+page.server.ts + +page.svelte
     ├── dashboard/
     │   ├── +layout.server.ts         ← admin-only redirect
@@ -103,15 +162,23 @@ src/
         ├── players/+server.ts              ← POST
         ├── players/[id]/+server.ts         ← PATCH, DELETE
         ├── players/[id]/profile/+server.ts ← PATCH
-        ├── players/[id]/views/+server.ts   ← POST
+        ├── players/[id]/views/+server.ts   ← POST (public, rate limited)
         ├── skins/+server.ts                ← POST
         ├── skins/[id]/+server.ts           ← PATCH, DELETE
-        ├── skins/[id]/download/+server.ts  ← POST
+        ├── skins/[id]/download/+server.ts  ← POST (public, rate limited)
         ├── player-skins/[playerId]/+server.ts ← PUT
-        ├── player/refresh/+server.ts       ← GET
+        ├── player/refresh/+server.ts       ← GET (logged in, rate limited)
         └── uploadthing/+server.ts
 
-convex/                               ← DO NOT TOUCH. Copied as-is from Nuxt project.
+convex/
+├── schema.ts
+├── auth.ts       ← upsertUser, getAuthUser
+├── players.ts    ← upsertPlayer, listPlayers, getPlayer, getPlayerByOsuId,
+│                    updatePlayerProfile, incrementPlayerViews, deletePlayer
+├── skins.ts      ← createSkin, listSkins, getSkin, updateSkin,
+│                    incrementSkinDownloads, deleteSkin, listSkinsWithPlayers
+└── playerSkins.ts ← getPlayersBySkin, getSkinsByPlayer, getSkinsByOsuId,
+                     updatePlayerSkins
 ```
 
 ---
@@ -122,14 +189,14 @@ convex/                               ← DO NOT TOUCH. Copied as-is from Nuxt p
 - **Phase 2 — Server Foundation** ✅
 - **Phase 3 — Auth Flow** ✅
 - **Phase 4 — API Routes** ✅
-- **Phase 5 — Shared Utilities** — fuzzyFilter + toast only (loadMore and resettableState dropped — data scale doesn't justify them, superforms handles dashboard state)
+- **Phase 5 — Shared Utilities** ✅ (fuzzyFilter + toast only)
 - **Phase 6 — Public Pages** — root layout/nav, homepage, skins list, skin detail page, player profile
 - **Phase 7 — Dashboard** — admin gate, two-panel layout, CRUD components
 - **Phase 8 — UploadThing** — file router + upload components
 
 ---
 
-## SvelteKit Concept Cheat Sheet (reference when explaining)
+## SvelteKit Concept Cheat Sheet
 
 | Concept | What it does |
 |---|---|
@@ -141,7 +208,7 @@ convex/                               ← DO NOT TOUCH. Copied as-is from Nuxt p
 | `hooks.server.ts` | Runs on every single request. Use `handle()` to modify `event.locals`. |
 | `event.locals` | A per-request object. Set things in `hooks.server.ts`, read them in any server file. |
 | `depends('key')` | Called inside `load()` to register a dependency. `invalidate('key')` re-runs all loads with that dep. |
-| `$env/static/private` | Import private env vars (server-only). Vite replaces them at build time. |
+| `$env/static/private` | Import private env vars (server-only). |
 | `$env/static/public` | Import public env vars (safe for client). |
 | `$app/state` | Import `page` to read `page.params`, `page.url`, etc. in components. |
 | `$app/navigation` | Import `goto`, `invalidate`, `invalidateAll` for client-side navigation. |
@@ -174,11 +241,3 @@ convex/                               ← DO NOT TOUCH. Copied as-is from Nuxt p
 | `useIntersectionObserver` | `use:` action with native `IntersectionObserver` |
 | `useClipboard` | `navigator.clipboard.writeText()` |
 | `formatTimeAgo` | `date-fns` `formatDistanceToNow()` |
-
----
-
-## Runtime Dependencies Still Needed
-
-```
-bun add convex jose fuse.js osu-api-extended svelte-sonner sveltekit-superforms valibot @uploadthing/svelte
-```
