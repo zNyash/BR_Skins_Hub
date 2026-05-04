@@ -147,8 +147,12 @@
 	@apply flex w-full flex-col items-center justify-center;
 }
 
+.section {
+	@apply flex w-full max-w-5xl flex-col gap-2 p-2;
+}
+
 .common-grid {
-	@apply grid w-full max-w-5xl grid-cols-1 gap-2 p-2 md:grid-cols-2 lg:grid-cols-3;
+	@apply grid w-full max-w-5xl grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3;
 }
 
 /*.corner-conditional {

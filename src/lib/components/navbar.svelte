@@ -1,4 +1,5 @@
 <script>
+	import Icon from "./icon.svelte";
 	import Button from "./ui/button/button.svelte";
 </script>
 
@@ -7,15 +8,15 @@
 		<div></div>
 		<div class="flex">
 			<Button variant="navigation" href="/">
-				<span class="icon-[lucide--user-round]"></span>
+				<Icon name="user-round" />
 				Players
 			</Button>
 			<Button variant="navigation" href="/skins">
-				<span class="icon-[lucide--brush]"></span>
+				<Icon name="brush" />
 				Skins
 			</Button>
 			<Button variant="navigation" href="/dashboard">
-				<span class="icon-[lucide--layout-dashboard]"></span>
+				<Icon name="layout-dashboard" />
 				Dashboard
 			</Button>
 		</div>

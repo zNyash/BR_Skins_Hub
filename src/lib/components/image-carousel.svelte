@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import type { Doc } from "$convex/_generated/dataModel";
+	import Icon from "./icon.svelte";
 	import Button from "./ui/button/button.svelte";
 
 	let { skin }: { skin: Doc<"skins"> } = $props();
@@ -69,7 +70,7 @@
 			variant="secondary"
 			size="icon"
 		>
-			<span class="icon-[lucide--chevron-left] size-6"></span>
+			<Icon name="chevron-left" class="size-6" />
 		</Button>
 		<Button
 			onclick={next}
@@ -77,7 +78,7 @@
 			variant="secondary"
 			size="icon"
 		>
-			<span class="icon-[lucide--chevron-right] size-6"></span>
+			<Icon name="chevron-right" class="size-6" />
 		</Button>
 	{/if}
 </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
+	import Icon from "$comp/icon.svelte";
 	import ImageCarousel from "$comp/image-carousel.svelte";
-	import { Popover, PopoverTrigger, PopoverContent } from "$comp/ui/popover/index.js";
+	import * as Popover from "$comp/ui/popover/index.js";
 	import Separator from "$comp/ui/separator/separator.svelte";
 	import Time from "svelte-time/Time.svelte";
 
@@ -16,23 +17,23 @@
 				<ImageCarousel {skin} />
 
 				<div class="flex w-full flex-col p-1 px-2 pb-2">
-					<Popover>
-						<PopoverTrigger
+					<Popover.Root>
+						<Popover.Trigger
 							openOnHover
 							openDelay={0}
 							closeDelay={0}
 							class="w-fit appearance-none text-start data-[state=open]:outline data-[state=open]:outline-primary data-[state=open]:outline-dashed "
 						>
 							<p class="truncate">{skin.name}</p>
-						</PopoverTrigger>
-						<PopoverContent class="w-fit px-2 py-1 outline outline-border">
+						</Popover.Trigger>
+						<Popover.Content class="w-fit px-2 py-1 outline outline-border">
 							<p>{skin.name}</p>
-						</PopoverContent>
-					</Popover>
+						</Popover.Content>
+					</Popover.Root>
 					<Separator class="mt-1 mb-2 bg-border" />
 					<span class="flex gap-1">
 						<span class="flex gap-1">
-							<span class="icon-[lucide--download] text-text-muted"></span>
+							<Icon name="download" class="size-4 text-text-muted" />
 							<p class="text-xs text-text-muted">{skin.download_count}</p>
 						</span>
 						<Time
