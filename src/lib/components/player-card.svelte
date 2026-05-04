@@ -11,19 +11,29 @@
 </script>
 
 <div
-	class="group/card relative flex items-center justify-start gap-2 rounded-lg p-2 outline outline-transparent hover:outline-primary"
+	class="group/card relative flex items-center justify-start gap-2 rounded-lg p-2 ring ring-background hover:ring-primary"
 >
-	<img src={`https://a.ppy.sh/${player.osu_id}`} alt={player.name} class="size-11 rounded-md" />
+	<img
+		src={`https://a.ppy.sh/${player.osu_id}`}
+		alt={player.name}
+		class="size-11 shape-squircle rounded-md"
+	/>
 
 	<img
 		src={player.cover_url}
 		alt={player.name}
-		class="absolute top-0 left-0 -z-10 size-full rounded-[calc(var(--radius-lg)+2px)] bg-card object-cover"
+		class="absolute top-0 left-0 -z-10 size-full radius-inherit bg-card object-cover"
 		onerror={handleImageError}
 	/>
 	<div
-		class={`absolute inset-0 -z-10 size-full rounded-lg backdrop-blur-[2px] group-hover/card:backdrop-blur-none ${isCoverLoaded ? "bg-black/70" : "bg-card"}`}
+		class={`absolute inset-0 -z-10 size-full radius-inherit backdrop-blur-[2px] group-hover/card:backdrop-blur-none ${isCoverLoaded ? "bg-black/70" : "bg-card"}`}
 	></div>
 
 	<p class="text-lg font-medium text-text">{player.name}</p>
 </div>
+
+<style>
+	:global(.radius-inherit) {
+		border-radius: inherit;
+	}
+</style>
