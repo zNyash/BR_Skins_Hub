@@ -9,7 +9,7 @@
 			variant: {
 				default: "bg-primary text-primary-foreground hover:brightness-110",
 				navigation:
-					"border-transparent bg-transparent hover:bg-popover active:brightness-95 hover:text-foreground  aria-expanded:bg-popover aria-expanded:text-foreground shadow-xs",
+					"border-transparent bg-transparent hover:bg-popover active:brightness-95 hover:text-foreground aria-expanded:bg-popover aria-expanded:text-foreground shadow-xs",
 				outline:
 					"border-border bg-background hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground shadow-xs",
 				secondary:

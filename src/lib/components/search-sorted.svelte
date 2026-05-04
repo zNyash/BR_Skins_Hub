@@ -9,6 +9,7 @@
 
 	let {
 		placeholder,
+		inputValue = $bindable<string>(""),
 		sortBy = $bindable<SortBy>("name"),
 		orderBy = $bindable<OrderBy>("asc")
 	} = $props();
@@ -29,9 +30,27 @@
 
 <ButtonGroup.Root>
 	<InputGroup.Root>
-		<InputGroup.Input {placeholder} />
+		<InputGroup.Input
+			{placeholder}
+			bind:value={inputValue}
+			onkeydown={(e) => {
+				if (e.key === "Escape") inputValue = "";
+			}}
+		/>
 		<InputGroup.Addon>
 			<Icon name="search" class="size-4" />
+		</InputGroup.Addon>
+		<InputGroup.Addon align="inline-end">
+			{#if inputValue}
+				<Button
+					size="icon-xs"
+					variant="ghost"
+					class="dark:hover:bg-popover"
+					onclick={() => (inputValue = "")}
+				>
+					<Icon name="x" class="size-4" />
+				</Button>
+			{/if}
 		</InputGroup.Addon>
 	</InputGroup.Root>
 	<Select.Root type="single" bind:value={sortBy}>
