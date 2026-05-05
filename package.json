@@ -24,6 +24,7 @@
 		"@lucide/svelte": "^1.14.0",
 		"@svelte-put/popover": "^1.0.0",
 		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@sveltejs/kit": "^2.57.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@tailwindcss/vite": "^4.2.2",
