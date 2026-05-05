@@ -4,7 +4,7 @@
 	import Icon from "./icon.svelte";
 	import Button from "./ui/button/button.svelte";
 
-	let { skin }: { skin: Doc<"skins"> } = $props();
+	let { skin, linked = true }: { skin: Doc<"skins">; linked?: boolean } = $props();
 
 	let currentIndex = $state(0);
 	let totalImages = $derived(skin.preview_images.length);
@@ -32,12 +32,15 @@
 		class="flex size-full radius-t-inherit transition-transform duration-300 ease-in-out"
 		style="transform: translateX(-{currentIndex * 100}%);"
 	>
-		<a href={resolve("/(public)/skins/[skinId]", { skinId: skin._id })} class="contents">
+		<a
+			href={linked ? resolve("/(public)/skins/[skinId]", { skinId: skin._id }) : undefined}
+			class="contents"
+		>
 			{#each skin.preview_images as image (image)}
 				<img
 					src={image}
 					alt={skin.name}
-					class="size-full cursor-pointer radius-inherit object-cover"
+					class="size-full {linked ? 'cursor-pointer' : ''} radius-inherit object-cover"
 				/>
 			{/each}
 		</a>
@@ -64,21 +67,15 @@
 		</div>
 
 		<!-- Buttons -->
-		<Button
-			onclick={prev}
-			class="absolute top-1/2 left-1 -translate-y-1/2"
-			variant="secondary"
-			size="icon"
-		>
-			<Icon name="chevron-left" class="size-6" />
-		</Button>
-		<Button
-			onclick={next}
-			class="absolute top-1/2 right-1 -translate-y-1/2"
-			variant="secondary"
-			size="icon"
-		>
-			<Icon name="chevron-right" class="size-6" />
-		</Button>
+		<span class="absolute top-1/2 left-1 -translate-y-1/2">
+			<Button onclick={prev} variant="secondary" size="icon">
+				<Icon name="chevron-left" class="size-6" />
+			</Button>
+		</span>
+		<span class="absolute top-1/2 right-1 -translate-y-1/2">
+			<Button onclick={next} variant="secondary" size="icon">
+				<Icon name="chevron-right" class="size-6" />
+			</Button>
+		</span>
 	{/if}
 </div>

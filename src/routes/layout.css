@@ -8,7 +8,7 @@
 
 :root {
 	/* ── Hue — change this one value to recolor everything ── */
-	--hue: 50;
+	--hue: 0;
 
 	/* ── Elevation layers ── */
 	--surface: oklch(13% 0.01 var(--hue));
@@ -19,12 +19,20 @@
 	--layer-5: oklch(43% 0.03 var(--hue));
 
 	/* ── Text ── */
-	--text: oklch(90% 0.035 var(--hue));
-	--text-muted: oklch(70% 0.035 var(--hue));
+	--text: oklch(90% 0.025 var(--hue));
+	--text-muted: oklch(70% 0.025 var(--hue));
 
 	/* ── Accent ── */
 	--accent-color: oklch(75% 0.16 var(--hue));
 	--on-accent-color: oklch(13% 0.1 var(--hue));
+
+	/* ── Semantic ── */
+	--success: oklch(75% 0.16 145);
+	--on-success: oklch(13% 0.1 145);
+	--warning: oklch(75% 0.16 90);
+	--on-warning: oklch(13% 0.1 90);
+	--error: oklch(75% 0.16 25);
+	--on-error: oklch(13% 0.1 25);
 
 	/* ── shadcn token mapping ── */
 	--background: var(--surface);
@@ -65,11 +73,6 @@
 	--sidebar-accent-foreground: var(--text);
 	--sidebar-border: var(--border);
 	--sidebar-ring: var(--accent-color);
-
-	/* ── Semantic ── */
-	--success: oklch(76% 0.15 145);
-	--warning: oklch(83% 0.13 90);
-	--error: oklch(68% 0.2 25);
 }
 
 @theme inline {
@@ -83,12 +86,16 @@
 	--color-layer-4: var(--layer-4);
 	--color-layer-5: var(--layer-5);
 	--color-text: var(--text);
+	--color-muted: var(--text-muted);
 	--color-text-muted: var(--text-muted);
 	--color-accent-color: var(--accent-color);
 	--color-on-accent: var(--on-accent-color);
 	--color-success: var(--success);
+	--color-on-success: var(--on-success);
 	--color-warning: var(--warning);
+	--color-on-warning: var(--on-warning);
 	--color-error: var(--error);
+	--color-on-error: var(--on-error);
 
 	/* ── shadcn mappings (unchanged) ── */
 	--color-sidebar-ring: var(--sidebar-ring);
@@ -143,15 +150,15 @@
 	}
 }
 
-.main {
-	@apply flex w-full flex-col items-center justify-center;
+@utility main {
+	@apply mt-12 flex w-full flex-col items-center justify-center;
 }
 
-.section {
+@utility section {
 	@apply flex w-full max-w-5xl flex-col gap-2 p-2;
 }
 
-.common-grid {
+@utility common-grid {
 	@apply grid w-full max-w-5xl grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3;
 }
 

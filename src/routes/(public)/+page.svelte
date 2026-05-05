@@ -4,30 +4,32 @@
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import type { OrderBy, SortBy } from "$lib/constants.js";
 	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
+	import { useSorted } from "$lib/utils/sorted.svelte.js";
 
 	let { data } = $props();
 	let inputValue = $state("");
 	let sortBy = $state<SortBy>("name");
 	let orderBy = $state<OrderBy>("asc");
 
+	export const snapshot = {
+		capture: () => ({ inputValue, sortBy, orderBy }),
+		restore: (value) => {
+			inputValue = value.inputValue;
+			sortBy = value.sortBy;
+			orderBy = value.orderBy;
+		}
+	};
+
 	const filtered = useFuzzyFilter(
 		() => data.players,
 		() => inputValue,
 		{ keys: ["name", "osu_id", "previous_usernames"], threshold: 0.4 }
 	);
-	const sorted = $derived.by(() => {
-		return [...filtered.results].sort((a, b) => {
-			if (sortBy === "name") {
-				return orderBy === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-			}
-			if (sortBy === "date") {
-				return orderBy === "asc"
-					? a._creationTime - b._creationTime
-					: b._creationTime - a._creationTime;
-			}
-			return 0;
-		});
-	});
+	const sorted = useSorted(
+		() => filtered.results,
+		() => sortBy,
+		() => orderBy
+	);
 </script>
 
 <main class="main">
@@ -42,19 +44,20 @@
 			<p class="text-xs">Loaded {data.players.length} players</p>
 		</div>
 		<div class="common-grid">
-			{#each sorted as player (player._id)}
+			{#each sorted.results as player (player._id)}
 				<a href={resolve(`/(public)/player/[osuId]`, { osuId: String(player.osu_id) })}
 					><PlayerCard {player} /></a
 				>
 			{/each}
 		</div>
 	</section>
-	<div class="flex p-10">
+
+	<!-- <div class="flex p-10">
 		<div class="size-10 bg-background"></div>
 		<div class="size-10 bg-card"></div>
 		<div class="size-10 bg-popover"></div>
 		<div class="size-10 bg-accent"></div>
 		<div class="size-10 bg-layer-4"></div>
 		<div class="size-10 bg-layer-5"></div>
-	</div>
+	</div> -->
 </main>

@@ -7,13 +7,13 @@
 		base: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-md border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3  aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		variants: {
 			variant: {
-				default: "bg-primary text-primary-foreground hover:brightness-110",
+				default: "bg-primary text-primary-foreground hover:brightness-110 active:translate-y-px",
 				navigation:
-					"border-transparent bg-transparent hover:bg-popover active:brightness-95 hover:text-foreground aria-expanded:bg-popover aria-expanded:text-foreground shadow-xs",
+					"border-transparent bg-transparent hover:bg-popover active:brightness-95 shadow-xs",
 				outline:
 					"border-border bg-background hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground shadow-xs",
 				secondary:
-					"bg-secondary text-secondary-foreground hover:brightness-110 active:brightness-95 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+					"bg-secondary text-secondary-foreground hover:brightness-110 active:brightness-95 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground active:translate-y-px",
 				ghost:
 					"hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground",
 				destructive:

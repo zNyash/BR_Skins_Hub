@@ -59,11 +59,13 @@
 	"dependencies": {
 		"@iconify-json/lucide": "^1.2.105",
 		"@iconify/svelte": "^5.2.1",
+		"@svelte-put/copy": "^4.0.0",
 		"@uploadthing/svelte": "^7.3.3",
 		"convex": "^1.37.0",
 		"fuse.js": "^7.3.0",
 		"jose": "^6.2.3",
 		"osu-api-extended": "^3.1.11",
+		"runed": "^0.37.1",
 		"svelte-time": "^2.1.0"
 	}
 }
