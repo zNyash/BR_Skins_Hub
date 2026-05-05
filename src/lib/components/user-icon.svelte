@@ -6,6 +6,7 @@
 	import Button from "./ui/button/button.svelte";
 	import Icon from "./icon.svelte";
 	import IOsuStandard from "./icons/i-osu-standard.svelte";
+	import { resolve } from "$app/paths";
 
 	let user = page.data.user as AuthUser | null;
 
@@ -37,14 +38,21 @@
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end">
 				<DropdownMenu.Group>
-					<DropdownMenu.Item>
-						<Icon name="user-round" class="size-4" />
-						Skin Page
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<IOsuStandard class="size-4" />
-						osu! Profile
-					</DropdownMenu.Item>
+					<a
+						href={resolve("/(public)/player/[osuId]", { osuId: String(user.osu_id) })}
+						class="contents"
+					>
+						<DropdownMenu.Item>
+							<Icon name="user-round" class="size-4" />
+							Skin Page
+						</DropdownMenu.Item>
+					</a>
+					<a href="https://osu.ppy.sh/users/{user.osu_id}" target="_blank" class="contents">
+						<DropdownMenu.Item>
+							<IOsuStandard class="size-4" />
+							osu! Profile
+						</DropdownMenu.Item>
+					</a>
 					<DropdownMenu.Separator />
 					<DropdownMenu.Item onSelect={logout}>
 						<Icon name="log-out" class="size-4" />
