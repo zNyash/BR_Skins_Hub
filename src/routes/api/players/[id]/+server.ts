@@ -8,7 +8,7 @@ export async function PATCH(event) {
 	requireAdmin(event);
 
 	const body = await event.request.json();
-	const { osu_id, name, cover_url, previous_usernames } = body;
+	const { osu_id, name, cover_url, previous_usernames, hue, description, links } = body;
 
 	if (!osu_id) error(400, "osu_id is required");
 
@@ -16,7 +16,10 @@ export async function PATCH(event) {
 		osu_id,
 		name,
 		cover_url,
-		previous_usernames
+		previous_usernames,
+		hue,
+		description,
+		links
 	});
 
 	return json({ success: true });

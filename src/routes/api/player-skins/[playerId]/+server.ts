@@ -4,6 +4,15 @@ import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
 import type { Id } from "$convex/_generated/dataModel";
 
+export async function GET(event) {
+	requireAdmin(event);
+
+	const player_id = event.params.playerId as Id<"players">;
+	const skins = await convex.query(api.playerSkins.getSkinsByPlayer, { player_id });
+
+	return json({ skinIds: skins.map((s) => s._id) });
+}
+
 export async function PUT(event) {
 	requireAdmin(event);
 

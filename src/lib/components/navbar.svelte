@@ -41,3 +41,9 @@
 		</div>
 	</div>
 </nav>
+
+<style>
+	nav {
+		box-shadow: 0px 1px 0.5rem 0px var(--crust);
+	}
+</style>

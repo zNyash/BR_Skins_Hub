@@ -4,7 +4,15 @@
 	import Icon from "./icon.svelte";
 	import Button from "./ui/button/button.svelte";
 
-	let { skin, linked = true }: { skin: Doc<"skins">; linked?: boolean } = $props();
+	let {
+		skin,
+		linked = true,
+		radius = "top"
+	}: {
+		skin: Doc<"skins">;
+		linked?: boolean;
+		radius?: "top" | "bottom" | "left" | "right" | "full" | "none";
+	} = $props();
 
 	let currentIndex = $state(0);
 	let totalImages = $derived(skin.preview_images.length);
@@ -25,9 +33,19 @@
 			currentIndex = 0;
 		}
 	};
+
+	let radiusClass = $derived.by(() => {
+		if (radius == "top") return "radius-t-inherit";
+		if (radius == "bottom") return "radius-b-inherit";
+		if (radius == "left") return "radius-l-inherit";
+		if (radius == "right") return "radius-r-inherit";
+		if (radius == "full") return "radius-inherit";
+		if (radius == "none") return "";
+		return "radius-t-inherit";
+	});
 </script>
 
-<div class="relative aspect-video overflow-hidden radius-t-inherit">
+<div class="relative aspect-video overflow-hidden {radiusClass}">
 	<div
 		class="flex size-full radius-t-inherit transition-transform duration-300 ease-in-out"
 		style="transform: translateX(-{currentIndex * 100}%);"

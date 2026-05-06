@@ -52,12 +52,13 @@
 		</div>
 	</section>
 
-	<!-- <div class="flex p-10">
+	<div class="flex p-10">
+		<div class="bg-crust size-10"></div>
 		<div class="size-10 bg-background"></div>
 		<div class="size-10 bg-card"></div>
 		<div class="size-10 bg-popover"></div>
 		<div class="size-10 bg-accent"></div>
 		<div class="size-10 bg-layer-4"></div>
 		<div class="size-10 bg-layer-5"></div>
-	</div> -->
+	</div>
 </main>

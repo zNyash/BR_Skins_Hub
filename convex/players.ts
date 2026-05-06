@@ -17,7 +17,24 @@ export const upsertPlayer = mutation({
 		osu_id: v.number(),
 		name: v.optional(v.string()),
 		cover_url: v.optional(v.string()),
-		previous_usernames: v.optional(v.array(v.string()))
+		previous_usernames: v.optional(v.array(v.string())),
+		hue: v.optional(v.number()),
+		description: v.optional(v.string()),
+		links: v.optional(
+			v.array(
+				v.object({
+					type: v.union(
+						v.literal("twitch"),
+						v.literal("twitter"),
+						v.literal("youtube"),
+						v.literal("github"),
+						v.literal("discord"),
+						v.literal("custom")
+					),
+					value: v.string()
+				})
+			)
+		)
 	},
 	handler: async (ctx, args) => {
 		const existing = await ctx.db
@@ -30,6 +47,9 @@ export const upsertPlayer = mutation({
 			if (args.name !== undefined) patch.name = args.name;
 			if (args.cover_url !== undefined) patch.cover_url = args.cover_url;
 			if (args.previous_usernames !== undefined) patch.previous_usernames = args.previous_usernames;
+			if (args.hue !== undefined) patch.hue = args.hue;
+			if (args.description !== undefined) patch.description = args.description;
+			if (args.links !== undefined) patch.links = args.links;
 			await ctx.db.patch(existing._id, patch);
 			return existing._id;
 		}
@@ -40,7 +60,10 @@ export const upsertPlayer = mutation({
 			osu_id: args.osu_id,
 			name: args.name,
 			cover_url: args.cover_url,
-			previous_usernames: args.previous_usernames ?? []
+			previous_usernames: args.previous_usernames ?? [],
+			hue: args.hue,
+			description: args.description,
+			links: args.links
 		});
 	}
 });

@@ -6,11 +6,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
+:root,
+.dark {
 	/* ── Hue — change this one value to recolor everything ── */
 	--hue: 0;
 
 	/* ── Elevation layers ── */
+	--crust: oklch(8% 0.01 var(--hue));
 	--surface: oklch(13% 0.01 var(--hue));
 	--layer-1: oklch(19% 0.014 var(--hue)); /* card */
 	--layer-2: oklch(25% 0.018 var(--hue)); /* popover */
@@ -79,6 +81,7 @@
 	--font-sans: "Inter Variable", sans-serif;
 
 	/* ── Layer utilities (bg-surface, bg-layer-1, etc.) ── */
+	--color-crust: var(--crust);
 	--color-surface: var(--surface);
 	--color-layer-1: var(--layer-1);
 	--color-layer-2: var(--layer-2);
