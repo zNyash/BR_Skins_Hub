@@ -69,19 +69,28 @@ export const deleteSkin = mutation({
 export const listSkinsWithPlayers = query({
 	args: {},
 	handler: async (ctx) => {
-		const skins = await ctx.db.query("skins").collect();
-		return await Promise.all(
-			skins.map(async (skin) => {
-				const relations = await ctx.db
-					.query("playerSkins")
-					.withIndex("by_skin", (q) => q.eq("skin_id", skin._id))
-					.collect();
+		const [skins, allRelations, allPlayers] = await Promise.all([
+			ctx.db.query("skins").collect(),
+			ctx.db.query("playerSkins").collect(),
+			ctx.db.query("players").collect()
+		]);
 
-				const players = await Promise.all(relations.map((r) => ctx.db.get(r.player_id)));
-				const playerNames = players.filter((p) => p !== null).map((p) => p!.name);
+		// Maps for quick lookup
+		const playerMap = new Map(allPlayers.map((p) => [p._id, p])); // Map of players with _id as key
+		const relationsMap = new Map<string, typeof allRelations>(); // Map of relations with skin _id as key
 
-				return { ...skin, playerNames };
-			})
-		);
+		// Store all the relations for a given skin by its _id
+		for (const relation of allRelations) {
+			const list = relationsMap.get(relation.skin_id) ?? [];
+			list.push(relation);
+			relationsMap.set(relation.skin_id, list);
+		}
+
+		return skins.map((skin) => {
+			const players = (relationsMap.get(skin._id) ?? [])
+				.map((r) => playerMap.get(r.player_id))
+				.filter((p) => p !== undefined);
+			return { ...skin, players };
+		});
 	}
 });
