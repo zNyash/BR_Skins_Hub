@@ -11,31 +11,32 @@
 	import type { InferInput } from "valibot";
 	import Icon from "$comp/icon.svelte";
 	import { untrack } from "svelte";
+	import HoldButton from "$comp/ui/hold-button/hold-button.svelte";
 
 	type LinkType = NonNullable<Doc<"players">["links"]>[number]["type"];
 
 	type Props = {
-		player?: Doc<"players"> | null;
+		player: Doc<"players">;
 		onsave?: () => void;
 		onassign?: () => void;
+		ondelete?: () => void;
 	};
 
-	let { player = null, onsave = () => {}, onassign = () => {} }: Props = $props();
+	let { player, onsave = () => {}, ondelete = () => {}, onassign = () => {} }: Props = $props();
 
 	const save = untrack(() => onsave);
+	const deletePlayer = untrack(() => ondelete);
 	const LINK_TYPES: LinkType[] = ["twitch", "twitter", "youtube", "github", "discord", "custom"];
 
-	const playerData = player
-		? ({
-				name: player.name,
-				osu_id: player.osu_id,
-				cover_url: player.cover_url,
-				hue: player.hue,
-				description: player.description,
-				previous_usernames: player.previous_usernames,
-				links: player.links
-			} satisfies InferInput<typeof playerSchema>)
-		: {};
+	const playerData = {
+		name: player.name,
+		osu_id: player.osu_id,
+		cover_url: player.cover_url,
+		hue: player.hue,
+		description: player.description,
+		previous_usernames: player.previous_usernames,
+		links: player.links
+	} satisfies InferInput<typeof playerSchema>;
 
 	let saved = $state(false);
 
@@ -54,8 +55,8 @@
 		resetForm: false,
 		onUpdate: async ({ form }) => {
 			if (!form.valid) return;
-			await fetch(player ? `/api/players/${player._id}` : "/api/players", {
-				method: player ? "PATCH" : "POST",
+			await fetch(`/api/players/${player._id}`, {
+				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(form.data)
 			});
@@ -84,22 +85,48 @@
 	}
 
 	async function handleDelete() {
-		if (!player) return;
 		await fetch(`/api/players/${player._id}`, { method: "DELETE" });
 		await invalidate("app:players");
+		deletePlayer();
 	}
 </script>
 
 <div class="flex items-center justify-between">
 	<span class="flex flex-col">
-		<h2 class="text-lg font-medium">{player ? "Editing Player" : "New Player"}</h2>
-		{#if player}
-			<p class="text-xs font-normal">{player.name}</p>
-		{/if}
+		<h2 class="text-lg font-medium">Editing Player</h2>
+		<p class="text-xs font-normal">{player.name}</p>
+	</span>
+	<span class="flex gap-2">
+		<HoldButton
+			variant="destructive"
+			duration={1500}
+			fillColor="bg-black/40"
+			size="icon"
+			onComplete={handleDelete}
+		>
+			<Icon name="trash" />
+		</HoldButton>
+		<Button type="button" variant="secondary" onclick={onassign}>
+			<Icon name="link" />
+			Assign Skins
+		</Button>
+		<Button
+			type="submit"
+			form="player-form"
+			disabled={!($tainted && isTainted()) || $submitting || $allErrors.length > 0}
+		>
+			{#if $submitting}
+				Saving...
+			{:else if saved}
+				Saved!
+			{:else}
+				Save changes
+			{/if}
+		</Button>
 	</span>
 </div>
 
-<form use:enhance class="flex flex-1 flex-col gap-2">
+<form id="player-form" use:enhance class="flex flex-1 flex-col gap-2">
 	<div class="flex flex-col">
 		<label for="name" class="text-sm">Name</label>
 		<Input id="name" bind:value={$formData.name} />
@@ -108,8 +135,7 @@
 
 	<div class="flex flex-col">
 		<label for="osu_id" class="text-sm">osu! ID</label>
-		<Input id="osu_id" type="number" bind:value={$formData.osu_id} disabled={!!player} />
-		{#if $errors.osu_id}<p class="text-sm text-destructive">{$errors.osu_id[0]}</p>{/if}
+		<Input id="osu_id" type="number" bind:value={$formData.osu_id} disabled={true} />
 	</div>
 
 	<div class="flex flex-col">
@@ -192,29 +218,5 @@
 				</Button>
 			</div>
 		{/each}
-	</div>
-
-	<div class="flex gap-2">
-		<Button
-			type="submit"
-			disabled={!($tainted && isTainted()) || $submitting || $allErrors.length > 0}
-		>
-			{#if $submitting}
-				Saving...
-			{:else if saved}
-				Saved!
-			{:else}
-				{player ? "Save changes" : "Create player"}
-			{/if}
-		</Button>
-		{#if player}
-			<Button type="button" variant="secondary" onclick={onassign}>
-				<Icon name="link" />
-				Assign Skins
-			</Button>
-			<Button type="button" variant="destructive" onclick={handleDelete}>
-				<Icon name="trash" />
-			</Button>
-		{/if}
 	</div>
 </form>
