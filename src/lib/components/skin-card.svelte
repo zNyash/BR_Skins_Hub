@@ -22,7 +22,7 @@
 	<div class="flex w-full flex-col p-1 px-2 pb-1">
 		<!-- Skin Name -->
 		<Popover.Root>
-			<Popover.Trigger {...POPOVER_SETTINGS} class="w-fit text-start">
+			<Popover.Trigger {...POPOVER_SETTINGS} class="w-fit max-w-full text-start">
 				<p class="truncate">{skin.name}</p>
 			</Popover.Trigger>
 			<Popover.Content class="w-fit px-2 py-1 outline outline-border">
