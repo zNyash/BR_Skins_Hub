@@ -1,26 +1,15 @@
-import type { OrderBy, SortBy } from '$lib/constants';
+import type { OrderBy, SortOption } from "$lib/constants";
 
-type Sortable = { name: string; _creationTime: number };
-
-export function useSorted<T extends Sortable>(
+export function useSorted<T>(
 	list: () => T[],
-	sortBy: () => SortBy,
-	orderBy: () => OrderBy
+	sortBy: () => string,
+	orderBy: () => OrderBy,
+	sortOptions: readonly SortOption[]
 ) {
 	const results = $derived.by(() => {
-		return [...list()].sort((a, b) => {
-			if (sortBy() === 'name') {
-				return orderBy() === 'asc'
-					? a.name.localeCompare(b.name)
-					: b.name.localeCompare(a.name);
-			}
-			if (sortBy() === 'date') {
-				return orderBy() === 'asc'
-					? a._creationTime - b._creationTime
-					: b._creationTime - a._creationTime;
-			}
-			return 0;
-		});
+		const option = sortOptions.find((o) => o.value === sortBy());
+		const dir = orderBy() === "asc" ? 1 : -1;
+		return [...list()].sort((a, b) => (option?.compare(a, b) ?? 0) * dir);
 	});
 
 	return {

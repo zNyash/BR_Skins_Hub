@@ -1,16 +1,21 @@
 <script lang="ts">
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
-	import { POPOVER_SETTINGS, type OrderBy, type SortBy } from "$lib/constants.js";
+	import {
+		SKIN_SORT_OPTIONS,
+		POPOVER_SETTINGS,
+		type OrderBy,
+		type SkinSortBy
+	} from "$lib/constants.js";
 	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
 	import { useSorted } from "$lib/utils/sorted.svelte.js";
+	import { osuAvatar } from "$lib/utils/osu.js";
 	import * as Popover from "$comp/ui/popover/index.js";
 
 	let { data } = $props();
-	console.log(() => data.player);
 
 	let inputValue = $state("");
-	let sortBy = $state<SortBy>("date");
+	let sortBy = $state<SkinSortBy>("date");
 	let orderBy = $state<OrderBy>("desc");
 
 	const filtered = useFuzzyFilter(
@@ -21,7 +26,8 @@
 	const sorted = useSorted(
 		() => filtered.results,
 		() => sortBy,
-		() => orderBy
+		() => orderBy,
+		SKIN_SORT_OPTIONS
 	);
 
 	let isCoverLoaded = $state(true);
@@ -55,7 +61,7 @@
 			<div class="-mt-14 flex w-full items-center justify-between px-12">
 				<div class="flex items-end gap-2">
 					<img
-						src="https://a.ppy.sh/{data.player.osu_id}"
+						src={osuAvatar(data.player.osu_id)}
 						alt="{data.player.name} Profile Picture"
 						class="size-28 shape-squircle rounded-3xl object-cover drop-shadow-lg"
 					/>
@@ -75,6 +81,7 @@
 		<div class="flex w-full items-center justify-between">
 			<SearchSorted
 				placeholder="Search skins by name..."
+				sortOptions={SKIN_SORT_OPTIONS}
 				bind:sortBy
 				bind:orderBy
 				bind:inputValue

@@ -1,14 +1,14 @@
 <script lang="ts">
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
-	import type { OrderBy, SortBy } from "$lib/constants.js";
+	import { SKIN_SORT_OPTIONS, type OrderBy, type SkinSortBy } from "$lib/constants.js";
 	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
 	import { useSorted } from "$lib/utils/sorted.svelte.js";
 
 	let { data } = $props();
 
 	let inputValue = $state("");
-	let sortBy = $state<SortBy>("date");
+	let sortBy = $state<SkinSortBy>("date");
 	let orderBy = $state<OrderBy>("desc");
 
 	export const snapshot = {
@@ -28,7 +28,8 @@
 	const sorted = useSorted(
 		() => filtered.results,
 		() => sortBy,
-		() => orderBy
+		() => orderBy,
+		SKIN_SORT_OPTIONS
 	);
 </script>
 
@@ -37,6 +38,7 @@
 		<div class="flex w-full items-center justify-between">
 			<SearchSorted
 				placeholder="Search skins by name..."
+				sortOptions={SKIN_SORT_OPTIONS}
 				bind:sortBy
 				bind:orderBy
 				bind:inputValue

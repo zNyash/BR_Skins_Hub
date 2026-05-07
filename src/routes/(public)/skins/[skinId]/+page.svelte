@@ -7,14 +7,10 @@
 	import Separator from "$comp/ui/separator/separator.svelte";
 	import Time from "svelte-time/Time.svelte";
 
-	let { data } = $props();
-	let copied = $state(false);
+	import { useCopyLink } from "$lib/utils/clipboard.svelte";
 
-	function copyLink() {
-		navigator.clipboard.writeText(`${window.location.origin}/skins/${data.skin._id}`);
-		copied = true;
-		setTimeout(() => (copied = false), 2000);
-	}
+	let { data } = $props();
+	const clipboard = useCopyLink();
 </script>
 
 <main class="main">
@@ -58,10 +54,12 @@
 					</Button>
 					<Button
 						variant="secondary"
-						onclick={copyLink}
-						class={copied ? " bg-success/20 text-success transition-colors" : "transition-colors"}
+						onclick={() => clipboard.copy(`${window.location.origin}/skins/${data.skin._id}`)}
+						class={clipboard.copied
+							? " bg-success/20 text-success transition-colors"
+							: "transition-colors"}
 					>
-						<Icon name={copied ? "check" : "copy"} class="size-4" />
+						<Icon name={clipboard.copied ? "check" : "copy"} class="size-4" />
 					</Button>
 				</span>
 			</div>

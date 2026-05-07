@@ -2,13 +2,13 @@
 	import { resolve } from "$app/paths";
 	import PlayerCard from "$comp/player-card.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
-	import type { OrderBy, SortBy } from "$lib/constants.js";
+	import { PLAYER_SORT_OPTIONS, type OrderBy, type PlayerSortBy } from "$lib/constants.js";
 	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
 	import { useSorted } from "$lib/utils/sorted.svelte.js";
 
 	let { data } = $props();
 	let inputValue = $state("");
-	let sortBy = $state<SortBy>("name");
+	let sortBy = $state<PlayerSortBy>("name");
 	let orderBy = $state<OrderBy>("asc");
 
 	export const snapshot = {
@@ -28,7 +28,8 @@
 	const sorted = useSorted(
 		() => filtered.results,
 		() => sortBy,
-		() => orderBy
+		() => orderBy,
+		PLAYER_SORT_OPTIONS
 	);
 </script>
 
@@ -37,6 +38,7 @@
 		<div class="flex w-full items-center justify-between">
 			<SearchSorted
 				placeholder="Search players by name or ID..."
+				sortOptions={PLAYER_SORT_OPTIONS}
 				bind:sortBy
 				bind:orderBy
 				bind:inputValue
@@ -52,6 +54,7 @@
 		</div>
 	</section>
 
+	<!-- Color palette dev reference — not for production
 	<div class="flex p-10">
 		<div class="bg-crust size-10"></div>
 		<div class="size-10 bg-background"></div>
@@ -61,4 +64,5 @@
 		<div class="size-10 bg-layer-4"></div>
 		<div class="size-10 bg-layer-5"></div>
 	</div>
+	-->
 </main>
