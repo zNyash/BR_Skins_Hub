@@ -11,6 +11,7 @@
 	import { useSorted } from "$lib/utils/sorted.svelte.js";
 	import { osuAvatar } from "$lib/utils/osu.js";
 	import * as Popover from "$comp/ui/popover/index.js";
+	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();
 
@@ -38,6 +39,11 @@
 	}
 </script>
 
+<PageHeading
+	title="{data.player.name} · player info"
+	description="All skins {data.player.name} uses!"
+	image={osuAvatar(data.player.osu_id)}
+/>
 <main class="main">
 	<section class="section">
 		<div class="relative">

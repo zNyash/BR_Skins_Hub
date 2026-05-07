@@ -5,6 +5,7 @@
 	import { PLAYER_SORT_OPTIONS, type OrderBy, type PlayerSortBy } from "$lib/constants.js";
 	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
 	import { useSorted } from "$lib/utils/sorted.svelte.js";
+	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();
 	let inputValue = $state("");
@@ -33,6 +34,7 @@
 	);
 </script>
 
+<PageHeading title="Players Listing" />
 <main class="main">
 	<section class="section">
 		<div class="flex w-full items-center justify-between">

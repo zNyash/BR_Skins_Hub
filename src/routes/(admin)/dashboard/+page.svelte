@@ -20,6 +20,7 @@
 	import { Button } from "$comp/ui/button";
 	import Icon from "$comp/icon.svelte";
 	import { osuAvatar } from "$lib/utils/osu";
+	import PageHeading from "$comp/page-heading.svelte";
 
 	// ---------- Types ----------
 	type EditorState =
@@ -81,6 +82,7 @@
 	);
 </script>
 
+<PageHeading title="Dashboard" description="Admin Dashboard" />
 <div
 	class="grid h-full gap-2 bg-card p-2 md:grid-cols-[1fr_2fr] lg:grid-cols-[1fr_3fr] xl:grid-cols-[1fr_4fr]"
 >

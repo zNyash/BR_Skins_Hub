@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageHeading from "$comp/page-heading.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
 	import { SKIN_SORT_OPTIONS, type OrderBy, type SkinSortBy } from "$lib/constants.js";
@@ -33,6 +34,7 @@
 	);
 </script>
 
+<PageHeading title="Skins Listing" />
 <main class="main">
 	<section class="section">
 		<div class="flex w-full items-center justify-between">

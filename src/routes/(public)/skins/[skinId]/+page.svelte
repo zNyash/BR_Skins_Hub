@@ -8,11 +8,17 @@
 	import Time from "svelte-time/Time.svelte";
 
 	import { useCopyLink } from "$lib/utils/clipboard.svelte";
+	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();
 	const clipboard = useCopyLink();
 </script>
 
+<PageHeading
+	title="{data.skin.name} · skin info"
+	description="{data.skin.name} osu skin"
+	image={data.skin.preview_images[0]}
+/>
 <main class="main">
 	<!-- Preview -->
 	<section class="section">
