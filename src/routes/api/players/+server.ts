@@ -1,25 +1,14 @@
 import { json, error } from "@sveltejs/kit";
 import { requireAdmin } from "$lib/server/admin";
-import { convex } from "$lib/server/convex";
-import { api } from "$convex/_generated/api";
+import { fetchAndUpsertPlayer } from "$lib/server/osu";
 
 export async function POST(event) {
 	requireAdmin(event);
 
-	const body = await event.request.json();
-	const { osu_id, name, cover_url, previous_usernames, hue, description, links } = body;
+	const { osu_id } = await event.request.json();
+	if (!osu_id) error(400, "osu_id is required");
 
-	if (!osu_id || !name) error(400, "osu_id and name are required");
-
-	const id = await convex.mutation(api.players.upsertPlayer, {
-		osu_id,
-		name,
-		cover_url,
-		previous_usernames,
-		hue,
-		description,
-		links
-	});
+	const id = await fetchAndUpsertPlayer(Number(osu_id));
 
 	return json({ id });
 }
