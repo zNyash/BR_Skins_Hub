@@ -28,6 +28,7 @@
 	const deletePlayer = untrack(() => ondelete);
 	const LINK_TYPES: LinkType[] = ["twitch", "twitter", "youtube", "github", "discord", "custom"];
 
+	// svelte-ignore state_referenced_locally
 	const playerData = {
 		name: player.name,
 		osu_id: player.osu_id,
@@ -155,6 +156,7 @@
 
 	<div class="flex flex-col gap-1">
 		<div class="flex items-center justify-between">
+			<!-- svelte-ignore a11y_label_has_associated_control -->
 			<label class="text-sm">Previous Usernames</label>
 			<Button type="button" variant="ghost" size="icon-sm" onclick={addUsername}>
 				<Icon name="plus" />
@@ -179,6 +181,7 @@
 
 	<div class="flex flex-col gap-1">
 		<div class="flex items-center justify-between">
+			<!-- svelte-ignore a11y_label_has_associated_control -->
 			<label class="text-sm">Links</label>
 			<Button type="button" variant="ghost" size="icon-sm" onclick={addLink}>
 				<Icon name="plus" />

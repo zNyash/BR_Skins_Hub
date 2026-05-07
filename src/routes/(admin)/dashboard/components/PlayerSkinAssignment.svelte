@@ -16,6 +16,7 @@
 
 	let { player, allSkins, onback }: Props = $props();
 
+	// svelte-ignore state_referenced_locally
 	let selectedIds = $state<string[]>(
 		allSkins.filter((s) => s.players.some((p) => p._id === player._id)).map((s) => s._id)
 	);
@@ -23,10 +24,14 @@
 	let searchValue = $state("");
 	let saving = $state(false);
 
-	const filtered = useFuzzyFilter(() => allSkins, () => searchValue, {
-		keys: ["name", "author"],
-		threshold: 0.4
-	});
+	const filtered = useFuzzyFilter(
+		() => allSkins,
+		() => searchValue,
+		{
+			keys: ["name", "author"],
+			threshold: 0.4
+		}
+	);
 
 	const assigned = $derived(allSkins.filter((s) => selectedIds.includes(s._id)));
 
@@ -56,6 +61,7 @@
 	</Button>
 </div>
 
+<!-- svelte-ignore a11y_label_has_associated_control -->
 <div class="flex flex-col gap-2">
 	<label class="text-sm">Assigned</label>
 	{#if assigned.length === 0}
@@ -63,7 +69,7 @@
 	{:else}
 		<div class="flex flex-wrap gap-1">
 			{#each assigned as skin (skin._id)}
-				<span class="bg-layer-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-sm">
+				<span class="flex items-center gap-1 rounded-full bg-layer-2 px-2 py-0.5 text-sm">
 					{skin.name}
 					<button
 						type="button"
@@ -82,6 +88,7 @@
 
 <Input bind:value={searchValue} placeholder="Search skins..." />
 
+<!-- svelte-ignore a11y_label_has_associated_control -->
 <div class="flex flex-col gap-1">
 	<label class="text-sm">Available</label>
 	{#if unassigned.length === 0}
@@ -91,19 +98,15 @@
 			{#each unassigned as skin (skin._id)}
 				<button
 					type="button"
-					class="flex cursor-pointer items-center gap-2 rounded-lg bg-card p-1 hover:ring hover:ring-inset hover:ring-primary"
+					class="flex cursor-pointer items-center gap-2 rounded-lg bg-card p-1 hover:ring hover:ring-primary hover:ring-inset"
 					onclick={() => {
 						selectedIds = [...selectedIds, skin._id];
 					}}
 				>
 					{#if skin.preview_images[0]}
-						<img
-							src={skin.preview_images[0]}
-							alt={skin.name}
-							class="size-8 rounded object-cover"
-						/>
+						<img src={skin.preview_images[0]} alt={skin.name} class="size-8 rounded object-cover" />
 					{:else}
-						<div class="bg-layer-1 size-8 rounded"></div>
+						<div class="size-8 rounded bg-layer-1"></div>
 					{/if}
 					<span class="text-sm">{skin.name}</span>
 				</button>

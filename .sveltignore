@@ -1,0 +1,4 @@
+# shadcn-svelte generated components — these use generic href props
+# that intentionally don't go through resolve() since they accept
+# external URLs, relative paths, and internal routes alike.
+src/lib/components/ui/button/button.svelte

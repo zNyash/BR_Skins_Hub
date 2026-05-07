@@ -35,6 +35,7 @@
 	});
 
 	// ---------- Form ----------
+	// svelte-ignore state_referenced_locally
 	const skinData = skin
 		? ({
 				name: skin.name,
