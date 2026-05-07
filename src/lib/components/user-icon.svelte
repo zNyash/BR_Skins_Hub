@@ -7,6 +7,7 @@
 	import Icon from "./icon.svelte";
 	import IOsuStandard from "./icons/i-osu-standard.svelte";
 	import { resolve } from "$app/paths";
+	import { osuAvatar } from "$lib/utils/osu";
 
 	let user = page.data.user as AuthUser | null;
 
@@ -32,7 +33,7 @@
 				class="group/avatar flex items-center justify-center rounded-md p-1 hover:bg-popover"
 			>
 				<Avatar.Root class="group-hover/avatar:brightness-110">
-					<Avatar.Image src="https://a.ppy.sh/{user.osu_id}" alt={user.username} />
+					<Avatar.Image src={osuAvatar(user.osu_id)} alt={user.username} />
 					<Avatar.Fallback>{username}</Avatar.Fallback>
 				</Avatar.Root>
 			</DropdownMenu.Trigger>

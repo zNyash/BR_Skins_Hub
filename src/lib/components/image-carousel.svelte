@@ -34,15 +34,15 @@
 		}
 	};
 
-	let radiusClass = $derived.by(() => {
-		if (radius == "top") return "radius-t-inherit";
-		if (radius == "bottom") return "radius-b-inherit";
-		if (radius == "left") return "radius-l-inherit";
-		if (radius == "right") return "radius-r-inherit";
-		if (radius == "full") return "radius-inherit";
-		if (radius == "none") return "";
-		return "radius-t-inherit";
-	});
+	const RADIUS_MAP: Record<string, string> = {
+		top: "radius-t-inherit",
+		bottom: "radius-b-inherit",
+		left: "radius-l-inherit",
+		right: "radius-r-inherit",
+		full: "radius-inherit",
+		none: ""
+	};
+	let radiusClass = $derived(RADIUS_MAP[radius] ?? "radius-t-inherit");
 </script>
 
 <div class="relative aspect-video overflow-hidden {radiusClass}">

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Doc } from "$convex/_generated/dataModel";
+	import { osuAvatar } from "$lib/utils/osu";
 
 	let { player }: { player: Doc<"players"> } = $props();
 	let isCoverLoaded = $state(true);
@@ -13,11 +14,7 @@
 <div
 	class="group/card relative flex items-center justify-start gap-2 rounded-lg p-2 ring ring-background hover:ring-primary"
 >
-	<img
-		src={`https://a.ppy.sh/${player.osu_id}`}
-		alt={player.name}
-		class="size-11 shape-squircle rounded-md"
-	/>
+	<img src={osuAvatar(player.osu_id)} alt={player.name} class="size-11 shape-squircle rounded-md" />
 
 	<img
 		src={player.cover_url}

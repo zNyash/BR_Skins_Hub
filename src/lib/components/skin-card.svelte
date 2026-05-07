@@ -7,16 +7,11 @@
 	import { POPOVER_SETTINGS } from "$lib/constants";
 	import Time from "svelte-time/Time.svelte";
 	import Button from "./ui/button/button.svelte";
+	import { useCopyLink } from "$lib/utils/clipboard.svelte";
 
 	let { skin }: { skin: Doc<"skins"> } = $props();
 
-	let copied = $state(false);
-
-	function copyLink() {
-		navigator.clipboard.writeText(`${window.location.origin}/skins/${skin._id}`);
-		copied = true;
-		setTimeout(() => (copied = false), 2000);
-	}
+	const clipboard = useCopyLink();
 </script>
 
 <div
@@ -55,14 +50,14 @@
 			</Popover.Root>
 
 			<Button
-				onclick={copyLink}
+				onclick={() => clipboard.copy(`${window.location.origin}/skins/${skin._id}`)}
 				variant="navigation"
 				size="icon-xs"
-				class={copied
+				class={clipboard.copied
 					? "bg-success/20 text-success hover:bg-success/20 hover:text-success"
 					: "text-text-muted"}
 			>
-				<Icon name={copied ? "check" : "copy"} class="size-4" />
+				<Icon name={clipboard.copied ? "check" : "copy"} class="size-4" />
 			</Button>
 		</span>
 	</div>
