@@ -14,7 +14,6 @@
 	const clipboard = useCopyLink();
 
 	function handleDownload(e: Event) {
-		e.preventDefault();
 		fetch(resolve("/api/skins/[id]/download", { id: data.skin._id }), {
 			method: "POST"
 		});
