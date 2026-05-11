@@ -12,6 +12,13 @@
 
 	let { data } = $props();
 	const clipboard = useCopyLink();
+
+	function handleDownload(e: Event) {
+		e.preventDefault();
+		fetch(resolve("/api/skins/[id]/download", { id: data.skin._id }), {
+			method: "POST"
+		});
+	}
 </script>
 
 <PageHeading
@@ -54,7 +61,7 @@
 			</div>
 			<div class="flex flex-col items-center gap-2">
 				<span class="flex gap-1">
-					<Button href={data.skin.download_url} target="_blank">
+					<Button href={data.skin.download_url} onclick={handleDownload} target="_blank">
 						<Icon name="download" class="size-4" />
 						Download
 					</Button>
