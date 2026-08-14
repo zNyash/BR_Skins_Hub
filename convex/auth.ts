@@ -15,6 +15,7 @@ export const upsertUser = mutation({
   args: {
     osu_id: v.number(),
     username: v.string(),
+    cover_url: v.string()
   },
   handler: async (ctx, args) => {
     const existingUser = await ctx.db
@@ -28,9 +29,16 @@ export const upsertUser = mutation({
       .withIndex("by_osu_id", (q) => q.eq("osu_id", args.osu_id))
       .unique();
 
-    // Keep player's public name in sync with latest osu! username
-    if (matchingPlayer && matchingPlayer.name !== args.username) {
-      await ctx.db.patch(matchingPlayer._id, { name: args.username });
+      
+      if (matchingPlayer) {
+        // Keep player's public name in sync with latest osu! username
+        if (matchingPlayer.name !== args.username) {
+          await ctx.db.patch(matchingPlayer._id, { name: args.username });
+        }
+        if (matchingPlayer.cover_url !== args.cover_url) {
+          await ctx.db.patch(matchingPlayer._id, { cover_url: args.cover_url})
+        }
+        
     }
 
     if (existingUser) {

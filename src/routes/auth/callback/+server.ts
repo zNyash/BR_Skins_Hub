@@ -20,7 +20,8 @@ export async function GET(event) {
 
 	await convex.mutation(api.auth.upsertUser, {
 		osu_id: profile.id,
-		username: profile.username
+		username: profile.username,
+		cover_url: profile.cover_url
 	});
 
 	const token = await createToken({ osu_id: profile.id });
