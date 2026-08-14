@@ -9,13 +9,13 @@ export async function GET(event) {
 	const code = event.url.searchParams.get("code");
 	if (!code) redirect(302, "/login");
 
+	// Fetch osu! profile
 	const profile = await auth.authorize({
 		code,
 		client_id: Number(OSU_CLIENT_ID),
 		client_secret: OSU_CLIENT_SECRET,
 		redirect_url: `${CURRENT_DOMAIN}/auth/callback`
 	});
-
 	if (!profile) redirect(302, "/login");
 
 	await convex.mutation(api.auth.upsertUser, {
@@ -26,6 +26,7 @@ export async function GET(event) {
 
 	const token = await createToken({ osu_id: profile.id });
 
+	// Create session token cookie
 	event.cookies.set("session", token, {
 		path: "/",
 		httpOnly: true,
@@ -34,5 +35,9 @@ export async function GET(event) {
 		maxAge: 60 * 60 * 24 * 30 // 30 days
 	});
 
-	redirect(302, "/");
+	// Read and clear the redirect target post login
+	const redirectTo = event.cookies.get("post_login_redirect") ?? "/";
+	event.cookies.delete("post_login_redirect", {path: "/"});
+
+	redirect(302, redirectTo);
 }

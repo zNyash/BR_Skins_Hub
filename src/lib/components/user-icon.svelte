@@ -24,6 +24,14 @@
 		await fetch("/auth/logout", { method: "POST" });
 		window.location.href = "/";
 	}
+
+	async function login() {
+		const currentUrl = window.location.href;
+		const loginUrl = new URL("/login", window.location.origin);
+		loginUrl.searchParams.set("from", currentUrl);
+
+		window.location.href = loginUrl.toString();
+	}
 </script>
 
 <div>
@@ -63,7 +71,7 @@
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	{:else}
-		<Button href="/login">
+		<Button onclick={login}>
 			Login
 			<Icon name="log-in" />
 		</Button>
