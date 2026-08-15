@@ -18,6 +18,7 @@
 	import Icon from "$comp/icon.svelte";
 	import HoldButton from "$comp/ui/hold-button/hold-button.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
+	import Button from "$comp/ui/button/button.svelte";
 
 	// ---------- State ----------
 	let { data } = $props();
@@ -57,18 +58,24 @@
 
 <PageHeading title="Dashboard" description="Admin Dashboard" />
 <div class="grid h-[calc(100vh-44px)] grid-cols-[1fr_4fr] gap-2 bg-card p-2">
-	<aside class="flex flex-col gap-2 overflow-y-auto rounded-lg bg-surface p-2">
+	<aside class="flex gap-2 overflow-y-auto rounded-lg bg-surface p-2">
 		<Tabs.Root bind:value={activeTab}>
-			<Tabs.List class="w-full bg-card">
-				<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
-				<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
-			</Tabs.List>
+			<span class="grid w-full grid-cols-[2fr_1fr] gap-2">
+				<Tabs.List class="w-full bg-card">
+					<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
+					<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
+				</Tabs.List>
+				<Button>
+					<Icon name="plus" />
+					New
+				</Button>
+			</span>
 
 			<!-- Listing for skins -->
 			<Tabs.Content value="skins" class="flex flex-col gap-2">
 				<SearchSorted
-					placeholder="Search players..."
-					sortOptions={PLAYER_SORT_OPTIONS}
+					placeholder="Search skins..."
+					sortOptions={SKIN_SORT_OPTIONS}
 					bind:inputValue={inputSkinsValue}
 					bind:sortBy={sortSkinsBy}
 					bind:orderBy={orderSkinsBy}
