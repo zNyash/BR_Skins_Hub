@@ -62,44 +62,8 @@
 				<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
 				<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
 			</Tabs.List>
-		</Tabs.Root>
-
-		<!-- Listing for Players -->
-		<div class="flex flex-col gap-2">
-			{#if activeTab === "players"}
-				{#each sortedPlayers.results as player (player._id)}
-					<ContextMenu.Root>
-						<ContextMenu.Trigger>
-							<div
-								class="flex items-center gap-2 rounded-md bg-card p-1 ring-primary select-none hover:ring"
-							>
-								<div class="aspect-square size-9">
-									<img
-										src={osuAvatar(player.osu_id)}
-										alt=""
-										class="size-full rounded-lg object-cover"
-									/>
-								</div>
-								<div>
-									<p>{player.name}</p>
-								</div>
-							</div>
-						</ContextMenu.Trigger>
-						<ContextMenu.Content>
-							<HoldButton
-								variant="destructive"
-								duration={1000}
-								fillColor="bg-black/40"
-								class="w-full justify-start"
-								from="left"
-							>
-								<Icon name="trash" />
-								<p>Delete</p>
-							</HoldButton>
-						</ContextMenu.Content>
-					</ContextMenu.Root>
-				{/each}
-			{:else}
+			<!-- Listing for Players -->
+			<Tabs.Content value="skins" class="flex flex-col gap-2">
 				{#each sortedSkins.results as skin (skin._id)}
 					<ContextMenu.Root>
 						<ContextMenu.Trigger>
@@ -139,8 +103,42 @@
 						</ContextMenu.Content>
 					</ContextMenu.Root>
 				{/each}
-			{/if}
-		</div>
+			</Tabs.Content>
+			<Tabs.Content value="players" class="flex flex-col gap-2">
+				{#each sortedPlayers.results as player (player._id)}
+					<ContextMenu.Root>
+						<ContextMenu.Trigger>
+							<div
+								class="flex items-center gap-2 rounded-md bg-card p-1 ring-primary select-none hover:ring"
+							>
+								<div class="aspect-square size-9">
+									<img
+										src={osuAvatar(player.osu_id)}
+										alt=""
+										class="size-full rounded-lg object-cover"
+									/>
+								</div>
+								<div>
+									<p>{player.name}</p>
+								</div>
+							</div>
+						</ContextMenu.Trigger>
+						<ContextMenu.Content>
+							<HoldButton
+								variant="destructive"
+								duration={1000}
+								fillColor="bg-black/40"
+								class="w-full justify-start"
+								from="left"
+							>
+								<Icon name="trash" />
+								<p>Delete</p>
+							</HoldButton>
+						</ContextMenu.Content>
+					</ContextMenu.Root>
+				{/each}
+			</Tabs.Content>
+		</Tabs.Root>
 	</aside>
 	<main class="rounded-lg bg-surface p-2">Content for {activeTab}</main>
 </div>
