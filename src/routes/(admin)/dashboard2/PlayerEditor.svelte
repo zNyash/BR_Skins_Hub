@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
+	import * as Select from "$comp/ui/select";
 	import { Input } from "$comp/ui/input";
 	import { Textarea } from "$comp/ui/textarea";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
@@ -18,6 +19,8 @@
 			links: Doc<"players">["links"];
 		}) => void;
 	};
+	type LinkType = NonNullable<Doc<"players">["links"]>[number]["type"];
+	const LINK_TYPES: LinkType[] = ["twitch", "twitter", "youtube", "github", "discord", "custom"];
 
 	let { player, onSave }: Props = $props();
 
@@ -29,7 +32,7 @@
 		hue: player.hue,
 		description: player.description,
 		previous_usernames: player.previous_usernames ?? [],
-		links: player.links
+		links: player.links ?? []
 	} satisfies Partial<Doc<"players">>;
 
 	// ---------- Input State ----------
@@ -37,10 +40,8 @@
 	let cover_url = $state(original.cover_url);
 	let hue = $state(original.hue);
 	let description = $state(original.description);
-	let previous_usernames = $state(original.previous_usernames ?? []);
+	let previous_usernames = $state(original.previous_usernames);
 	let links = $state(original.links);
-
-	let newUsername = $state("");
 
 	let isDirty = $derived.by(() => {
 		const current = {
@@ -71,17 +72,17 @@
 	}
 
 	function addUsername() {
-		const trimmed = newUsername.trim();
-		if (!trimmed) return;
-		if (previous_usernames.includes(trimmed)) {
-			newUsername = "";
-			return;
-		}
-		previous_usernames.push(newUsername);
-		newUsername = "";
+		previous_usernames.push("");
 	}
 	function removeUsername(index: number) {
 		previous_usernames.splice(index, 1);
+	}
+	function addLink() {
+		links.push({ type: "custom", value: "" });
+	}
+
+	function removeLink(index: number) {
+		links.splice(index, 1);
 	}
 </script>
 
@@ -131,20 +132,54 @@
 			</div>
 
 			<div class="flex flex-col gap-1">
-				<span class="flex flex-col">
+				<span class="flex items-end justify-between">
 					<label for="previous_usernames" class="text-sm">Previous Usernames</label>
 					<span class="flex gap-2">
-						<Input bind:value={newUsername} />
-						<Button type="button" variant="secondary" size="icon" onclick={addUsername}>
+						<Button type="button" variant="secondary" size="icon-sm" onclick={addUsername}>
 							<Icon name="plus" />
 						</Button>
 					</span>
 				</span>
 
-				{#each previous_usernames as username, i (username + i)}
+				{#each previous_usernames, i (i)}
 					<span class="flex items-center gap-2">
 						<Input bind:value={previous_usernames[i]} />
-						<Button type="button" variant="secondary" size="icon" onclick={() => removeUsername(i)}>
+						<Button
+							type="button"
+							variant="secondary"
+							size="icon-sm"
+							onclick={() => removeUsername(i)}
+						>
+							<Icon name="trash" />
+						</Button>
+					</span>
+				{/each}
+			</div>
+
+			<div class="flex flex-col gap-1">
+				<span class="flex items-end justify-between">
+					<label for="links" class="text-sm">Links</label>
+					<Button type="button" variant="secondary" size="icon-sm" onclick={addLink}>
+						<Icon name="plus" />
+					</Button>
+				</span>
+
+				{#each links as link, i (i)}
+					<span class="flex items-center gap-2">
+						<Select.Root type="single" bind:value={link.type}>
+							<Select.Trigger class="w-28 capitalize">
+								{link.type}
+							</Select.Trigger>
+							<Select.Content>
+								{#each LINK_TYPES as type (type)}
+									<Select.Item value={type} class="capitalize">{type}</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+
+						<Input bind:value={link.value} placeholder="URL or value" />
+
+						<Button type="button" variant="secondary" size="icon-sm" onclick={() => removeLink(i)}>
 							<Icon name="trash" />
 						</Button>
 					</span>
