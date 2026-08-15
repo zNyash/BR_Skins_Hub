@@ -19,10 +19,35 @@
 	import HoldButton from "$comp/ui/hold-button/hold-button.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import Button from "$comp/ui/button/button.svelte";
+	import PlayerEditor from "./PlayerEditor.svelte";
+
+	// ---------- Types ----------
+	type EditorState =
+		| { mode: "idle" }
+		| { mode: "create"; type: "player" | "skin" }
+		| { mode: "edit"; type: "player"; id: string }
+		| { mode: "edit"; type: "skin"; id: string };
 
 	// ---------- State ----------
 	let { data } = $props();
 	let activeTab = $state<"players" | "skins">("players");
+	let editor = $state<EditorState>({
+		mode: "idle"
+	});
+
+	const editorPlayer = $derived.by(() => {
+		const e = editor;
+		if (e.mode !== "edit") return null;
+		if (e.type !== "player") return null;
+		return data.players.find((p) => p._id === e.id) ?? null;
+	});
+
+	const editorSkin = $derived.by(() => {
+		const e = editor;
+		if (e.mode !== "edit") return null;
+		if (e.type !== "skin") return null;
+		return data.skins.find((s) => s._id === e.id) ?? null;
+	});
 
 	// ---------- Input State and Sorting ----------
 	let inputPlayersValue = $state("");
@@ -54,22 +79,76 @@
 		() => orderSkinsBy,
 		SKIN_SORT_OPTIONS
 	);
+
+	//
+	function quitEditMode(event: KeyboardEvent) {
+		if (event.key === "Escape") {
+			editor = { mode: "idle" };
+		}
+	}
 </script>
 
 <PageHeading title="Dashboard" description="Admin Dashboard" />
-<div class="grid h-[calc(100vh-44px)] grid-cols-[1fr_4fr] gap-2 bg-card p-2">
-	<aside class="flex gap-2 overflow-y-auto rounded-lg bg-surface p-2">
+
+<svelte:window onkeydown={quitEditMode} />
+
+<div class="flex h-[calc(100vh-44px)] gap-2 bg-card p-2">
+	<aside class="flex w-full max-w-xs gap-2 overflow-y-auto rounded-lg bg-surface p-2">
 		<Tabs.Root bind:value={activeTab}>
 			<span class="grid w-full grid-cols-[2fr_1fr] gap-2">
 				<Tabs.List class="w-full bg-card">
 					<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
 					<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
 				</Tabs.List>
-				<Button>
+				<Button variant={editor.mode === "idle" ? "default" : "secondary"}>
 					<Icon name="plus" />
 					New
 				</Button>
 			</span>
+
+			<!-- Listing for players -->
+			<Tabs.Content value="players" class="flex flex-col gap-2">
+				<SearchSorted
+					placeholder="Search players..."
+					sortOptions={PLAYER_SORT_OPTIONS}
+					bind:inputValue={inputPlayersValue}
+					bind:sortBy={sortPlayersBy}
+					bind:orderBy={orderPlayersBy}
+				/>
+				{#each sortedPlayers.results as player (player._id)}
+					<ContextMenu.Root>
+						<ContextMenu.Trigger>
+							<button
+								class="flex w-full items-center gap-2 rounded-md bg-card p-1 ring-primary select-none hover:ring"
+								onclick={() => (editor = { mode: "edit", type: "player", id: player._id })}
+							>
+								<div class="aspect-square size-9">
+									<img
+										src={osuAvatar(player.osu_id)}
+										alt=""
+										class="size-full rounded-lg object-cover"
+									/>
+								</div>
+								<div>
+									<p>{player.name}</p>
+								</div>
+							</button>
+						</ContextMenu.Trigger>
+						<ContextMenu.Content>
+							<HoldButton
+								variant="destructive"
+								duration={1000}
+								fillColor="bg-black/40"
+								class="w-full justify-start"
+								from="left"
+							>
+								<Icon name="trash" />
+								<p>Delete</p>
+							</HoldButton>
+						</ContextMenu.Content>
+					</ContextMenu.Root>
+				{/each}
+			</Tabs.Content>
 
 			<!-- Listing for skins -->
 			<Tabs.Content value="skins" class="flex flex-col gap-2">
@@ -120,52 +199,25 @@
 					</ContextMenu.Root>
 				{/each}
 			</Tabs.Content>
-
-			<!-- Listing for players -->
-			<Tabs.Content value="players" class="flex flex-col gap-2">
-				<SearchSorted
-					placeholder="Search players..."
-					sortOptions={PLAYER_SORT_OPTIONS}
-					bind:inputValue={inputPlayersValue}
-					bind:sortBy={sortPlayersBy}
-					bind:orderBy={orderPlayersBy}
-				/>
-				{#each sortedPlayers.results as player (player._id)}
-					<ContextMenu.Root>
-						<ContextMenu.Trigger>
-							<div
-								class="flex items-center gap-2 rounded-md bg-card p-1 ring-primary select-none hover:ring"
-							>
-								<div class="aspect-square size-9">
-									<img
-										src={osuAvatar(player.osu_id)}
-										alt=""
-										class="size-full rounded-lg object-cover"
-									/>
-								</div>
-								<div>
-									<p>{player.name}</p>
-								</div>
-							</div>
-						</ContextMenu.Trigger>
-						<ContextMenu.Content>
-							<HoldButton
-								variant="destructive"
-								duration={1000}
-								fillColor="bg-black/40"
-								class="w-full justify-start"
-								from="left"
-							>
-								<Icon name="trash" />
-								<p>Delete</p>
-							</HoldButton>
-						</ContextMenu.Content>
-					</ContextMenu.Root>
-				{/each}
-			</Tabs.Content>
 		</Tabs.Root>
 	</aside>
-	<main class="rounded-lg bg-surface p-2">Content for {activeTab}</main>
+
+	<!-- Main context window -->
+	<main class="w-full rounded-lg bg-surface p-2">
+		<div class="flex size-full max-w-2xl flex-col rounded bg-card p-4">
+			{#if editor.mode === "edit"}
+				{#if editor.type === "player"}
+					{#key editor.id}
+						<PlayerEditor player={editorPlayer!} onSave={() => {}} />
+					{/key}
+				{:else}
+					<p>Skin {editorSkin?.name}</p>
+				{/if}
+			{:else}
+				<p>Theres nothing here.</p>
+			{/if}
+		</div>
+	</main>
 </div>
 
 <style>
