@@ -17,6 +17,7 @@
 	import ImageCarousel from "$comp/image-carousel.svelte";
 	import Icon from "$comp/icon.svelte";
 	import HoldButton from "$comp/ui/hold-button/hold-button.svelte";
+	import SearchSorted from "$comp/search-sorted.svelte";
 
 	// ---------- State ----------
 	let { data } = $props();
@@ -62,8 +63,16 @@
 				<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
 				<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
 			</Tabs.List>
-			<!-- Listing for Players -->
+
+			<!-- Listing for skins -->
 			<Tabs.Content value="skins" class="flex flex-col gap-2">
+				<SearchSorted
+					placeholder="Search players..."
+					sortOptions={PLAYER_SORT_OPTIONS}
+					bind:inputValue={inputSkinsValue}
+					bind:sortBy={sortSkinsBy}
+					bind:orderBy={orderSkinsBy}
+				/>
 				{#each sortedSkins.results as skin (skin._id)}
 					<ContextMenu.Root>
 						<ContextMenu.Trigger>
@@ -104,7 +113,16 @@
 					</ContextMenu.Root>
 				{/each}
 			</Tabs.Content>
+
+			<!-- Listing for players -->
 			<Tabs.Content value="players" class="flex flex-col gap-2">
+				<SearchSorted
+					placeholder="Search players..."
+					sortOptions={PLAYER_SORT_OPTIONS}
+					bind:inputValue={inputPlayersValue}
+					bind:sortBy={sortPlayersBy}
+					bind:orderBy={orderPlayersBy}
+				/>
 				{#each sortedPlayers.results as player (player._id)}
 					<ContextMenu.Root>
 						<ContextMenu.Trigger>
