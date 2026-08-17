@@ -51,12 +51,12 @@ export const upsertPlayer = mutation({
 			if (args.description !== undefined) patch.description = args.description;
 			if (args.links !== undefined) patch.links = args.links;
 			await ctx.db.patch(existing._id, patch);
-			return existing._id;
+			return await ctx.db.get(existing._id);
 		}
 
 		if (!args.name) throw new Error("name is required when creating a new player");
 
-		return await ctx.db.insert("players", {
+		const id = await ctx.db.insert("players", {
 			osu_id: args.osu_id,
 			name: args.name,
 			cover_url: args.cover_url,
@@ -65,6 +65,7 @@ export const upsertPlayer = mutation({
 			description: args.description,
 			links: args.links
 		});
+		return await ctx.db.get(id);
 	}
 });
 
