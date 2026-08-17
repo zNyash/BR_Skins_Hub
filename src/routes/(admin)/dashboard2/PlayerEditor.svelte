@@ -4,85 +4,85 @@
 	import * as Select from "$comp/ui/select";
 	import { Input } from "$comp/ui/input";
 	import { Textarea } from "$comp/ui/textarea";
-	import type { Doc, Id } from "$convex/_generated/dataModel";
+	import type { Doc } from "$convex/_generated/dataModel";
+	import { invalidate } from "$app/navigation";
 
 	// ---------- Local Types ----------
 	type Props = {
 		player: Doc<"players">;
-		onSave: (updated: {
-			_id: Id<"players">;
-			name: Doc<"players">["name"];
-			hue: Doc<"players">["hue"];
-			cover_url: Doc<"players">["cover_url"];
-			description: Doc<"players">["description"];
-			previous_usernames: Doc<"players">["previous_usernames"];
-			links: Doc<"players">["links"];
-		}) => void;
+		onSave: () => void;
 	};
 	type LinkType = NonNullable<Doc<"players">["links"]>[number]["type"];
 	const LINK_TYPES: LinkType[] = ["twitch", "twitter", "youtube", "github", "discord", "custom"];
 
 	let { player, onSave }: Props = $props();
 
-	// ---------- Constant State ----------
+	// ---------- Helpers ----------
+	function snapshotFromPlayer(p: Doc<"players">) {
+		return {
+			name: p.name,
+			cover_url: p.cover_url,
+			hue: p.hue,
+			description: p.description,
+			previous_usernames: p.previous_usernames ?? [],
+			links: p.links ?? []
+		} satisfies Partial<Doc<"players">>;
+	}
+
+	// ---------- State ----------
 	// svelte-ignore state_referenced_locally
-	const original = {
-		name: player.name,
-		cover_url: player.cover_url,
-		hue: player.hue,
-		description: player.description,
-		previous_usernames: player.previous_usernames ?? [],
-		links: player.links ?? []
-	} satisfies Partial<Doc<"players">>;
+	let original = $state(snapshotFromPlayer(player)); // dirty-check baseline
+	// svelte-ignore state_referenced_locally
+	let form = $state(snapshotFromPlayer(player)); // the live, editable state
 
-	// ---------- Input State ----------
-	let name = $state(original.name);
-	let cover_url = $state(original.cover_url);
-	let hue = $state(original.hue);
-	let description = $state(original.description);
-	let previous_usernames = $state(original.previous_usernames);
-	let links = $state(original.links);
+	let isDirty = $derived(JSON.stringify($state.snapshot(form)) !== JSON.stringify(original));
 
-	let isDirty = $derived.by(() => {
-		const current = {
-			name,
-			cover_url,
-			hue,
-			description,
-			previous_usernames: $state.snapshot(previous_usernames),
-			links: $state.snapshot(links)
-		};
-		return JSON.stringify(current) !== JSON.stringify(original);
-	});
+	let isSaving = $state(false);
+	let saveError = $state<string | null>(null);
 
 	// ---------- Handlers ----------
-	function handleSubmit(event: SubmitEvent) {
+	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
-		onSave({ _id: player._id, name, hue, description, previous_usernames, links, cover_url });
-		discard();
+
+		if (!isDirty) return;
+		isSaving = true;
+		saveError = null;
+
+		try {
+			const res = await fetch(`/api/players/${player._id}`, {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ osu_id: player.osu_id, ...form })
+			});
+			if (!res.ok) throw new Error(await res.text());
+
+			// Update the base state for comparison (isDirty check)
+			original = $state.snapshot(form);
+
+			onSave();
+			await invalidate("app:players");
+		} catch (e) {
+			saveError = e instanceof Error ? e.message : "Failed to save";
+		} finally {
+			isSaving = false;
+		}
 	}
 
 	function discard() {
-		name = original.name;
-		cover_url = original.cover_url;
-		hue = original.hue;
-		description = original.description;
-		previous_usernames = [...(original.previous_usernames ?? [])];
-		links = structuredClone(original.links);
+		form = structuredClone(original);
 	}
 
 	function addUsername() {
-		previous_usernames.push("");
+		form.previous_usernames.push("");
 	}
 	function removeUsername(index: number) {
-		previous_usernames.splice(index, 1);
+		form.previous_usernames.splice(index, 1);
 	}
 	function addLink() {
-		links.push({ type: "custom", value: "" });
+		form.links.push({ type: "custom", value: "" });
 	}
-
 	function removeLink(index: number) {
-		links.splice(index, 1);
+		form.links.splice(index, 1);
 	}
 </script>
 
@@ -92,7 +92,10 @@
 		<div class="flex flex-col">
 			<p class="text-lg font-medium">Editing player</p>
 			<p class="text-xs font-normal">{player.name}</p>
+			<p class="text-xs font-normal text-red-400">{saveError}</p>
 		</div>
+
+		<!-- Buttons -->
 		<div>
 			{#if isDirty}
 				<Button type="button" variant="secondary" onclick={discard}>
@@ -100,9 +103,14 @@
 					Discard
 				</Button>
 			{/if}
-			<Button form="player-form" type="submit" onclick={() => handleSubmit}>
-				<Icon name="save" />
-				Save changes
+			<Button form="player-form" type="submit" disabled={!isDirty || isSaving}>
+				{#if isSaving}
+					<Icon name="loader-circle" class="animate-spin" />
+					Saving
+				{:else}
+					<Icon name="save" />
+					Save changes
+				{/if}
 			</Button>
 		</div>
 	</span>
@@ -110,30 +118,35 @@
 	<!-- Form -->
 	<form onsubmit={handleSubmit} id="player-form">
 		<span class="flex flex-col gap-2">
+			<!-- Name and Profile Color -->
 			<span class="grid grid-cols-2 gap-2">
 				<div class="flex flex-col">
 					<label for="name" class="text-sm">Name</label>
-					<Input id="name" type="text" bind:value={name} />
+					<Input id="name" type="text" bind:value={form.name} />
 				</div>
+
 				<div class="flex flex-col">
 					<label for="hue" class="text-sm">Profile Color</label>
-					<Input id="hue" type="number" min="0" max="360" bind:value={hue} />
+					<Input id="hue" type="number" min="0" max="360" bind:value={form.hue} />
 				</div>
 			</span>
 
+			<!-- Cover link/url -->
 			<div class="flex flex-col">
 				<label for="cover_url" class="text-sm">Cover</label>
-				<Input id="cover_url" type="text" bind:value={cover_url} />
+				<Input id="cover_url" type="text" bind:value={form.cover_url} />
 			</div>
 
+			<!-- Description -->
 			<div class="flex flex-col">
 				<label for="description" class="text-sm">Description</label>
-				<Textarea id="description" bind:value={description} />
+				<Textarea id="description" bind:value={form.description} />
 			</div>
 
+			<!-- Usernames -->
 			<div class="flex flex-col gap-1">
 				<span class="flex items-end justify-between">
-					<label for="previous_usernames" class="text-sm">Previous Usernames</label>
+					<span class="text-sm">Previous Usernames</span>
 					<span class="flex gap-2">
 						<Button type="button" variant="secondary" size="icon-sm" onclick={addUsername}>
 							<Icon name="plus" />
@@ -141,9 +154,9 @@
 					</span>
 				</span>
 
-				{#each previous_usernames, i (i)}
+				{#each form.previous_usernames, i (i)}
 					<span class="flex items-center gap-2">
-						<Input bind:value={previous_usernames[i]} />
+						<Input bind:value={form.previous_usernames[i]} />
 						<Button
 							type="button"
 							variant="secondary"
@@ -156,15 +169,16 @@
 				{/each}
 			</div>
 
+			<!-- Links -->
 			<div class="flex flex-col gap-1">
 				<span class="flex items-end justify-between">
-					<label for="links" class="text-sm">Links</label>
+					<span class="text-sm">Links</span>
 					<Button type="button" variant="secondary" size="icon-sm" onclick={addLink}>
 						<Icon name="plus" />
 					</Button>
 				</span>
 
-				{#each links as link, i (i)}
+				{#each form.links as link, i (i)}
 					<span class="flex items-center gap-2">
 						<Select.Root type="single" bind:value={link.type}>
 							<Select.Trigger class="w-28 capitalize">
