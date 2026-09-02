@@ -6,16 +6,23 @@
 	import { Textarea } from "$comp/ui/textarea";
 	import type { Doc } from "$convex/_generated/dataModel";
 	import { invalidate } from "$app/navigation";
+	import { SKIN_SORT_OPTIONS, type OrderBy, type SkinSortBy } from "$lib/constants";
+	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
+	import { useSorted } from "$lib/utils/sorted.svelte";
+	import SearchSorted from "$comp/search-sorted.svelte";
 
 	// ---------- Local Types ----------
+	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
+
 	type Props = {
 		player: Doc<"players">;
+		allSkins: SkinWithPlayers[];
 		onSave: () => void;
 	};
 	type LinkType = NonNullable<Doc<"players">["links"]>[number]["type"];
 	const LINK_TYPES: LinkType[] = ["twitch", "twitter", "youtube", "github", "discord", "custom"];
 
-	let { player, onSave }: Props = $props();
+	let { player, onSave, allSkins }: Props = $props();
 
 	// ---------- Helpers ----------
 	function snapshotFromPlayer(p: Doc<"players">) {
@@ -39,6 +46,22 @@
 
 	let isSaving = $state(false);
 	let saveError = $state<string | null>(null);
+
+	let inputValue = $state("");
+	let sortBy = $state<SkinSortBy>("date");
+	let orderBy = $state<OrderBy>("desc");
+
+	const filtered = useFuzzyFilter(
+		() => allSkins,
+		() => inputValue,
+		{ keys: ["name"], threshold: 0.4 }
+	);
+	const sorted = useSorted(
+		() => filtered.results,
+		() => sortBy,
+		() => orderBy,
+		SKIN_SORT_OPTIONS
+	);
 
 	// ---------- Handlers ----------
 	async function handleSubmit(event: SubmitEvent) {
@@ -198,6 +221,35 @@
 						</Button>
 					</span>
 				{/each}
+			</div>
+
+			<!-- Here will go the component for the player assignSkinAssignment -->
+			<div class="flex w-full flex-col gap-1 p-1">
+				<SearchSorted
+					placeholder="Search skins by name..."
+					sortOptions={SKIN_SORT_OPTIONS}
+					bind:sortBy
+					bind:orderBy
+					bind:inputValue
+				/>
+				<div class="grid grid-cols-2 flex-col gap-2">
+					{#each sorted.results as skin}
+						<div class="group/skin flex flex-col rounded bg-layer-2 hover:ring hover:ring-primary">
+							<span class="relative">
+								<img src={skin.preview_images[0]} alt="" class="rounded-t" />
+								<div
+									class="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover/skin:opacity-100"
+								>
+									<Button variant="secondary" class="bg-layer-3">
+										<Icon name="plus" />
+										Assign
+									</Button>
+								</div>
+							</span>
+							<p class="p-1">{skin.name}</p>
+						</div>
+					{/each}
+				</div>
 			</div>
 		</span>
 	</form>

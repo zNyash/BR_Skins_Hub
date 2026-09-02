@@ -203,12 +203,12 @@
 	</aside>
 
 	<!-- Main context window -->
-	<main class="w-full rounded-lg bg-surface p-2">
-		<div class="flex size-full max-w-2xl flex-col rounded bg-card p-4">
+	<main class="w-full overflow-y-auto rounded-lg bg-surface p-2">
+		<div class="flex size-full h-fit max-w-2xl flex-col rounded bg-card p-4">
 			{#if editor.mode === "edit"}
 				{#if editor.type === "player"}
 					{#key editor.id}
-						<PlayerEditor player={editorPlayer!} onSave={() => {}} />
+						<PlayerEditor player={editorPlayer!} allSkins={data.skins} onSave={() => {}} />
 					{/key}
 				{:else}
 					<p>Skin {editorSkin?.name}</p>
