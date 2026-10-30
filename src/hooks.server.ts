@@ -1,8 +1,8 @@
-import type { Handle } from '@sveltejs/kit';
-import { verifyToken } from '$lib/server/auth';
+import type { Handle } from "@sveltejs/kit";
+import { verifyToken } from "$lib/server/auth";
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const token = event.cookies.get('session');
+	const token = event.cookies.get("session");
 	event.locals.user = null;
 
 	if (token) {

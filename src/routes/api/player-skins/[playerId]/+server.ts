@@ -6,25 +6,25 @@ import { api } from "$convex/_generated/api";
 import type { Id } from "$convex/_generated/dataModel";
 
 export async function GET(event: RequestEvent) {
-  requireAdmin(event);
+	requireAdmin(event);
 
-  const player_id = event.params.playerId as Id<"players">;
-  const skins = await convex.query(api.playerSkins.getSkinsByPlayer, { player_id });
+	const player_id = event.params.playerId as Id<"players">;
+	const skins = await convex.query(api.playerSkins.getSkinsByPlayer, { player_id });
 
-  return json({ skinIds: skins.map((s) => s._id) });
+	return json({ skinIds: skins.map((s) => s._id) });
 }
 
 export async function PUT(event: RequestEvent) {
-  requireAdmin(event);
+	requireAdmin(event);
 
-  const player_id = event.params.playerId as Id<"players">;
-  const body = await event.request.json();
-  const { skin_ids } = body;
+	const player_id = event.params.playerId as Id<"players">;
+	const body = await event.request.json();
+	const { skin_ids } = body;
 
-  await convex.mutation(api.playerSkins.updatePlayerSkins, {
-    player_id,
-    skin_ids: skin_ids ?? [],
-  });
+	await convex.mutation(api.playerSkins.updatePlayerSkins, {
+		player_id,
+		skin_ids: skin_ids ?? []
+	});
 
-  return json({ success: true });
+	return json({ success: true });
 }

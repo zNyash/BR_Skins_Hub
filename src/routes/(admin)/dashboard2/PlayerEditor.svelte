@@ -233,6 +233,9 @@
 					bind:orderBy
 					bind:inputValue
 				/>
+				<!-- Badges with the name of the skins the current player already have attached to them         -->
+				<div></div>
+
 				<div class="grid h-fit grid-cols-2 flex-col gap-2">
 					{#each sorted.results as skin}
 						<div class="group/skin flex flex-col rounded bg-layer-2 hover:ring hover:ring-primary">

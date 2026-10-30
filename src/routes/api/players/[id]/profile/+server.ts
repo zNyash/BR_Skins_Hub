@@ -5,19 +5,19 @@ import { api } from "$convex/_generated/api";
 import type { Id } from "$convex/_generated/dataModel";
 
 export async function PATCH(event: RequestEvent) {
-  if (!event.locals.user) error(401, "Unauthorized");
+	if (!event.locals.user) error(401, "Unauthorized");
 
-  const body = await event.request.json();
-  const { description, links } = body;
+	const body = await event.request.json();
+	const { description, links } = body;
 
-  const id = event.params.id as Id<"players">;
+	const id = event.params.id as Id<"players">;
 
-  await convex.mutation(api.players.updatePlayerProfile, {
-    id,
-    requester_osu_id: event.locals.user.osu_id,
-    description,
-    links,
-  });
+	await convex.mutation(api.players.updatePlayerProfile, {
+		id,
+		requester_osu_id: event.locals.user.osu_id,
+		description,
+		links
+	});
 
-  return json({ success: true });
+	return json({ success: true });
 }

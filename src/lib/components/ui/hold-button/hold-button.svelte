@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
-	import { Button } from '$lib/components/ui/button';
-	import type { Snippet } from 'svelte';
+	import { cn } from "$lib/utils";
+	import { Button } from "$lib/components/ui/button";
+	import type { Snippet } from "svelte";
 
-	type Direction = 'top' | 'bottom' | 'left' | 'right';
+	type Direction = "top" | "bottom" | "left" | "right";
 
 	let {
 		duration = 1500,
 		onComplete,
 		class: className,
 		children,
-		fillColor = 'bg-black/10',
-		from = 'bottom',
+		fillColor = "bg-black/10",
+		from = "bottom",
 		onmousedown,
 		onmouseup,
 		ontouchstart,
@@ -62,25 +62,25 @@
 
 	const transformStyles = $derived.by(() => {
 		switch (from) {
-			case 'top':
+			case "top":
 				return {
-					origin: 'origin-top',
+					origin: "origin-top",
 					transform: `scaleY(${isHolding ? 1 : 0})`
 				};
-			case 'left':
+			case "left":
 				return {
-					origin: 'origin-left',
+					origin: "origin-left",
 					transform: `scaleX(${isHolding ? 1 : 0})`
 				};
-			case 'right':
+			case "right":
 				return {
-					origin: 'origin-right',
+					origin: "origin-right",
 					transform: `scaleX(${isHolding ? 1 : 0})`
 				};
-			case 'bottom':
+			case "bottom":
 			default:
 				return {
-					origin: 'origin-bottom',
+					origin: "origin-bottom",
 					transform: `scaleY(${isHolding ? 1 : 0})`
 				};
 		}
@@ -88,7 +88,7 @@
 </script>
 
 <Button
-	class={cn('relative overflow-hidden select-none', className)}
+	class={cn("relative overflow-hidden select-none", className)}
 	onmousedown={(e) => {
 		startHold(e);
 		onmousedown?.(e);
@@ -110,12 +110,12 @@
 	{...rest}
 >
 	<div
-		class={cn('absolute inset-0 pointer-events-none z-0', transformStyles.origin, fillColor)}
+		class={cn("pointer-events-none absolute inset-0 z-0", transformStyles.origin, fillColor)}
 		style:transform={transformStyles.transform}
 		style:transition="transform {isHolding ? duration : 100}ms linear"
 	></div>
 
-	<span class="relative z-10 flex items-center gap-2 pointer-events-none">
+	<span class="pointer-events-none relative z-10 flex items-center gap-2">
 		{@render children()}
 	</span>
 </Button>

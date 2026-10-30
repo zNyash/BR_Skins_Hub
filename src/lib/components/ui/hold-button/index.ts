@@ -1,2 +1,2 @@
-import HoldButton from './hold-button.svelte';
+import HoldButton from "./hold-button.svelte";
 export { HoldButton };

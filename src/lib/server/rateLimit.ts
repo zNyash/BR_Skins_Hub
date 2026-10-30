@@ -1,4 +1,4 @@
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent } from "@sveltejs/kit";
 
 type RateLimiterOptions = {
 	key: string;
@@ -14,8 +14,8 @@ type Bucket = {
 const buckets = new Map<string, Bucket>();
 
 function getClientIp(event: RequestEvent): string {
-	const forwardedFor = event.request.headers.get('x-forwarded-for');
-	if (forwardedFor) return forwardedFor.split(',')[0].trim();
+	const forwardedFor = event.request.headers.get("x-forwarded-for");
+	if (forwardedFor) return forwardedFor.split(",")[0].trim();
 	return event.getClientAddress();
 }
 
@@ -49,16 +49,13 @@ export function createRateLimiter({ key, maxRequests, windowMs }: RateLimiterOpt
 
 			if (existing.count > maxRequests) {
 				const retryAfterSeconds = Math.ceil((existing.resetAt - now) / 1000);
-				throw new Response(
-					JSON.stringify({ message: 'Too many requests' }),
-					{
-						status: 429,
-						headers: {
-							'Content-Type': 'application/json',
-							'Retry-After': String(retryAfterSeconds)
-						}
+				throw new Response(JSON.stringify({ message: "Too many requests" }), {
+					status: 429,
+					headers: {
+						"Content-Type": "application/json",
+						"Retry-After": String(retryAfterSeconds)
 					}
-				);
+				});
 			}
 		}
 	};

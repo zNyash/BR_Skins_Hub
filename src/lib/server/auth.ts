@@ -1,13 +1,13 @@
-import { SignJWT, jwtVerify } from 'jose';
-import { JWT_SECRET } from '$env/static/private';
+import { SignJWT, jwtVerify } from "jose";
+import { JWT_SECRET } from "$env/static/private";
 
 const secret = new TextEncoder().encode(JWT_SECRET);
 
 export async function createToken(payload: { osu_id: number }) {
 	return new SignJWT(payload)
-		.setProtectedHeader({ alg: 'HS256' })
+		.setProtectedHeader({ alg: "HS256" })
 		.setIssuedAt()
-		.setExpirationTime('30d')
+		.setExpirationTime("30d")
 		.sign(secret);
 }
 

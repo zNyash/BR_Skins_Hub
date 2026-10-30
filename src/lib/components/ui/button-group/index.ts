@@ -11,5 +11,5 @@ export {
 	//
 	Root as ButtonGroup,
 	Text as ButtonGroupText,
-	Separator as ButtonGroupSeparator,
+	Separator as ButtonGroupSeparator
 };
