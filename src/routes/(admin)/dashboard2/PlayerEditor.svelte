@@ -4,12 +4,13 @@
 	import * as Select from "$comp/ui/select";
 	import { Input } from "$comp/ui/input";
 	import { Textarea } from "$comp/ui/textarea";
-	import type { Doc } from "$convex/_generated/dataModel";
+	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { invalidate } from "$app/navigation";
 	import { SKIN_SORT_OPTIONS, type OrderBy, type SkinSortBy } from "$lib/constants";
 	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
 	import { useSorted } from "$lib/utils/sorted.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
+	import { Badge } from "$lib/components/ui/badge/index.js";
 
 	// ---------- Local Types ----------
 	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
@@ -24,7 +25,6 @@
 
 	let { player, onSave, allSkins }: Props = $props();
 
-	// const players = convex;
 	// ---------- Helpers ----------
 	function snapshotFromPlayer(p: Doc<"players">) {
 		return {
@@ -38,13 +38,6 @@
 	}
 
 	// ---------- State ----------
-	// svelte-ignore state_referenced_locally
-	let original = $state(snapshotFromPlayer(player)); // dirty-check baseline
-	// svelte-ignore state_referenced_locally
-	let form = $state(snapshotFromPlayer(player)); // the live, editable state
-
-	let isDirty = $derived(JSON.stringify($state.snapshot(form)) !== JSON.stringify(original));
-
 	let isSaving = $state(false);
 	let saveError = $state<string | null>(null);
 
@@ -64,6 +57,31 @@
 		SKIN_SORT_OPTIONS
 	);
 
+	// svelte-ignore state_referenced_locally
+	// Filter the skins by matching the current player id. allSkins has players that uses those skins.
+	const initialPlayerSkins = allSkins.filter((skin) =>
+		skin.players.some((assignedPlayer) => assignedPlayer._id === player._id)
+	);
+
+	// svelte-ignore state_referenced_locally
+	const initialDraft = {
+		player: snapshotFromPlayer(player),
+		skinIds: initialPlayerSkins.map((skin) => skin._id)
+	};
+	let draft = $state(structuredClone(initialDraft));
+
+	let isDirty = $derived.by(() => {
+		const current = $state.snapshot(draft);
+		return (
+			JSON.stringify(current.player) !== JSON.stringify(initialDraft.player) ||
+			JSON.stringify([...current.skinIds].sort()) !==
+				JSON.stringify([...initialDraft.skinIds].sort())
+		);
+	});
+
+	let assignedSkins = $derived(allSkins.filter((skin) => draft.skinIds.includes(skin._id)));
+	let availableSkins = $derived(sorted.results.filter((skin) => !draft.skinIds.includes(skin._id)));
+
 	// ---------- Handlers ----------
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -73,15 +91,19 @@
 		saveError = null;
 
 		try {
-			const res = await fetch(`/api/players/${player._id}`, {
+			const playerResponse = await fetch(`/api/players/${player._id}`, {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ osu_id: player.osu_id, ...form })
+				body: JSON.stringify({ osu_id: player.osu_id, ...draft.player })
 			});
-			if (!res.ok) throw new Error(await res.text());
+			if (!playerResponse.ok) throw new Error(await playerResponse.text());
 
-			// Update the base state for comparison (isDirty check)
-			original = $state.snapshot(form);
+			const skinResponse = await fetch(`/api/player-skins/${player._id}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ skin_ids: draft.skinIds })
+			});
+			if (!skinResponse.ok) throw new Error(await skinResponse.text());
 
 			onSave();
 			await invalidate("app:players");
@@ -93,20 +115,28 @@
 	}
 
 	function discard() {
-		form = structuredClone(original);
+		draft = structuredClone(initialDraft);
 	}
 
 	function addUsername() {
-		form.previous_usernames.push("");
+		draft.player.previous_usernames.push("");
 	}
 	function removeUsername(index: number) {
-		form.previous_usernames.splice(index, 1);
+		draft.player.previous_usernames.splice(index, 1);
 	}
+
 	function addLink() {
-		form.links.push({ type: "custom", value: "" });
+		draft.player.links.push({ type: "custom", value: "" });
 	}
 	function removeLink(index: number) {
-		form.links.splice(index, 1);
+		draft.player.links.splice(index, 1);
+	}
+
+	function addSkin(skinId: Id<"skins">) {
+		draft.skinIds.push(skinId);
+	}
+	function removeSkin(skinId: Id<"skins">) {
+		draft.skinIds = draft.skinIds.filter((id) => id !== skinId);
 	}
 </script>
 
@@ -146,25 +176,25 @@
 			<span class="grid grid-cols-2 gap-2">
 				<div class="flex flex-col">
 					<label for="name" class="text-sm">Name</label>
-					<Input id="name" type="text" bind:value={form.name} />
+					<Input id="name" type="text" bind:value={draft.player.name} />
 				</div>
 
 				<div class="flex flex-col">
 					<label for="hue" class="text-sm">Profile Color</label>
-					<Input id="hue" type="number" min="0" max="360" bind:value={form.hue} />
+					<Input id="hue" type="number" min="0" max="360" bind:value={draft.player.hue} />
 				</div>
 			</span>
 
 			<!-- Cover link/url -->
 			<div class="flex flex-col">
 				<label for="cover_url" class="text-sm">Cover</label>
-				<Input id="cover_url" type="text" bind:value={form.cover_url} />
+				<Input id="cover_url" type="text" bind:value={draft.player.cover_url} />
 			</div>
 
 			<!-- Description -->
 			<div class="flex flex-col">
 				<label for="description" class="text-sm">Description</label>
-				<Textarea id="description" bind:value={form.description} />
+				<Textarea id="description" bind:value={draft.player.description} />
 			</div>
 
 			<!-- Usernames -->
@@ -178,9 +208,9 @@
 					</span>
 				</span>
 
-				{#each form.previous_usernames, i (i)}
+				{#each draft.player.previous_usernames, i (i)}
 					<span class="flex items-center gap-2">
-						<Input bind:value={form.previous_usernames[i]} />
+						<Input bind:value={draft.player.previous_usernames[i]} />
 						<Button
 							type="button"
 							variant="secondary"
@@ -202,7 +232,7 @@
 					</Button>
 				</span>
 
-				{#each form.links as link, i (i)}
+				{#each draft.player.links as link, i (i)}
 					<span class="flex items-center gap-2">
 						<Select.Root type="single" bind:value={link.type}>
 							<Select.Trigger class="w-28 capitalize">
@@ -234,17 +264,31 @@
 					bind:inputValue
 				/>
 				<!-- Badges with the name of the skins the current player already have attached to them         -->
-				<div></div>
+				<div class="flex w-full flex-wrap gap-2 gap-y-1">
+					{#each assignedSkins as skin}
+						<Badge variant="outline"
+							>{skin.name}
+							<button type="button" onclick={() => removeSkin(skin._id)}>
+								<Icon name="x" class="size-4 hover:brightness-125" />
+							</button>
+						</Badge>
+					{/each}
+				</div>
 
 				<div class="grid h-fit grid-cols-2 flex-col gap-2">
-					{#each sorted.results as skin}
+					{#each availableSkins as skin}
 						<div class="group/skin flex flex-col rounded bg-layer-2 hover:ring hover:ring-primary">
 							<span class="relative">
 								<img src={skin.preview_images[0]} alt="" class="rounded-t" />
 								<div
 									class="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover/skin:opacity-100"
 								>
-									<Button variant="secondary" class="bg-layer-3">
+									<Button
+										variant="secondary"
+										class="bg-layer-3"
+										type="button"
+										onclick={() => addSkin(skin._id)}
+									>
 										<Icon name="plus" />
 										Assign
 									</Button>
