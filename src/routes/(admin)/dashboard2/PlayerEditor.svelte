@@ -24,6 +24,7 @@
 
 	let { player, onSave, allSkins }: Props = $props();
 
+	// const players = convex;
 	// ---------- Helpers ----------
 	function snapshotFromPlayer(p: Doc<"players">) {
 		return {
@@ -232,7 +233,7 @@
 					bind:orderBy
 					bind:inputValue
 				/>
-				<div class="grid grid-cols-2 flex-col gap-2">
+				<div class="grid h-fit grid-cols-2 flex-col gap-2">
 					{#each sorted.results as skin}
 						<div class="group/skin flex flex-col rounded bg-layer-2 hover:ring hover:ring-primary">
 							<span class="relative">
