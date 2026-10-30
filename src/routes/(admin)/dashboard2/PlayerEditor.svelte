@@ -12,7 +12,6 @@
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import { Badge } from "$lib/components/ui/badge/index.js";
 
-	// ---------- Local Types ----------
 	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
 
 	type Props = {
@@ -20,12 +19,12 @@
 		allSkins: SkinWithPlayers[];
 		onSave: () => void;
 	};
+
 	type LinkType = NonNullable<Doc<"players">["links"]>[number]["type"];
 	const LINK_TYPES: LinkType[] = ["twitch", "twitter", "youtube", "github", "discord", "custom"];
 
 	let { player, onSave, allSkins }: Props = $props();
 
-	// ---------- Helpers ----------
 	function snapshotFromPlayer(p: Doc<"players">) {
 		return {
 			name: p.name,
@@ -37,13 +36,23 @@
 		} satisfies Partial<Doc<"players">>;
 	}
 
-	// ---------- State ----------
-	let isSaving = $state(false);
-	let saveError = $state<string | null>(null);
+	// svelte-ignore state_referenced_locally
+	const initialPlayerSkins = allSkins.filter((skin) =>
+		skin.players.some((assignedPlayer) => assignedPlayer._id === player._id)
+	);
+
+	// svelte-ignore state_referenced_locally
+	const initialDraft = {
+		player: snapshotFromPlayer(player),
+		skinIds: initialPlayerSkins.map((skin) => skin._id)
+	};
+	let draft = $state(structuredClone(initialDraft));
 
 	let inputValue = $state("");
 	let sortBy = $state<SkinSortBy>("date");
 	let orderBy = $state<OrderBy>("desc");
+	let isSaving = $state(false);
+	let saveError = $state<string | null>(null);
 
 	const filtered = useFuzzyFilter(
 		() => allSkins,
@@ -57,19 +66,6 @@
 		SKIN_SORT_OPTIONS
 	);
 
-	// svelte-ignore state_referenced_locally
-	// Filter the skins by matching the current player id. allSkins has players that uses those skins.
-	const initialPlayerSkins = allSkins.filter((skin) =>
-		skin.players.some((assignedPlayer) => assignedPlayer._id === player._id)
-	);
-
-	// svelte-ignore state_referenced_locally
-	const initialDraft = {
-		player: snapshotFromPlayer(player),
-		skinIds: initialPlayerSkins.map((skin) => skin._id)
-	};
-	let draft = $state(structuredClone(initialDraft));
-
 	let isDirty = $derived.by(() => {
 		const current = $state.snapshot(draft);
 		return (
@@ -82,7 +78,6 @@
 	let assignedSkins = $derived(allSkins.filter((skin) => draft.skinIds.includes(skin._id)));
 	let availableSkins = $derived(sorted.results.filter((skin) => !draft.skinIds.includes(skin._id)));
 
-	// ---------- Handlers ----------
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 
@@ -141,7 +136,6 @@
 </script>
 
 <div class="flex flex-col gap-2">
-	<!-- Header -->
 	<span class="flex items-center justify-between">
 		<div class="flex flex-col">
 			<p class="text-lg font-medium">Editing player</p>
@@ -149,7 +143,6 @@
 			<p class="text-xs font-normal text-red-400">{saveError}</p>
 		</div>
 
-		<!-- Buttons -->
 		<div>
 			{#if isDirty}
 				<Button type="button" variant="secondary" onclick={discard}>
@@ -169,10 +162,8 @@
 		</div>
 	</span>
 
-	<!-- Form -->
 	<form onsubmit={handleSubmit} id="player-form">
 		<span class="flex flex-col gap-2">
-			<!-- Name and Profile Color -->
 			<span class="grid grid-cols-2 gap-2">
 				<div class="flex flex-col">
 					<label for="name" class="text-sm">Name</label>
@@ -185,19 +176,16 @@
 				</div>
 			</span>
 
-			<!-- Cover link/url -->
 			<div class="flex flex-col">
 				<label for="cover_url" class="text-sm">Cover</label>
 				<Input id="cover_url" type="text" bind:value={draft.player.cover_url} />
 			</div>
 
-			<!-- Description -->
 			<div class="flex flex-col">
 				<label for="description" class="text-sm">Description</label>
 				<Textarea id="description" bind:value={draft.player.description} />
 			</div>
 
-			<!-- Usernames -->
 			<div class="flex flex-col gap-1">
 				<span class="flex items-end justify-between">
 					<span class="text-sm">Previous Usernames</span>
@@ -223,7 +211,6 @@
 				{/each}
 			</div>
 
-			<!-- Links -->
 			<div class="flex flex-col gap-1">
 				<span class="flex items-end justify-between">
 					<span class="text-sm">Links</span>
@@ -254,7 +241,6 @@
 				{/each}
 			</div>
 
-			<!-- Here will go the component for the player assignSkinAssignment -->
 			<div class="flex w-full flex-col gap-1 p-1">
 				<SearchSorted
 					placeholder="Search skins by name..."
@@ -263,7 +249,6 @@
 					bind:orderBy
 					bind:inputValue
 				/>
-				<!-- Badges with the name of the skins the current player already have attached to them         -->
 				<div class="flex w-full flex-wrap gap-2 gap-y-1">
 					{#each assignedSkins as skin}
 						<Badge variant="outline"
