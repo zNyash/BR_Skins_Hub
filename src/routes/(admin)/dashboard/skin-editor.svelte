@@ -9,14 +9,14 @@
 	import HoldButton from "$comp/hold-button.svelte";
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
-	import { normalizeTags } from "$lib/tags";
+	import type { SkinWithPlayers } from "$lib/types";
 	import { osuAvatar } from "$lib/osu";
 	import { moveItem, resolveImageUrls, type ImageItem } from "./skin-images";
 	import { createUploadThing } from "$lib/uploadthing";
-	import { cn } from "$lib/utils";
+	import { cn, formatDate } from "$lib/utils";
 	import AssignPlayersDialog from "./assign-players-dialog.svelte";
+	import TagInput from "./tag-input.svelte";
 
-	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
 
 	type Props = {
 		skin: SkinWithPlayers;
@@ -155,25 +155,6 @@
 		if (dragIndex === null) addFiles(event.dataTransfer?.files);
 	}
 
-	// ---------- Tags ----------
-	let tagInput = $state("");
-	const unusedTagSuggestions = $derived(
-		tagSuggestions.filter((tag) => !draft.skin.tags.includes(tag))
-	);
-
-	function addTag() {
-		draft.skin.tags = normalizeTags([...draft.skin.tags, tagInput]);
-		tagInput = "";
-	}
-	function handleTagKeydown(event: KeyboardEvent) {
-		if (event.key === "Enter" || event.key === ",") {
-			event.preventDefault();
-			addTag();
-		}
-	}
-	function removeTag(tag: string) {
-		draft.skin.tags = draft.skin.tags.filter((t) => t !== tag);
-	}
 
 	// ---------- Players ----------
 	function addPlayers(playerIds: Id<"players">[]) {
@@ -185,8 +166,6 @@
 		draft.playerIds = draft.playerIds.filter((id) => id !== playerId);
 	}
 
-	const formatDate = (ms: number) =>
-		new Date(ms).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 </script>
 
 <div class="flex flex-col gap-2">
@@ -247,44 +226,7 @@
 			{/if}
 		</div>
 
-		<div class="flex flex-col gap-1">
-			<label for="skin_tags" class="text-sm">
-				Tags <span class="text-xs text-muted-foreground">(search only, not shown publicly)</span>
-			</label>
-			<Input
-				id="skin_tags"
-				list="skin-tag-suggestions"
-				placeholder="Type a tag and press Enter"
-				autocomplete="off"
-				bind:value={tagInput}
-				onkeydown={handleTagKeydown}
-				onblur={() => tagInput.trim() && addTag()}
-			/>
-			<datalist id="skin-tag-suggestions">
-				{#each unusedTagSuggestions as tag (tag)}
-					<option value={tag}></option>
-				{/each}
-			</datalist>
-			{#if draft.skin.tags.length > 0}
-				<div class="flex flex-wrap gap-1">
-					{#each draft.skin.tags as tag (tag)}
-						<span
-							class="flex items-center gap-1 rounded-full bg-layer-2 py-0.5 pr-1 pl-2.5 text-xs"
-						>
-							{tag}
-							<button
-								type="button"
-								aria-label="Remove tag {tag}"
-								class="rounded-full p-0.5 hover:bg-layer-3"
-								onclick={() => removeTag(tag)}
-							>
-								<Icon name="x" class="size-3" />
-							</button>
-						</span>
-					{/each}
-				</div>
-			{/if}
-		</div>
+			<TagInput id="skin-tags" bind:tags={draft.skin.tags} suggestions={tagSuggestions} />
 
 		<!-- Preview images -->
 		<section

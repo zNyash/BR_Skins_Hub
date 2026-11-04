@@ -1,11 +1,9 @@
 import Fuse, { type IFuseOptions } from "fuse.js";
-import type { FunctionReturnType } from "convex/server";
-import type { api } from "$convex/_generated/api";
 import type { Doc } from "$convex/_generated/dataModel";
+import type { SkinWithPlayers } from "$lib/types";
 
 // --- Types ---
 
-type SkinWithPlayers = FunctionReturnType<typeof api.skins.listWithPlayers>[number];
 
 export type OrderBy = "asc" | "desc";
 

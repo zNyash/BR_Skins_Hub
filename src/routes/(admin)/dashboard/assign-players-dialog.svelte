@@ -8,7 +8,7 @@
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { PLAYER_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import { osuAvatar } from "$lib/osu";
-	import { cn } from "$lib/utils";
+	import { cn, formatDate } from "$lib/utils";
 
 	type Props = {
 		allPlayers: Doc<"players">[];
@@ -49,8 +49,6 @@
 		open = false;
 	}
 
-	const formatDate = (ms: number) =>
-		new Date(ms).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>

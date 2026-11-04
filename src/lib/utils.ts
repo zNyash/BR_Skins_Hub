@@ -11,3 +11,12 @@ export type WithoutChild<T> = T extends { child?: any } ? Omit<T, "child"> : T;
 export type WithoutChildren<T> = T extends { children?: any } ? Omit<T, "children"> : T;
 export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
+
+/** "Nov 4, 2026" in the viewer's locale. */
+export function formatDate(ms: number) {
+	return new Date(ms).toLocaleDateString(undefined, {
+		year: "numeric",
+		month: "short",
+		day: "numeric"
+	});
+}

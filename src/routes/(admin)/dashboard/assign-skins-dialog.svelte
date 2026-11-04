@@ -5,11 +5,11 @@
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import * as Dialog from "$comp/ui/dialog";
 	import * as Tooltip from "$comp/ui/tooltip";
-	import type { Doc, Id } from "$convex/_generated/dataModel";
+	import type { Id } from "$convex/_generated/dataModel";
+	import type { SkinWithPlayers } from "$lib/types";
 	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
-	import { cn } from "$lib/utils";
+	import { cn, formatDate } from "$lib/utils";
 
-	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
 
 	type Props = {
 		allSkins: SkinWithPlayers[];
@@ -57,8 +57,6 @@
 		open = false;
 	}
 
-	const formatDate = (ms: number) =>
-		new Date(ms).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
