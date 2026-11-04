@@ -46,7 +46,11 @@
 	}
 
 	function closeOnEscape(event: KeyboardEvent) {
-		if (event.key === "Escape") selected = null;
+		if (event.key !== "Escape") return;
+		// Esc that closed a dialog or cleared a search box was meant for that, not for the editor.
+		const isOverlayOpen = isDeleteDialogOpen || isCreatingPlayer || isCreatingSkin;
+		if (event.defaultPrevented || isOverlayOpen || event.target instanceof HTMLInputElement) return;
+		selected = null;
 	}
 
 	// --- Search and sorting ---
