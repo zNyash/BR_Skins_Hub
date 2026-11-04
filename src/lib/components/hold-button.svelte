@@ -48,31 +48,14 @@
 		}
 	}
 
-	const transformStyles = $derived.by(() => {
-		switch (from) {
-			case "top":
-				return {
-					origin: "origin-top",
-					transform: `scaleY(${isHolding ? 1 : 0})`
-				};
-			case "left":
-				return {
-					origin: "origin-left",
-					transform: `scaleX(${isHolding ? 1 : 0})`
-				};
-			case "right":
-				return {
-					origin: "origin-right",
-					transform: `scaleX(${isHolding ? 1 : 0})`
-				};
-			case "bottom":
-			default:
-				return {
-					origin: "origin-bottom",
-					transform: `scaleY(${isHolding ? 1 : 0})`
-				};
-		}
-	});
+	// Where the fill grows from while holding.
+	const FILL = {
+		top: { origin: "origin-top", scale: "scaleY" },
+		bottom: { origin: "origin-bottom", scale: "scaleY" },
+		left: { origin: "origin-left", scale: "scaleX" },
+		right: { origin: "origin-right", scale: "scaleX" }
+	} as const;
+	const fill = $derived(FILL[from]);
 </script>
 
 <Button
@@ -88,8 +71,8 @@
 	{...rest}
 >
 	<div
-		class={cn("pointer-events-none absolute inset-0 z-0", transformStyles.origin, fillColor)}
-		style:transform={transformStyles.transform}
+		class={cn("pointer-events-none absolute inset-0 z-0", fill.origin, fillColor)}
+		style:transform="{fill.scale}({isHolding ? 1 : 0})"
 		style:transition="transform {isHolding ? duration : 100}ms linear"
 	></div>
 

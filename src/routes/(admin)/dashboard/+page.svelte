@@ -1,73 +1,76 @@
 <script lang="ts">
-	import PageHeading from "$comp/page-heading.svelte";
-	import * as Tabs from "$comp/ui/tabs/index";
-	import * as Popover from "$comp/ui/popover/index";
-	import * as ContextMenu from "$comp/ui/context-menu/index";
-
-	import {
-		DASHBOARD_SKIN_LIST,
-		PLAYER_LIST,
-		useListQuery
-	} from "$lib/hooks/list-query.svelte";
-	import { osuAvatar } from "$lib/osu";
-	import ImageCarousel from "$comp/image-carousel.svelte";
-	import Icon from "$comp/icon.svelte";
+	import { toast } from "svelte-sonner";
+	import { invalidate } from "$app/navigation";
 	import HoldButton from "$comp/hold-button.svelte";
+	import Icon from "$comp/icon.svelte";
+	import ImageCarousel from "$comp/image-carousel.svelte";
+	import PageHeading from "$comp/page-heading.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import Button from "$comp/ui/button/button.svelte";
-	import PlayerEditor from "./player-editor.svelte";
+	import * as ContextMenu from "$comp/ui/context-menu";
+	import * as Popover from "$comp/ui/popover";
+	import * as Tabs from "$comp/ui/tabs";
+	import { request } from "$lib/api";
+	import { DASHBOARD_SKIN_LIST, PLAYER_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
+	import { osuAvatar } from "$lib/osu";
+	import DeleteDialog from "./delete-dialog.svelte";
 	import PlayerCreatorDialog from "./player-creator-dialog.svelte";
-	import SkinEditor from "./skin-editor.svelte";
+	import PlayerEditor from "./player-editor.svelte";
 	import SkinCreatorDialog from "./skin-creator-dialog.svelte";
+	import SkinEditor from "./skin-editor.svelte";
 
-	// ---------- Types ----------
-	// Creating happens in dialogs; only editing uses the main panel.
-	type EditorState =
-		| { mode: "idle" }
-		| { mode: "edit"; type: "player"; id: string }
-		| { mode: "edit"; type: "skin"; id: string };
+	type Item = { type: "player" | "skin"; id: string };
 
-	// ---------- State ----------
 	let { data } = $props();
+
+	// --- Editor ---
+	// Creating happens in dialogs; the main panel only edits the selected item.
 	let activeTab = $state<"players" | "skins">("players");
-	let editor = $state<EditorState>({
-		mode: "idle"
-	});
+	let selected = $state<Item | null>(null);
 	let isCreatingPlayer = $state(false);
 	let isCreatingSkin = $state(false);
+
+	const selectedPlayer = $derived(
+		selected?.type === "player" ? data.players.find((p) => p._id === selected?.id) : undefined
+	);
+	const selectedSkin = $derived(
+		selected?.type === "skin" ? data.skins.find((s) => s._id === selected?.id) : undefined
+	);
+	const tagSuggestions = $derived(
+		[...new Set([...data.players, ...data.skins].flatMap((doc) => doc.tags ?? []))].sort()
+	);
 
 	function openCreator() {
 		if (activeTab === "players") isCreatingPlayer = true;
 		else isCreatingSkin = true;
 	}
 
-	const editorPlayer = $derived.by(() => {
-		const e = editor;
-		if (e.mode !== "edit") return null;
-		if (e.type !== "player") return null;
-		return data.players.find((p) => p._id === e.id) ?? null;
-	});
+	function closeOnEscape(event: KeyboardEvent) {
+		if (event.key === "Escape") selected = null;
+	}
 
-	const editorSkin = $derived.by(() => {
-		const e = editor;
-		if (e.mode !== "edit") return null;
-		if (e.type !== "skin") return null;
-		return data.skins.find((s) => s._id === e.id) ?? null;
-	});
-
-	const tagSuggestions = $derived(
-		[...new Set([...data.players, ...data.skins].flatMap((doc) => doc.tags ?? []))].sort()
-	);
-
-	// ---------- Search and sorting ----------
+	// --- Search and sorting ---
 	const players = useListQuery(() => data.players, PLAYER_LIST);
 	const skins = useListQuery(() => data.skins, DASHBOARD_SKIN_LIST);
 
-	//
-	function quitEditMode(event: KeyboardEvent) {
-		if (event.key === "Escape") {
-			editor = { mode: "idle" };
-		}
+	// --- Deleting ---
+	// Every delete button (sidebar and editors) asks for the name to be typed in one dialog.
+	let toDelete = $state<(Item & { name: string }) | null>(null);
+	let isDeleteDialogOpen = $state(false);
+
+	function askToDelete(item: Item & { name: string }) {
+		toDelete = item;
+		isDeleteDialogOpen = true;
+	}
+
+	async function deleteItem() {
+		if (!toDelete) return;
+		const { type, id, name } = toDelete;
+
+		await request(`/api/${type}s/${id}`, { method: "DELETE" });
+		toast.success(`${name} deleted`);
+		if (selected?.id === id) selected = null;
+		await invalidate(type === "player" ? "app:players" : "app:skins");
 	}
 </script>
 
@@ -75,14 +78,25 @@
 
 <PlayerCreatorDialog
 	bind:open={isCreatingPlayer}
-	onCreated={(id) => (editor = { mode: "edit", type: "player", id })}
+	onCreated={(id) => (selected = { type: "player", id })}
 />
 <SkinCreatorDialog
 	bind:open={isCreatingSkin}
-	onCreated={(id) => (editor = { mode: "edit", type: "skin", id })}
+	onCreated={(id) => (selected = { type: "skin", id })}
 />
+{#if toDelete}
+	<!-- Keyed so each delete starts with an empty confirmation input -->
+	{#key toDelete}
+		<DeleteDialog
+			bind:open={isDeleteDialogOpen}
+			name={toDelete.name}
+			kind={toDelete.type}
+			onConfirm={deleteItem}
+		/>
+	{/key}
+{/if}
 
-<svelte:window onkeydown={quitEditMode} />
+<svelte:window onkeydown={closeOnEscape} />
 
 <div class="flex h-[calc(100vh-44px)] min-h-0 gap-2 bg-card p-2">
 	<aside class="flex w-full max-w-xs gap-2 overflow-y-auto rounded-lg bg-surface p-2">
@@ -93,7 +107,7 @@
 					<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
 					<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
 				</Tabs.List>
-				<Button variant={editor.mode === "idle" ? "default" : "secondary"} onclick={openCreator}>
+				<Button variant={selected ? "secondary" : "default"} onclick={openCreator}>
 					<Icon name="plus" />
 					New
 				</Button>
@@ -107,7 +121,7 @@
 						<ContextMenu.Trigger>
 							<button
 								class="flex w-full items-center gap-2 rounded-md bg-card p-1 ring-primary select-none hover:ring"
-								onclick={() => (editor = { mode: "edit", type: "player", id: player._id })}
+								onclick={() => (selected = { type: "player", id: player._id })}
 							>
 								<div class="aspect-square size-9">
 									<img
@@ -128,6 +142,7 @@
 								fillColor="bg-black/40"
 								class="w-full justify-start"
 								from="left"
+								onComplete={() => askToDelete({ type: "player", id: player._id, name: player.name })}
 							>
 								<Icon name="trash" />
 								<p>Delete</p>
@@ -162,7 +177,7 @@
 								</span>
 								<button
 									class="min-w-0 flex-1 self-stretch truncate text-left"
-									onclick={() => (editor = { mode: "edit", type: "skin", id: skin._id })}
+									onclick={() => (selected = { type: "skin", id: skin._id })}
 								>
 									{skin.name}
 								</button>
@@ -175,6 +190,7 @@
 								fillColor="bg-black/40"
 								class="w-full justify-start"
 								from="left"
+								onComplete={() => askToDelete({ type: "skin", id: skin._id, name: skin.name })}
 							>
 								<Icon name="trash" />
 								<p>Delete</p>
@@ -189,31 +205,32 @@
 	<!-- Main context window -->
 	<main class="min-h-0 flex-1 overflow-hidden rounded-lg bg-surface p-2">
 		<div class="flex h-full min-h-0 w-full max-w-2xl flex-col overflow-y-auto rounded bg-muted p-4">
-			{#if editor.mode === "edit"}
-				{#if editor.type === "player"}
-					<!-- Keyed on the player object (not just the id) so the editor re-reads it after a refresh from osu! -->
-					{#key editorPlayer}
-						<PlayerEditor
-							player={editorPlayer!}
-							allSkins={data.skins}
-							{tagSuggestions}
-							onSave={() => (editor = { mode: "idle" })}
-						/>
-					{/key}
-				{:else if editorSkin}
-					<!-- Keyed on the skin object for the same reason as the player editor -->
-					{#key editorSkin}
-						<SkinEditor
-							skin={editorSkin}
-							allPlayers={data.players}
-							{tagSuggestions}
-							onSave={() => (editor = { mode: "idle" })}
-							onDelete={() => (editor = { mode: "idle" })}
-						/>
-					{/key}
-				{/if}
+			{#if selectedPlayer}
+				<!-- Keyed on the player object (not just the id) so the editor re-reads it after a refresh from osu! -->
+				{#key selectedPlayer}
+					<PlayerEditor
+						player={selectedPlayer}
+						allSkins={data.skins}
+						{tagSuggestions}
+						onSave={() => (selected = null)}
+						onDelete={() =>
+							askToDelete({ type: "player", id: selectedPlayer._id, name: selectedPlayer.name })}
+					/>
+				{/key}
+			{:else if selectedSkin}
+				<!-- Keyed on the skin object for the same reason as the player editor -->
+				{#key selectedSkin}
+					<SkinEditor
+						skin={selectedSkin}
+						allPlayers={data.players}
+						{tagSuggestions}
+						onSave={() => (selected = null)}
+						onDelete={() =>
+							askToDelete({ type: "skin", id: selectedSkin._id, name: selectedSkin.name })}
+					/>
+				{/key}
 			{:else}
-				<p>Theres nothing here.</p>
+				<p class="text-muted-foreground">Select a player or skin to edit it.</p>
 			{/if}
 		</div>
 	</main>

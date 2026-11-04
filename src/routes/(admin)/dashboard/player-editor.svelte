@@ -2,6 +2,7 @@
 	import { toast } from "svelte-sonner";
 	import { request } from "$lib/api";
 	import Icon from "$comp/icon.svelte";
+	import HoldButton from "$comp/hold-button.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import * as Select from "$comp/ui/select";
 	import { Input } from "$comp/ui/input";
@@ -19,12 +20,14 @@
 		/** Every tag already used on any player or skin, offered as autocomplete. */
 		tagSuggestions: string[];
 		onSave: () => void;
+		/** Asks the page to confirm and delete this player. */
+		onDelete: () => void;
 	};
 
 	type LinkType = NonNullable<Doc<"players">["links"]>[number]["type"];
 	const LINK_TYPES: LinkType[] = ["twitch", "twitter", "youtube", "github", "discord", "custom"];
 
-	let { player, onSave, allSkins, tagSuggestions }: Props = $props();
+	let { player, allSkins, tagSuggestions, onSave, onDelete }: Props = $props();
 
 	function snapshotFromPlayer(p: Doc<"players">) {
 		return {
@@ -156,6 +159,16 @@
 		</div>
 
 		<div class="flex gap-2">
+			<HoldButton
+				variant="destructive"
+				duration={1500}
+				fillColor="bg-black/40"
+				size="icon"
+				title="Hold to delete"
+				onComplete={onDelete}
+			>
+				<Icon name="trash" />
+			</HoldButton>
 			<Button
 				type="button"
 				variant="secondary"

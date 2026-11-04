@@ -24,6 +24,7 @@
 		/** Every tag already used on any player or skin, offered as autocomplete. */
 		tagSuggestions: string[];
 		onSave: () => void;
+		/** Asks the page to confirm and delete this skin. */
 		onDelete: () => void;
 	};
 
@@ -106,17 +107,6 @@
 			toast.error((e as Error).message);
 		} finally {
 			isSaving = false;
-		}
-	}
-
-	async function handleDelete() {
-		try {
-			await request(`/api/skins/${skin._id}`, { method: "DELETE" });
-			toast.success("Skin deleted");
-			onDelete();
-			await invalidate("app:skins");
-		} catch (e) {
-			toast.error((e as Error).message);
 		}
 	}
 
@@ -215,7 +205,7 @@
 				fillColor="bg-black/40"
 				size="icon"
 				title="Hold to delete"
-				onComplete={handleDelete}
+				onComplete={onDelete}
 			>
 				<Icon name="trash" />
 			</HoldButton>

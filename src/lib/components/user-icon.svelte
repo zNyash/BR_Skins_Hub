@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as Avatar from "$comp/ui/avatar/index";
-	import * as DropdownMenu from "$comp/ui/dropdown-menu/index";
+	import * as Avatar from "$comp/ui/avatar";
+	import * as DropdownMenu from "$comp/ui/dropdown-menu";
 	import { page } from "$app/state";
 	import type { AuthUser } from "$lib/types";
 	import Button from "./ui/button/button.svelte";

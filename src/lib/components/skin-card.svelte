@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from "$comp/icon.svelte";
 	import ImageCarousel from "$comp/image-carousel.svelte";
-	import * as Popover from "$comp/ui/popover/index";
+	import * as Popover from "$comp/ui/popover";
 	import Separator from "$comp/ui/separator/separator.svelte";
 	import type { Doc } from "$convex/_generated/dataModel";
 	import { POPOVER_SETTINGS } from "$lib/constants";
