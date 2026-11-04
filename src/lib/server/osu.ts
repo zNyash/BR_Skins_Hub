@@ -4,7 +4,14 @@ import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
 import { error } from "@sveltejs/kit";
 import { mergeUsernames } from "$lib/utils/osu";
+import type { UsersDetailsResponse } from "osu-api-extended/dist/types/v2/users_details";
 
+type OsuProfile = Pick<
+	UsersDetailsResponse,
+	"id" | "username" | "cover_url" | "previous_usernames"
+>;
+
+/** Fetches the profile from osu! and creates or fully syncs the player. */
 export async function fetchAndUpsertPlayer(osu_id: number) {
 	await auth.login({
 		type: "v2",
@@ -16,7 +23,14 @@ export async function fetchAndUpsertPlayer(osu_id: number) {
 	const profile = await v2.users.details({ user: osu_id, key: "id" });
 	if (!profile?.id) error(404, "osu! user not found");
 
-	// Previous usernames are curated by admins, so only add new ones from osu!, never drop any.
+	return syncPlayerFromProfile(profile);
+}
+
+/**
+ * Writes osu! data to the player (creating it if needed) and marks it as synced.
+ * Previous usernames are curated by admins, so new ones are added but none are dropped.
+ */
+export async function syncPlayerFromProfile(profile: OsuProfile) {
 	const existing = await convex.query(api.players.getPlayerByOsuId, { osu_id: profile.id });
 
 	return convex.mutation(api.players.upsertPlayer, {
@@ -26,6 +40,7 @@ export async function fetchAndUpsertPlayer(osu_id: number) {
 		previous_usernames: mergeUsernames(
 			existing?.previous_usernames ?? [],
 			profile.previous_usernames ?? []
-		)
+		),
+		from_osu: true
 	});
 }

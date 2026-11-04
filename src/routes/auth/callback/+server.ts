@@ -5,6 +5,7 @@ import { OSU_CLIENT_ID, OSU_CLIENT_SECRET, CURRENT_DOMAIN } from "$env/static/pr
 import { createToken } from "$lib/server/auth";
 import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
+import { syncPlayerFromProfile } from "$lib/server/osu";
 
 export async function GET(event: RequestEvent) {
 	const code = event.url.searchParams.get("code");
@@ -21,9 +22,13 @@ export async function GET(event: RequestEvent) {
 
 	await convex.mutation(api.auth.upsertUser, {
 		osu_id: profile.id,
-		username: profile.username,
-		cover_url: profile.cover_url
+		username: profile.username
 	});
+
+	// Logging in is a free, fresh osu! profile, so fully sync the player if they have a page.
+	// Never create one here: players are only added by admins.
+	const player = await convex.query(api.players.getPlayerByOsuId, { osu_id: profile.id });
+	if (player) await syncPlayerFromProfile(profile);
 
 	const token = await createToken({ osu_id: profile.id });
 
