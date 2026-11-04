@@ -1,6 +1,6 @@
 <script lang="ts">
-	import favicon from "$lib/assets/favicon.svg";
 	import { Toaster } from "$comp/ui/sonner";
+	import favicon from "$lib/assets/favicon.svg";
 	import "./layout.css";
 
 	let { children } = $props();

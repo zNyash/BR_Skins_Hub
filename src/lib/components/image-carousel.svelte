@@ -1,8 +1,20 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
+	import Icon from "$comp/icon.svelte";
+	import Button from "$comp/ui/button/button.svelte";
 	import type { Doc } from "$convex/_generated/dataModel";
-	import Icon from "./icon.svelte";
-	import Button from "./ui/button/button.svelte";
+
+	type Radius = "top" | "bottom" | "left" | "right" | "full" | "none";
+
+	const RADIUS_CLASS: Record<Radius, string> = {
+		top: "radius-t-inherit",
+		bottom: "radius-b-inherit",
+		left: "radius-l-inherit",
+		right: "radius-r-inherit",
+		full: "radius-inherit",
+		none: ""
+	};
+
 
 	let {
 		skin,
@@ -11,41 +23,18 @@
 	}: {
 		skin: Doc<"skins">;
 		linked?: boolean;
-		radius?: "top" | "bottom" | "left" | "right" | "full" | "none";
+		radius?: Radius;
 	} = $props();
 
 	let currentIndex = $state(0);
-	let totalImages = $derived(skin.preview_images.length);
-	let isMoreThanOne = $derived(skin.preview_images.length > 1);
+	const total = $derived(skin.preview_images.length);
 
-	const prev = () => {
-		if (currentIndex > 0) {
-			currentIndex = Math.max(0, currentIndex - 1);
-		} else {
-			currentIndex = totalImages - 1;
-		}
-	};
-
-	const next = () => {
-		if (currentIndex < totalImages - 1) {
-			currentIndex = Math.min(totalImages - 1, currentIndex + 1);
-		} else {
-			currentIndex = 0;
-		}
-	};
-
-	const RADIUS_MAP: Record<string, string> = {
-		top: "radius-t-inherit",
-		bottom: "radius-b-inherit",
-		left: "radius-l-inherit",
-		right: "radius-r-inherit",
-		full: "radius-inherit",
-		none: ""
-	};
-	let radiusClass = $derived(RADIUS_MAP[radius] ?? "radius-t-inherit");
+	// Both wrap around: previous from the first image goes to the last, and vice versa.
+	const prev = () => (currentIndex = (currentIndex - 1 + total) % total);
+	const next = () => (currentIndex = (currentIndex + 1) % total);
 </script>
 
-<div class="relative aspect-video overflow-hidden {radiusClass}">
+<div class="relative aspect-video overflow-hidden {RADIUS_CLASS[radius]}">
 	<div
 		class="flex size-full radius-t-inherit transition-transform duration-300 ease-in-out"
 		style="transform: translateX(-{currentIndex * 100}%);"
@@ -64,7 +53,7 @@
 		</a>
 	</div>
 
-	{#if isMoreThanOne}
+	{#if total > 1}
 		<!-- Indicators -->
 		<div class="absolute bottom-0 left-1/2 flex w-full -translate-x-1/2">
 			{#each skin.preview_images as image, i (image)}

@@ -1,8 +1,16 @@
 <script lang="ts">
-	import { cn } from "$lib/utils";
 	import { Button, type ButtonProps } from "$comp/ui/button";
+	import { cn } from "$lib/utils";
 
 	type Direction = "top" | "bottom" | "left" | "right";
+
+	// Where the fill grows from while holding.
+	const FILL = {
+		top: { origin: "origin-top", scale: "scaleY" },
+		bottom: { origin: "origin-bottom", scale: "scaleY" },
+		left: { origin: "origin-left", scale: "scaleX" },
+		right: { origin: "origin-right", scale: "scaleX" }
+	} as const satisfies Record<Direction, unknown>;
 
 	let {
 		duration = 1500,
@@ -48,13 +56,6 @@
 		}
 	}
 
-	// Where the fill grows from while holding.
-	const FILL = {
-		top: { origin: "origin-top", scale: "scaleY" },
-		bottom: { origin: "origin-bottom", scale: "scaleY" },
-		left: { origin: "origin-left", scale: "scaleX" },
-		right: { origin: "origin-right", scale: "scaleX" }
-	} as const;
 	const fill = $derived(FILL[from]);
 </script>
 

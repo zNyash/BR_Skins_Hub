@@ -1,22 +1,21 @@
 <script lang="ts">
-	import { toast } from "svelte-sonner";
-	import { request } from "$lib/api";
 	import { onDestroy } from "svelte";
+	import { toast } from "svelte-sonner";
 	import { flip } from "svelte/animate";
 	import { invalidate } from "$app/navigation";
+	import HoldButton from "$comp/hold-button.svelte";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
-	import HoldButton from "$comp/hold-button.svelte";
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
-	import type { SkinWithPlayers } from "$lib/types";
+	import { request } from "$lib/api";
 	import { osuAvatar } from "$lib/osu";
-	import { moveItem, resolveImageUrls, type ImageItem } from "./skin-images";
+	import type { SkinWithPlayers } from "$lib/types";
 	import { createUploadThing } from "$lib/uploadthing";
 	import { cn, formatDate } from "$lib/utils";
 	import AssignPlayersDialog from "./assign-players-dialog.svelte";
+	import { moveItem, resolveImageUrls, type ImageItem } from "./skin-images";
 	import TagInput from "./tag-input.svelte";
-
 
 	type Props = {
 		skin: SkinWithPlayers;
@@ -30,6 +29,7 @@
 
 	let { skin, allPlayers, tagSuggestions, onSave, onDelete }: Props = $props();
 
+	// --- Draft ---
 	// svelte-ignore state_referenced_locally
 	const initialDraft = {
 		skin: {
@@ -48,7 +48,7 @@
 	// Files can't be JSON-compared, so images are compared by a stable key (url or blob preview).
 	const imageKey = (item: ImageItem) => (item.kind === "url" ? item.url : item.preview);
 
-	let isDirty = $derived.by(() => {
+	const isDirty = $derived.by(() => {
 		const current = $state.snapshot(draft);
 		return (
 			JSON.stringify(current.skin) !== JSON.stringify(initialDraft.skin) ||
@@ -63,8 +63,9 @@
 		isDirty && draft.skin.name.trim() !== "" && URL.canParse(draft.skin.download_url.trim())
 	);
 
-	let assignedPlayers = $derived(allPlayers.filter((p) => draft.playerIds.includes(p._id)));
+	const assignedPlayers = $derived(allPlayers.filter((p) => draft.playerIds.includes(p._id)));
 
+	// --- Saving ---
 	const { startUpload } = createUploadThing("imageUploader", {
 		onUploadError: (error) => console.error("[uploadthing]", error)
 	});
@@ -110,7 +111,7 @@
 		}
 	}
 
-	// ---------- Images ----------
+	// --- Images ---
 	// Blob urls hold the file in memory until revoked, so free them whenever a pending image goes away.
 	function revokePreviews(items: ImageItem[]) {
 		for (const item of items) if (item.kind === "file") URL.revokeObjectURL(item.preview);
@@ -155,8 +156,7 @@
 		if (dragIndex === null) addFiles(event.dataTransfer?.files);
 	}
 
-
-	// ---------- Players ----------
+	// --- Players ---
 	function addPlayers(playerIds: Id<"players">[]) {
 		for (const id of playerIds) {
 			if (!draft.playerIds.includes(id)) draft.playerIds.push(id);

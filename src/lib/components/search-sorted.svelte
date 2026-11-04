@@ -1,7 +1,7 @@
 <script lang="ts" generics="T">
 	import Icon from "$comp/icon.svelte";
-	import Button from "$comp/ui/button/button.svelte";
 	import * as ButtonGroup from "$comp/ui/button-group";
+	import Button from "$comp/ui/button/button.svelte";
 	import * as InputGroup from "$comp/ui/input-group";
 	import * as Select from "$comp/ui/select";
 	import type { ListQuery } from "$lib/hooks/list-query.svelte";

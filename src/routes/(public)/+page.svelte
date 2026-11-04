@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
+	import PageHeading from "$comp/page-heading.svelte";
 	import PlayerCard from "$comp/player-card.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import { PLAYER_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
-	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();
 	const players = useListQuery(() => data.players, PLAYER_LIST);

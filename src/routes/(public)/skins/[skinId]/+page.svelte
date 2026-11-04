@@ -1,14 +1,13 @@
 <script lang="ts">
+	import Time from "svelte-time/Time.svelte";
 	import { resolve } from "$app/paths";
 	import Icon from "$comp/icon.svelte";
 	import ImageCarousel from "$comp/image-carousel.svelte";
+	import PageHeading from "$comp/page-heading.svelte";
 	import PlayerCard from "$comp/player-card.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import Separator from "$comp/ui/separator/separator.svelte";
-	import Time from "svelte-time/Time.svelte";
-
 	import { useCopyLink } from "$lib/hooks/copy-link.svelte";
-	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();
 	const clipboard = useCopyLink();

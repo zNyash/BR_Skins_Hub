@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { SvelteSet } from "svelte/reactivity";
 	import Icon from "$comp/icon.svelte";
-	import Button from "$comp/ui/button/button.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
+	import Button from "$comp/ui/button/button.svelte";
 	import * as Dialog from "$comp/ui/dialog";
 	import * as Tooltip from "$comp/ui/tooltip";
 	import type { Doc, Id } from "$convex/_generated/dataModel";

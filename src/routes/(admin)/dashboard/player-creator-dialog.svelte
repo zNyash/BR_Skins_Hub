@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { request } from "$lib/api";
-	import { invalidate } from "$app/navigation";
 	import { toast } from "svelte-sonner";
+	import { invalidate } from "$app/navigation";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import * as Dialog from "$comp/ui/dialog";
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
+	import { request } from "$lib/api";
 	import { parseOsuId } from "$lib/osu";
 
 	type Props = {

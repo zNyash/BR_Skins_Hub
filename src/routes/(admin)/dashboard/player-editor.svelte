@@ -1,18 +1,17 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
-	import { request } from "$lib/api";
-	import Icon from "$comp/icon.svelte";
+	import { invalidate } from "$app/navigation";
 	import HoldButton from "$comp/hold-button.svelte";
+	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
-	import * as Select from "$comp/ui/select";
 	import { Input } from "$comp/ui/input";
+	import * as Select from "$comp/ui/select";
 	import { Textarea } from "$comp/ui/textarea";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
+	import { request } from "$lib/api";
 	import type { SkinWithPlayers } from "$lib/types";
-	import { invalidate } from "$app/navigation";
 	import AssignSkinsDialog from "./assign-skins-dialog.svelte";
 	import TagInput from "./tag-input.svelte";
-
 
 	type Props = {
 		player: Doc<"players">;
@@ -29,6 +28,8 @@
 
 	let { player, allSkins, tagSuggestions, onSave, onDelete }: Props = $props();
 
+	// --- Draft ---
+	// The form edits a copy; comparing it to the initial copy tells whether there's anything to save.
 	function snapshotFromPlayer(p: Doc<"players">) {
 		return {
 			name: p.name,
@@ -56,7 +57,7 @@
 	let isSaving = $state(false);
 	let isRefreshing = $state(false);
 
-	let isDirty = $derived.by(() => {
+	const isDirty = $derived.by(() => {
 		const current = $state.snapshot(draft);
 		return (
 			JSON.stringify(current.player) !== JSON.stringify(initialDraft.player) ||
@@ -65,8 +66,9 @@
 		);
 	});
 
-	let assignedSkins = $derived(allSkins.filter((skin) => draft.skinIds.includes(skin._id)));
+	const assignedSkins = $derived(allSkins.filter((skin) => draft.skinIds.includes(skin._id)));
 
+	// --- Saving ---
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 
@@ -107,13 +109,13 @@
 		draft = structuredClone(initialDraft);
 	}
 
+	// --- Usernames and links ---
 	function addUsername() {
 		draft.player.previous_usernames.push("");
 	}
 	function removeUsername(index: number) {
 		draft.player.previous_usernames.splice(index, 1);
 	}
-
 
 	function addLink() {
 		draft.player.links.push({ type: "custom", value: "" });
@@ -122,6 +124,7 @@
 		draft.player.links.splice(index, 1);
 	}
 
+	// --- Skins ---
 	function addSkins(skinIds: Id<"skins">[]) {
 		for (const id of skinIds) {
 			if (!draft.skinIds.includes(id)) draft.skinIds.push(id);

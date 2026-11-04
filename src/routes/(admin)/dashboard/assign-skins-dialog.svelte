@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { SvelteSet } from "svelte/reactivity";
 	import Icon from "$comp/icon.svelte";
-	import Button from "$comp/ui/button/button.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
+	import Button from "$comp/ui/button/button.svelte";
 	import * as Dialog from "$comp/ui/dialog";
 	import * as Tooltip from "$comp/ui/tooltip";
 	import type { Id } from "$convex/_generated/dataModel";
-	import type { SkinWithPlayers } from "$lib/types";
 	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
+	import type { SkinWithPlayers } from "$lib/types";
 	import { cn, formatDate } from "$lib/utils";
-
 
 	type Props = {
 		allSkins: SkinWithPlayers[];

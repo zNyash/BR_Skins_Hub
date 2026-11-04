@@ -1,11 +1,11 @@
 <script lang="ts">
+	import PageHeading from "$comp/page-heading.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
+	import * as Popover from "$comp/ui/popover";
 	import { POPOVER_SETTINGS } from "$lib/constants";
 	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import { osuAvatar } from "$lib/osu";
-	import * as Popover from "$comp/ui/popover";
-	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();
 

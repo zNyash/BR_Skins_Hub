@@ -3,20 +3,19 @@
 
 	type Props = {
 		title: string;
-		titleSufix?: string;
+		titleSuffix?: string;
 		description?: string;
 		image?: string;
 	};
 
 	let {
 		title,
-		titleSufix = "BRSkinsHub",
+		titleSuffix = "BRSkinsHub",
 		description = "Skins Hub for Brazilian players",
 		image = ""
 	}: Props = $props();
 
-	// svelte-ignore state_referenced_locally
-	const fullTitle = `${title} | ${titleSufix}`;
+	const fullTitle = $derived(`${title} | ${titleSuffix}`);
 </script>
 
 <svelte:head>
