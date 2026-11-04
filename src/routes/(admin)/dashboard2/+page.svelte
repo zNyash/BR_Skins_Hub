@@ -57,6 +57,10 @@
 		return data.skins.find((s) => s._id === e.id) ?? null;
 	});
 
+	const tagSuggestions = $derived(
+		[...new Set([...data.players, ...data.skins].flatMap((doc) => doc.tags ?? []))].sort()
+	);
+
 	// ---------- Input State and Sorting ----------
 	let inputPlayersValue = $state("");
 	let sortPlayersBy = $state<PlayerSortBy>("name");
@@ -64,7 +68,7 @@
 	const filteredPlayers = useFuzzyFilter(
 		() => data.players,
 		() => inputPlayersValue,
-		{ keys: ["name", "osu_id", "previous_usernames"], threshold: 0.4 }
+		{ keys: ["name", "osu_id", "previous_usernames", "tags"], threshold: 0.4 }
 	);
 	const sortedPlayers = useSorted(
 		() => filteredPlayers.results,
@@ -79,7 +83,10 @@
 	const filteredSkins = useFuzzyFilter(
 		() => data.skins,
 		() => inputSkinsValue,
-		{ keys: ["name", "author", "players.name", "players.previous_usernames"], threshold: 0.4 }
+		{
+			keys: ["name", "author", "tags", "players.name", "players.previous_usernames"],
+			threshold: 0.4
+		}
 	);
 	const sortedSkins = useSorted(
 		() => filteredSkins.results,
@@ -226,6 +233,7 @@
 						<PlayerEditor
 							player={editorPlayer!}
 							allSkins={data.skins}
+							{tagSuggestions}
 							onSave={() => (editor = { mode: "idle" })}
 						/>
 					{/key}

@@ -24,7 +24,7 @@
 	const filtered = useFuzzyFilter(
 		() => data.players,
 		() => inputValue,
-		{ keys: ["name", "osu_id", "previous_usernames"], threshold: 0.4 }
+		{ keys: ["name", "osu_id", "previous_usernames", "tags"], threshold: 0.4 }
 	);
 	const sorted = useSorted(
 		() => filtered.results,

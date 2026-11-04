@@ -7,19 +7,22 @@
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { invalidate } from "$app/navigation";
 	import AssignSkinsDialog from "./AssignSkinsDialog.svelte";
+	import { normalizeTags } from "$lib/utils/tags";
 
 	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
 
 	type Props = {
 		player: Doc<"players">;
 		allSkins: SkinWithPlayers[];
+		/** Every tag already used on any player or skin, offered as autocomplete. */
+		tagSuggestions: string[];
 		onSave: () => void;
 	};
 
 	type LinkType = NonNullable<Doc<"players">["links"]>[number]["type"];
 	const LINK_TYPES: LinkType[] = ["twitch", "twitter", "youtube", "github", "discord", "custom"];
 
-	let { player, onSave, allSkins }: Props = $props();
+	let { player, onSave, allSkins, tagSuggestions }: Props = $props();
 
 	function snapshotFromPlayer(p: Doc<"players">) {
 		return {
@@ -28,7 +31,8 @@
 			hue: p.hue,
 			description: p.description,
 			previous_usernames: p.previous_usernames ?? [],
-			links: p.links ?? []
+			links: p.links ?? [],
+			tags: p.tags ?? []
 		} satisfies Partial<Doc<"players">>;
 	}
 
@@ -116,6 +120,26 @@
 		draft.player.previous_usernames.splice(index, 1);
 	}
 
+	let tagInput = $state("");
+	const unusedTagSuggestions = $derived(
+		tagSuggestions.filter((tag) => !draft.player.tags.includes(tag))
+	);
+
+	function addTag() {
+		// normalizeTags also dedupes, so re-adding an existing tag is a no-op.
+		draft.player.tags = normalizeTags([...draft.player.tags, tagInput]);
+		tagInput = "";
+	}
+	function handleTagKeydown(event: KeyboardEvent) {
+		if (event.key === "Enter" || event.key === ",") {
+			event.preventDefault(); // Enter would otherwise submit the whole form
+			addTag();
+		}
+	}
+	function removeTag(tag: string) {
+		draft.player.tags = draft.player.tags.filter((t) => t !== tag);
+	}
+
 	function addLink() {
 		draft.player.links.push({ type: "custom", value: "" });
 	}
@@ -194,6 +218,45 @@
 			<div class="flex flex-col">
 				<label for="description" class="text-sm">Description</label>
 				<Textarea id="description" bind:value={draft.player.description} />
+			</div>
+
+			<div class="flex flex-col gap-1">
+				<label for="tags" class="text-sm">
+					Tags <span class="text-xs text-muted-foreground">(search only, not shown publicly)</span>
+				</label>
+				<Input
+					id="tags"
+					list="tag-suggestions"
+					placeholder="Type a tag and press Enter"
+					autocomplete="off"
+					bind:value={tagInput}
+					onkeydown={handleTagKeydown}
+					onblur={() => tagInput.trim() && addTag()}
+				/>
+				<datalist id="tag-suggestions">
+					{#each unusedTagSuggestions as tag (tag)}
+						<option value={tag}></option>
+					{/each}
+				</datalist>
+				{#if draft.player.tags.length > 0}
+					<div class="flex flex-wrap gap-1">
+						{#each draft.player.tags as tag (tag)}
+							<span
+								class="flex items-center gap-1 rounded-full bg-layer-2 py-0.5 pr-1 pl-2.5 text-xs"
+							>
+								{tag}
+								<button
+									type="button"
+									aria-label="Remove tag {tag}"
+									class="rounded-full p-0.5 hover:bg-layer-3"
+									onclick={() => removeTag(tag)}
+								>
+									<Icon name="x" class="size-3" />
+								</button>
+							</span>
+						{/each}
+					</div>
+				{/if}
 			</div>
 
 			<div class="flex flex-col gap-1">

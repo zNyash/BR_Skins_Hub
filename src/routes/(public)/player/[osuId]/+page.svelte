@@ -22,7 +22,7 @@
 	const filtered = useFuzzyFilter(
 		() => data.skins,
 		() => inputValue,
-		{ keys: ["name"], threshold: 0.4 }
+		{ keys: ["name", "tags"], threshold: 0.4 }
 	);
 	const sorted = useSorted(
 		() => filtered.results,

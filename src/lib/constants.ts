@@ -27,6 +27,14 @@ const PLAYER_SORT_OPTIONS = [
 		ascIcon: "calendar-arrow-down",
 		descIcon: "calendar-arrow-up",
 		compare: (a, b) => a._creationTime - b._creationTime
+	},
+	{
+		value: "updated",
+		label: "Updated",
+		ascIcon: "clock-arrow-down",
+		descIcon: "clock-arrow-up",
+		// Older documents have no updated_at yet, so fall back to when they were created.
+		compare: (a, b) => (a.updated_at ?? a._creationTime) - (b.updated_at ?? b._creationTime)
 	}
 ] as const satisfies SortOption[];
 
@@ -44,6 +52,14 @@ const SKIN_SORT_OPTIONS = [
 		ascIcon: "calendar-arrow-down",
 		descIcon: "calendar-arrow-up",
 		compare: (a, b) => a._creationTime - b._creationTime
+	},
+	{
+		value: "updated",
+		label: "Updated",
+		ascIcon: "clock-arrow-down",
+		descIcon: "clock-arrow-up",
+		// Older documents have no updated_at yet, so fall back to when they were created.
+		compare: (a, b) => (a.updated_at ?? a._creationTime) - (b.updated_at ?? b._creationTime)
 	},
 	{
 		value: "downloads",

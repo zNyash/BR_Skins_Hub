@@ -35,7 +35,7 @@
 	const filtered = useFuzzyFilter(
 		() => allSkins,
 		() => inputValue,
-		{ keys: ["name"], threshold: 0.4 }
+		{ keys: ["name", "tags"], threshold: 0.4 }
 	);
 	const sorted = useSorted(
 		() => filtered.results,
@@ -178,6 +178,7 @@
 											</p>
 										{/if}
 										{@render infoRow("Uploaded", formatDate(skin._creationTime))}
+										{@render infoRow("Updated", formatDate(skin.updated_at ?? skin._creationTime))}
 									</Tooltip.Content>
 								</Tooltip.Root>
 							</div>
