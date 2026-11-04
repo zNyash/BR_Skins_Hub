@@ -6,9 +6,7 @@
 	import * as Dialog from "$comp/ui/dialog";
 	import * as Tooltip from "$comp/ui/tooltip";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
-	import { PLAYER_SORT_OPTIONS, type OrderBy, type PlayerSortBy } from "$lib/constants";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
-	import { useSorted } from "$lib/utils/sorted.svelte";
+	import { PLAYER_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import { osuAvatar } from "$lib/osu";
 	import { cn } from "$lib/utils";
 
@@ -23,33 +21,20 @@
 	let { allPlayers, assignedIds, skinName, onAssign }: Props = $props();
 
 	let open = $state(false);
-	let inputValue = $state("");
-	let sortBy = $state<PlayerSortBy>("name");
-	let orderBy = $state<OrderBy>("asc");
 	let hideAssigned = $state(true);
 	const selected = new SvelteSet<Id<"players">>();
 
-	const filtered = useFuzzyFilter(
-		() => allPlayers,
-		() => inputValue,
-		{ keys: ["name", "osu_id", "previous_usernames", "tags"], threshold: 0.4 }
-	);
-	const sorted = useSorted(
-		() => filtered.results,
-		() => sortBy,
-		() => orderBy,
-		PLAYER_SORT_OPTIONS
-	);
+	const players = useListQuery(() => allPlayers, PLAYER_LIST);
 
 	const assignedSet = $derived(new Set(assignedIds));
 	const visiblePlayers = $derived(
-		hideAssigned ? sorted.results.filter((p) => !assignedSet.has(p._id)) : sorted.results
+		hideAssigned ? players.results.filter((p) => !assignedSet.has(p._id)) : players.results
 	);
 
 	function handleOpenChange(isOpen: boolean) {
 		if (isOpen) {
 			selected.clear();
-			inputValue = "";
+			players.query = "";
 		}
 	}
 
@@ -83,13 +68,7 @@
 			<Dialog.Title>Assign players to {skinName || "skin"}</Dialog.Title>
 		</Dialog.Header>
 
-		<SearchSorted
-			placeholder="Search players..."
-			sortOptions={PLAYER_SORT_OPTIONS}
-			bind:sortBy
-			bind:orderBy
-			bind:inputValue
-		/>
+		<SearchSorted list={players} placeholder="Search players..." />
 
 		<div class="flex gap-2">
 			<button

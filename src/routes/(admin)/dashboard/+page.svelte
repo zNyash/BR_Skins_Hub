@@ -5,15 +5,11 @@
 	import * as ContextMenu from "$comp/ui/context-menu/index";
 
 	import {
-		PLAYER_SORT_OPTIONS,
-		SKIN_SORT_OPTIONS,
-		type OrderBy,
-		type PlayerSortBy,
-		type SkinSortBy
-	} from "$lib/constants";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
+		DASHBOARD_SKIN_LIST,
+		PLAYER_LIST,
+		useListQuery
+	} from "$lib/hooks/list-query.svelte";
 	import { osuAvatar } from "$lib/osu";
-	import { useSorted } from "$lib/utils/sorted.svelte";
 	import ImageCarousel from "$comp/image-carousel.svelte";
 	import Icon from "$comp/icon.svelte";
 	import HoldButton from "$comp/hold-button.svelte";
@@ -63,39 +59,9 @@
 		[...new Set([...data.players, ...data.skins].flatMap((doc) => doc.tags ?? []))].sort()
 	);
 
-	// ---------- Input State and Sorting ----------
-	let inputPlayersValue = $state("");
-	let sortPlayersBy = $state<PlayerSortBy>("name");
-	let orderPlayersBy = $state<OrderBy>("asc");
-	const filteredPlayers = useFuzzyFilter(
-		() => data.players,
-		() => inputPlayersValue,
-		{ keys: ["name", "osu_id", "previous_usernames", "tags"], threshold: 0.4 }
-	);
-	const sortedPlayers = useSorted(
-		() => filteredPlayers.results,
-		() => sortPlayersBy,
-		() => orderPlayersBy,
-		PLAYER_SORT_OPTIONS
-	);
-
-	let inputSkinsValue = $state("");
-	let sortSkinsBy = $state<SkinSortBy>("date");
-	let orderSkinsBy = $state<OrderBy>("desc");
-	const filteredSkins = useFuzzyFilter(
-		() => data.skins,
-		() => inputSkinsValue,
-		{
-			keys: ["name", "author", "tags", "players.name", "players.previous_usernames"],
-			threshold: 0.4
-		}
-	);
-	const sortedSkins = useSorted(
-		() => filteredSkins.results,
-		() => sortSkinsBy,
-		() => orderSkinsBy,
-		SKIN_SORT_OPTIONS
-	);
+	// ---------- Search and sorting ----------
+	const players = useListQuery(() => data.players, PLAYER_LIST);
+	const skins = useListQuery(() => data.skins, DASHBOARD_SKIN_LIST);
 
 	//
 	function quitEditMode(event: KeyboardEvent) {
@@ -135,14 +101,8 @@
 
 			<!-- Listing for players -->
 			<Tabs.Content value="players" class="flex flex-col gap-2">
-				<SearchSorted
-					placeholder="Search players..."
-					sortOptions={PLAYER_SORT_OPTIONS}
-					bind:inputValue={inputPlayersValue}
-					bind:sortBy={sortPlayersBy}
-					bind:orderBy={orderPlayersBy}
-				/>
-				{#each sortedPlayers.results as player (player._id)}
+				<SearchSorted list={players} placeholder="Search players..." />
+				{#each players.results as player (player._id)}
 					<ContextMenu.Root>
 						<ContextMenu.Trigger>
 							<button
@@ -179,14 +139,8 @@
 
 			<!-- Listing for skins -->
 			<Tabs.Content value="skins" class="flex flex-col gap-2">
-				<SearchSorted
-					placeholder="Search skins..."
-					sortOptions={SKIN_SORT_OPTIONS}
-					bind:inputValue={inputSkinsValue}
-					bind:sortBy={sortSkinsBy}
-					bind:orderBy={orderSkinsBy}
-				/>
-				{#each sortedSkins.results as skin (skin._id)}
+				<SearchSorted list={skins} placeholder="Search skins..." />
+				{#each skins.results as skin (skin._id)}
 					<ContextMenu.Root>
 						<ContextMenu.Trigger>
 							<div

@@ -6,9 +6,7 @@
 	import * as Dialog from "$comp/ui/dialog";
 	import * as Tooltip from "$comp/ui/tooltip";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
-	import { SKIN_SORT_OPTIONS, type OrderBy, type SkinSortBy } from "$lib/constants";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
-	import { useSorted } from "$lib/utils/sorted.svelte";
+	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import { cn } from "$lib/utils";
 
 	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
@@ -24,29 +22,16 @@
 	let { allSkins, assignedIds, playerName, onAssign }: Props = $props();
 
 	let open = $state(false);
-	let inputValue = $state("");
-	let sortBy = $state<SkinSortBy>("date");
-	let orderBy = $state<OrderBy>("desc");
 	let hideAssigned = $state(true);
 	let onlyUnused = $state(false);
 	const selected = new SvelteSet<Id<"skins">>();
 
-	// Search -> sort -> chip filters. Each step is a derived view of the previous one.
-	const filtered = useFuzzyFilter(
-		() => allSkins,
-		() => inputValue,
-		{ keys: ["name", "tags"], threshold: 0.4 }
-	);
-	const sorted = useSorted(
-		() => filtered.results,
-		() => sortBy,
-		() => orderBy,
-		SKIN_SORT_OPTIONS
-	);
+	// Search and sort, then the chip filters on top.
+	const skins = useListQuery(() => allSkins, SKIN_LIST);
 
 	const assignedSet = $derived(new Set(assignedIds));
 	const visibleSkins = $derived(
-		sorted.results.filter((skin) => {
+		skins.results.filter((skin) => {
 			if (hideAssigned && assignedSet.has(skin._id)) return false;
 			if (onlyUnused && skin.players.length > 0) return false;
 			return true;
@@ -57,7 +42,7 @@
 		// Start each session fresh so a cancelled selection doesn't linger.
 		if (isOpen) {
 			selected.clear();
-			inputValue = "";
+			skins.query = "";
 		}
 	}
 
@@ -91,13 +76,7 @@
 			<Dialog.Title>Assign skins to {playerName || "player"}</Dialog.Title>
 		</Dialog.Header>
 
-		<SearchSorted
-			placeholder="Search skins by name..."
-			sortOptions={SKIN_SORT_OPTIONS}
-			bind:sortBy
-			bind:orderBy
-			bind:inputValue
-		/>
+		<SearchSorted list={skins} placeholder="Search skins by name..." />
 
 		<div class="flex gap-2">
 			{@render chip("Hide assigned", hideAssigned, () => (hideAssigned = !hideAssigned))}

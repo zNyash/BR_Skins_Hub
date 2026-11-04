@@ -2,53 +2,27 @@
 	import PageHeading from "$comp/page-heading.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
-	import { SKIN_SORT_OPTIONS, type OrderBy, type SkinSortBy } from "$lib/constants";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
-	import { useSorted } from "$lib/utils/sorted.svelte";
+	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 
 	let { data } = $props();
 
-	let inputValue = $state("");
-	let sortBy = $state<SkinSortBy>("date");
-	let orderBy = $state<OrderBy>("desc");
+	const skins = useListQuery(() => data.skins, SKIN_LIST);
 
 	export const snapshot = {
-		capture: () => ({ inputValue, sortBy, orderBy }),
-		restore: (value) => {
-			inputValue = value.inputValue;
-			sortBy = value.sortBy;
-			orderBy = value.orderBy;
-		}
+		capture: () => ({ query: skins.query, sortBy: skins.sortBy, orderBy: skins.orderBy }),
+		restore: (value) => Object.assign(skins, value)
 	};
-
-	const filtered = useFuzzyFilter(
-		() => data.skins,
-		() => inputValue,
-		{ keys: ["name", "tags"], threshold: 0.4 }
-	);
-	const sorted = useSorted(
-		() => filtered.results,
-		() => sortBy,
-		() => orderBy,
-		SKIN_SORT_OPTIONS
-	);
 </script>
 
 <PageHeading title="Skins Listing" />
 <main class="main">
 	<section class="section">
 		<div class="flex w-full items-center justify-between">
-			<SearchSorted
-				placeholder="Search skins by name..."
-				sortOptions={SKIN_SORT_OPTIONS}
-				bind:sortBy
-				bind:orderBy
-				bind:inputValue
-			/>
+			<SearchSorted list={skins} placeholder="Search skins by name..." />
 			<p class="text-xs">Loaded {data.skins.length} skins</p>
 		</div>
 		<div class="common-grid">
-			{#each sorted.results as skin (skin._id)}
+			{#each skins.results as skin (skin._id)}
 				<SkinCard {skin} />
 			{/each}
 		</div>
