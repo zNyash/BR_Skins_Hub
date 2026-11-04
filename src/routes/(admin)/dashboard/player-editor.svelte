@@ -8,7 +8,7 @@
 	import { Textarea } from "$comp/ui/textarea";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { invalidate } from "$app/navigation";
-	import AssignSkinsDialog from "./AssignSkinsDialog.svelte";
+	import AssignSkinsDialog from "./assign-skins-dialog.svelte";
 	import { normalizeTags } from "$lib/tags";
 
 	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };

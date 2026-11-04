@@ -2,7 +2,7 @@ import { api } from "$convex/_generated/api";
 import { isAdmin } from "$lib/server/auth";
 import { serverQuery } from "$lib/server/convex";
 import type { AuthUser } from "$lib/types";
-import { osuAvatar } from "$lib/utils/osu";
+import { osuAvatar } from "$lib/osu";
 
 export async function load({ locals }) {
 	if (!locals.user) return { user: null };

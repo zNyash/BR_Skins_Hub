@@ -1,9 +1,9 @@
 <script lang="ts" generics="T extends string">
 	import Button from "$comp/ui/button/button.svelte";
 	import Icon from "$comp/icon.svelte";
-	import * as ButtonGroup from "$comp/ui/button-group/index.js";
-	import * as InputGroup from "$comp/ui/input-group/index.js";
-	import * as Select from "$comp/ui/select/index.js";
+	import * as ButtonGroup from "$comp/ui/button-group/index";
+	import * as InputGroup from "$comp/ui/input-group/index";
+	import * as Select from "$comp/ui/select/index";
 	import type { SortOption, OrderBy } from "$lib/constants";
 
 	let {

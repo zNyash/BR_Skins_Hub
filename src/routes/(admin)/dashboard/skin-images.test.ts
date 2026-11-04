@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moveItem, resolveImageUrls, type ImageItem } from "./skinImages";
+import { moveItem, resolveImageUrls, type ImageItem } from "./skin-images";
 
 describe("moveItem", () => {
 	it("moves an item forward", () => {

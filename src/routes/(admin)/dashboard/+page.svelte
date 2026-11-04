@@ -1,8 +1,8 @@
 <script lang="ts">
 	import PageHeading from "$comp/page-heading.svelte";
-	import * as Tabs from "$lib/components/ui/tabs/index.js";
-	import * as Popover from "$lib/components/ui/popover/index.js";
-	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
+	import * as Tabs from "$comp/ui/tabs/index";
+	import * as Popover from "$comp/ui/popover/index";
+	import * as ContextMenu from "$comp/ui/context-menu/index";
 
 	import {
 		PLAYER_SORT_OPTIONS,
@@ -10,19 +10,19 @@
 		type OrderBy,
 		type PlayerSortBy,
 		type SkinSortBy
-	} from "$lib/constants.js";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
-	import { osuAvatar } from "$lib/utils/osu";
-	import { useSorted } from "$lib/utils/sorted.svelte.js";
+	} from "$lib/constants";
+	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
+	import { osuAvatar } from "$lib/osu";
+	import { useSorted } from "$lib/utils/sorted.svelte";
 	import ImageCarousel from "$comp/image-carousel.svelte";
 	import Icon from "$comp/icon.svelte";
-	import HoldButton from "$comp/ui/hold-button/hold-button.svelte";
+	import HoldButton from "$comp/hold-button.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import Button from "$comp/ui/button/button.svelte";
-	import PlayerEditor from "./PlayerEditor.svelte";
-	import PlayerCreatorDialog from "./PlayerCreatorDialog.svelte";
-	import SkinEditor from "./SkinEditor.svelte";
-	import SkinCreatorDialog from "./SkinCreatorDialog.svelte";
+	import PlayerEditor from "./player-editor.svelte";
+	import PlayerCreatorDialog from "./player-creator-dialog.svelte";
+	import SkinEditor from "./skin-editor.svelte";
+	import SkinCreatorDialog from "./skin-creator-dialog.svelte";
 
 	// ---------- Types ----------
 	// Creating happens in dialogs; only editing uses the main panel.

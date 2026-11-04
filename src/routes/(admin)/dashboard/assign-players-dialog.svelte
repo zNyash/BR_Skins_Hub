@@ -9,7 +9,7 @@
 	import { PLAYER_SORT_OPTIONS, type OrderBy, type PlayerSortBy } from "$lib/constants";
 	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
 	import { useSorted } from "$lib/utils/sorted.svelte";
-	import { osuAvatar } from "$lib/utils/osu";
+	import { osuAvatar } from "$lib/osu";
 	import { cn } from "$lib/utils";
 
 	type Props = {

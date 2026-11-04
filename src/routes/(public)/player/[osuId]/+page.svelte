@@ -6,11 +6,11 @@
 		POPOVER_SETTINGS,
 		type OrderBy,
 		type SkinSortBy
-	} from "$lib/constants.js";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
-	import { useSorted } from "$lib/utils/sorted.svelte.js";
-	import { osuAvatar } from "$lib/utils/osu.js";
-	import * as Popover from "$comp/ui/popover/index.js";
+	} from "$lib/constants";
+	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
+	import { useSorted } from "$lib/utils/sorted.svelte";
+	import { osuAvatar } from "$lib/osu";
+	import * as Popover from "$comp/ui/popover/index";
 	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();

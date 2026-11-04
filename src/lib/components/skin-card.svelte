@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Icon from "$comp/icon.svelte";
 	import ImageCarousel from "$comp/image-carousel.svelte";
-	import * as Popover from "$comp/ui/popover/index.js";
+	import * as Popover from "$comp/ui/popover/index";
 	import Separator from "$comp/ui/separator/separator.svelte";
 	import type { Doc } from "$convex/_generated/dataModel";
 	import { POPOVER_SETTINGS } from "$lib/constants";
 	import Time from "svelte-time/Time.svelte";
 	import Button from "./ui/button/button.svelte";
-	import { useCopyLink } from "$lib/utils/clipboard.svelte";
+	import { useCopyLink } from "$lib/hooks/copy-link.svelte";
 
 	let { skin }: { skin: Doc<"skins"> } = $props();
 

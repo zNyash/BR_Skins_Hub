@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Doc } from "$convex/_generated/dataModel";
-	import { osuAvatar } from "$lib/utils/osu";
+	import { osuAvatar } from "$lib/osu";
 
 	let { player }: { player: Doc<"players"> } = $props();
 	let isCoverLoaded = $state(true);

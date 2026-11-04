@@ -7,7 +7,7 @@
 	import Separator from "$comp/ui/separator/separator.svelte";
 	import Time from "svelte-time/Time.svelte";
 
-	import { useCopyLink } from "$lib/utils/clipboard.svelte";
+	import { useCopyLink } from "$lib/hooks/copy-link.svelte";
 	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();

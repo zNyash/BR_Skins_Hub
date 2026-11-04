@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from "$lib/utils";
-	import { Button, type ButtonProps } from "$lib/components/ui/button";
+	import { Button, type ButtonProps } from "$comp/ui/button";
 
 	type Direction = "top" | "bottom" | "left" | "right";
 

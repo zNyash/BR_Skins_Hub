@@ -2,9 +2,9 @@
 	import { resolve } from "$app/paths";
 	import PlayerCard from "$comp/player-card.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
-	import { PLAYER_SORT_OPTIONS, type OrderBy, type PlayerSortBy } from "$lib/constants.js";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
-	import { useSorted } from "$lib/utils/sorted.svelte.js";
+	import { PLAYER_SORT_OPTIONS, type OrderBy, type PlayerSortBy } from "$lib/constants";
+	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
+	import { useSorted } from "$lib/utils/sorted.svelte";
 	import PageHeading from "$comp/page-heading.svelte";
 
 	let { data } = $props();

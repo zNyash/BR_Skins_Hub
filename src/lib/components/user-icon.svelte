@@ -1,13 +1,13 @@
 <script lang="ts">
-	import * as Avatar from "$lib/components/ui/avatar/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+	import * as Avatar from "$comp/ui/avatar/index";
+	import * as DropdownMenu from "$comp/ui/dropdown-menu/index";
 	import { page } from "$app/state";
 	import type { AuthUser } from "$lib/types";
 	import Button from "./ui/button/button.svelte";
 	import Icon from "./icon.svelte";
 	import IOsuStandard from "./icons/i-osu-standard.svelte";
 	import { resolve } from "$app/paths";
-	import { osuAvatar } from "$lib/utils/osu";
+	import { osuAvatar } from "$lib/osu";
 
 	let user = page.data.user as AuthUser | null;
 

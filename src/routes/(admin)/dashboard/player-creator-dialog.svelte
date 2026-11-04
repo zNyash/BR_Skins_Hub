@@ -7,7 +7,7 @@
 	import * as Dialog from "$comp/ui/dialog";
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
-	import { parseOsuId } from "$lib/utils/osu";
+	import { parseOsuId } from "$lib/osu";
 
 	type Props = {
 		open: boolean;

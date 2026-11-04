@@ -6,15 +6,15 @@
 	import { invalidate } from "$app/navigation";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
-	import HoldButton from "$comp/ui/hold-button/hold-button.svelte";
+	import HoldButton from "$comp/hold-button.svelte";
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { normalizeTags } from "$lib/tags";
-	import { osuAvatar } from "$lib/utils/osu";
-	import { moveItem, resolveImageUrls, type ImageItem } from "$lib/utils/skinImages";
-	import { createUploadThing } from "$lib/utils/uploadthing";
+	import { osuAvatar } from "$lib/osu";
+	import { moveItem, resolveImageUrls, type ImageItem } from "./skin-images";
+	import { createUploadThing } from "$lib/uploadthing";
 	import { cn } from "$lib/utils";
-	import AssignPlayersDialog from "./AssignPlayersDialog.svelte";
+	import AssignPlayersDialog from "./assign-players-dialog.svelte";
 
 	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
 
