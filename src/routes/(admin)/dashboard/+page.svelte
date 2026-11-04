@@ -1,9 +1,9 @@
 <script lang="ts">
+	import PageHeading from "$comp/page-heading.svelte";
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import * as Popover from "$lib/components/ui/popover/index.js";
-	import * as Empty from "$lib/components/ui/empty/index.js";
-	import ImageCarousel from "$comp/image-carousel.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
+	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
+
 	import {
 		PLAYER_SORT_OPTIONS,
 		SKIN_SORT_OPTIONS,
@@ -12,36 +12,39 @@
 		type SkinSortBy
 	} from "$lib/constants.js";
 	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
-	import { useSorted } from "$lib/utils/sorted.svelte.js";
-	import SkinEditor from "./components/SkinEditor.svelte";
-	import PlayerEditor from "./components/PlayerEditor.svelte";
-	import PlayerCreator from "./components/PlayerCreator.svelte";
-	import PlayerSkinAssignment from "./components/PlayerSkinAssignment.svelte";
-	import { Button } from "$comp/ui/button";
-	import Icon from "$comp/icon.svelte";
 	import { osuAvatar } from "$lib/utils/osu";
-	import PageHeading from "$comp/page-heading.svelte";
+	import { useSorted } from "$lib/utils/sorted.svelte.js";
+	import ImageCarousel from "$comp/image-carousel.svelte";
+	import Icon from "$comp/icon.svelte";
+	import HoldButton from "$comp/ui/hold-button/hold-button.svelte";
+	import SearchSorted from "$comp/search-sorted.svelte";
+	import Button from "$comp/ui/button/button.svelte";
+	import PlayerEditor from "./PlayerEditor.svelte";
+	import PlayerCreatorDialog from "./PlayerCreatorDialog.svelte";
+	import SkinEditor from "./SkinEditor.svelte";
+	import SkinCreatorDialog from "./SkinCreatorDialog.svelte";
+	import { Toaster } from "$comp/ui/sonner";
 
 	// ---------- Types ----------
+	// Creating happens in dialogs; only editing uses the main panel.
 	type EditorState =
 		| { mode: "idle" }
-		| { mode: "create"; type: "player" | "skin" }
 		| { mode: "edit"; type: "player"; id: string }
-		| { mode: "edit"; type: "skin"; id: string }
-		| { mode: "assign"; playerId: string };
+		| { mode: "edit"; type: "skin"; id: string };
 
 	// ---------- State ----------
 	let { data } = $props();
-
-	let editor = $state<EditorState>({ mode: "idle" });
 	let activeTab = $state<"players" | "skins">("players");
-
-	const editorSkin = $derived.by(() => {
-		const e = editor;
-		if (e.mode !== "edit") return null;
-		if (e.type !== "skin") return null;
-		return data.skins.find((s) => s._id === e.id) ?? null;
+	let editor = $state<EditorState>({
+		mode: "idle"
 	});
+	let isCreatingPlayer = $state(false);
+	let isCreatingSkin = $state(false);
+
+	function openCreator() {
+		if (activeTab === "players") isCreatingPlayer = true;
+		else isCreatingSkin = true;
+	}
 
 	const editorPlayer = $derived.by(() => {
 		const e = editor;
@@ -50,6 +53,17 @@
 		return data.players.find((p) => p._id === e.id) ?? null;
 	});
 
+	const editorSkin = $derived.by(() => {
+		const e = editor;
+		if (e.mode !== "edit") return null;
+		if (e.type !== "skin") return null;
+		return data.skins.find((s) => s._id === e.id) ?? null;
+	});
+
+	const tagSuggestions = $derived(
+		[...new Set([...data.players, ...data.skins].flatMap((doc) => doc.tags ?? []))].sort()
+	);
+
 	// ---------- Input State and Sorting ----------
 	let inputPlayersValue = $state("");
 	let sortPlayersBy = $state<PlayerSortBy>("name");
@@ -57,7 +71,7 @@
 	const filteredPlayers = useFuzzyFilter(
 		() => data.players,
 		() => inputPlayersValue,
-		{ keys: ["name", "osu_id", "previous_usernames"], threshold: 0.4 }
+		{ keys: ["name", "osu_id", "previous_usernames", "tags"], threshold: 0.4 }
 	);
 	const sortedPlayers = useSorted(
 		() => filteredPlayers.results,
@@ -72,7 +86,10 @@
 	const filteredSkins = useFuzzyFilter(
 		() => data.skins,
 		() => inputSkinsValue,
-		{ keys: ["name", "author", "players.name", "players.previous_usernames"], threshold: 0.4 }
+		{
+			keys: ["name", "author", "tags", "players.name", "players.previous_usernames"],
+			threshold: 0.4
+		}
 	);
 	const sortedSkins = useSorted(
 		() => filteredSkins.results,
@@ -80,28 +97,46 @@
 		() => orderSkinsBy,
 		SKIN_SORT_OPTIONS
 	);
+
+	//
+	function quitEditMode(event: KeyboardEvent) {
+		if (event.key === "Escape") {
+			editor = { mode: "idle" };
+		}
+	}
 </script>
 
 <PageHeading title="Dashboard" description="Admin Dashboard" />
-<div
-	class="grid h-full gap-2 bg-card p-2 md:grid-cols-[1fr_2fr] lg:grid-cols-[1fr_3fr] xl:grid-cols-[1fr_4fr]"
->
-	<aside class="flex overflow-y-auto rounded-lg bg-surface p-2">
-		<Tabs.Root bind:value={activeTab} class="flex-1">
-			<Tabs.List class="bg-card">
-				<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
-				<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
-			</Tabs.List>
-			<Tabs.Content value="players" class="flex flex-col gap-2">
-				<Button
-					variant="outline"
-					size="sm"
-					class="w-full"
-					onclick={() => (editor = { mode: "create", type: "player" })}
-				>
+<Toaster />
+
+<PlayerCreatorDialog
+	bind:open={isCreatingPlayer}
+	onCreated={(id) => (editor = { mode: "edit", type: "player", id })}
+/>
+<SkinCreatorDialog
+	bind:open={isCreatingSkin}
+	onCreated={(id) => (editor = { mode: "edit", type: "skin", id })}
+/>
+
+<svelte:window onkeydown={quitEditMode} />
+
+<div class="flex h-[calc(100vh-44px)] min-h-0 gap-2 bg-card p-2">
+	<aside class="flex w-full max-w-xs gap-2 overflow-y-auto rounded-lg bg-surface p-2">
+		<!-- min-w-0: let the tabs shrink to the sidebar width, otherwise long truncated names widen it -->
+		<Tabs.Root bind:value={activeTab} class="w-full min-w-0">
+			<span class="grid w-full grid-cols-[2fr_1fr] gap-2">
+				<Tabs.List class="w-full bg-card">
+					<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
+					<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
+				</Tabs.List>
+				<Button variant={editor.mode === "idle" ? "default" : "secondary"} onclick={openCreator}>
 					<Icon name="plus" />
-					New Player
+					New
 				</Button>
+			</span>
+
+			<!-- Listing for players -->
+			<Tabs.Content value="players" class="flex flex-col gap-2">
 				<SearchSorted
 					placeholder="Search players..."
 					sortOptions={PLAYER_SORT_OPTIONS}
@@ -110,31 +145,42 @@
 					bind:orderBy={orderPlayersBy}
 				/>
 				{#each sortedPlayers.results as player (player._id)}
-					<button
-						class="flex flex-1 items-center justify-start gap-2 rounded-xl bg-card p-1 hover:ring hover:ring-primary hover:ring-inset"
-						onclick={() => (editor = { mode: "edit", type: "player", id: player._id })}
-					>
-						<span class="size-9">
-							<img
-								src={osuAvatar(player.osu_id)}
-								alt={player.name}
-								class="size-full rounded-lg object-cover"
-							/>
-						</span>
-						<p class="select-none">{player.name}</p>
-					</button>
+					<ContextMenu.Root>
+						<ContextMenu.Trigger>
+							<button
+								class="flex w-full items-center gap-2 rounded-md bg-card p-1 ring-primary select-none hover:ring"
+								onclick={() => (editor = { mode: "edit", type: "player", id: player._id })}
+							>
+								<div class="aspect-square size-9">
+									<img
+										src={osuAvatar(player.osu_id)}
+										alt=""
+										class="size-full rounded-lg object-cover"
+									/>
+								</div>
+								<div>
+									<p>{player.name}</p>
+								</div>
+							</button>
+						</ContextMenu.Trigger>
+						<ContextMenu.Content>
+							<HoldButton
+								variant="destructive"
+								duration={1000}
+								fillColor="bg-black/40"
+								class="w-full justify-start"
+								from="left"
+							>
+								<Icon name="trash" />
+								<p>Delete</p>
+							</HoldButton>
+						</ContextMenu.Content>
+					</ContextMenu.Root>
 				{/each}
 			</Tabs.Content>
+
+			<!-- Listing for skins -->
 			<Tabs.Content value="skins" class="flex flex-col gap-2">
-				<Button
-					variant="outline"
-					size="sm"
-					class="w-full"
-					onclick={() => (editor = { mode: "create", type: "skin" })}
-				>
-					<Icon name="plus" />
-					New Skin
-				</Button>
 				<SearchSorted
 					placeholder="Search skins..."
 					sortOptions={SKIN_SORT_OPTIONS}
@@ -143,94 +189,80 @@
 					bind:orderBy={orderSkinsBy}
 				/>
 				{#each sortedSkins.results as skin (skin._id)}
-					<button
-						class="flex flex-1 items-center justify-start gap-2 rounded-xl bg-card p-1 hover:ring hover:ring-primary hover:ring-inset"
-						onclick={() => (editor = { mode: "edit", type: "skin", id: skin._id })}
-					>
-						<span class="size-9">
-							<Popover.Root>
-								<Popover.Trigger class="size-9">
-									<img
-										src={skin.preview_images[0]}
-										alt={skin.name}
-										class="aspect-square size-full rounded-lg object-cover"
-									/>
-								</Popover.Trigger>
-								<Popover.Content class="w-2xl rounded-2xl p-2">
-									<ImageCarousel {skin} linked={false} radius="full" />
-								</Popover.Content>
-							</Popover.Root>
-						</span>
-						<p class="select-none">{skin.name}</p>
-					</button>
+					<ContextMenu.Root>
+						<ContextMenu.Trigger>
+							<div
+								class="flex items-center gap-2 rounded-md bg-card p-1 ring-primary select-none hover:ring"
+							>
+								<span class="size-9">
+									<Popover.Root>
+										<Popover.Trigger class="flex aspect-square size-9">
+											<img
+												src={skin.preview_images[0]}
+												alt={skin.name}
+												class="size-full rounded-lg object-cover"
+											/>
+										</Popover.Trigger>
+										<Popover.Content class="w-2xl rounded-xl p-1">
+											<ImageCarousel {skin} linked={false} radius="full" />
+										</Popover.Content>
+									</Popover.Root>
+								</span>
+								<button
+									class="min-w-0 flex-1 self-stretch truncate text-left"
+									onclick={() => (editor = { mode: "edit", type: "skin", id: skin._id })}
+								>
+									{skin.name}
+								</button>
+							</div>
+						</ContextMenu.Trigger>
+						<ContextMenu.Content>
+							<HoldButton
+								variant="destructive"
+								duration={1000}
+								fillColor="bg-black/40"
+								class="w-full justify-start"
+								from="left"
+							>
+								<Icon name="trash" />
+								<p>Delete</p>
+							</HoldButton>
+						</ContextMenu.Content>
+					</ContextMenu.Root>
 				{/each}
 			</Tabs.Content>
 		</Tabs.Root>
 	</aside>
-	<main class="flex overflow-y-auto rounded-lg bg-surface p-2">
-		<div
-			class="flex flex-1 {editor.mode === 'idle'
-				? 'items-center'
-				: 'items-start'} justify-center rounded-md bg-card p-4"
-		>
-			<div class="flex size-full max-w-xl flex-col gap-4 overflow-y-auto">
-				{#if editor.mode === "idle"}
-					<!-- Here you will implement the idle state which is a Empty card from shadcn -->
-					<Empty.Root>
-						<Empty.Header>
-							<Empty.Media variant="icon">
-								<Icon name="pencil" />
-							</Empty.Media>
-							<Empty.Title>No {activeTab} found</Empty.Title>
-							<Empty.Description
-								>Select a {activeTab === "players" ? "player" : "skin"} to edit or add a new one.</Empty.Description
-							>
-						</Empty.Header>
-						<Empty.Content>
-							<Button
-								onclick={() =>
-									(editor = { mode: "create", type: activeTab === "players" ? "player" : "skin" })}
-								>Add {activeTab === "players" ? "player" : "skin"}</Button
-							>
-						</Empty.Content>
-					</Empty.Root>
-				{:else if editor.mode === "create" && editor.type === "skin"}
-					<!-- <SkinEditor /> goes here later -->
-					{#key "skin-create"}
-						<SkinEditor onsave={() => (editor = { mode: "idle" })} />
-					{/key}
-				{:else if editor.mode === "edit" && editor.type === "skin"}
-					<!-- <SkinEditor skin={editor.item} /> goes here later -->
-					{#key editor.id}
-						<SkinEditor skin={editorSkin} ondelete={() => (editor = { mode: "idle" })} />
-					{/key}
-				{:else if editor.mode === "create" && editor.type === "player"}
-					{#key "player-create"}
-						<PlayerCreator onsave={() => (editor = { mode: "idle" })} />
-					{/key}
-				{:else if editor.mode === "edit" && editor.type === "player"}
-					{@const currentPlayerId = editor.id}
-					{#key currentPlayerId}
-						{#if editorPlayer}
-							<PlayerEditor
-								player={editorPlayer}
-								onassign={() => (editor = { mode: "assign", playerId: currentPlayerId })}
-								ondelete={() => (editor = { mode: "idle" })}
-							/>
-						{/if}
-					{/key}
-				{:else if editor.mode === "assign"}
-					{@const playerId = editor.playerId}
-					{@const assignPlayer = data.players.find((p) => p._id === playerId)}
-					{#if assignPlayer}
-						<PlayerSkinAssignment
-							player={assignPlayer}
+
+	<!-- Main context window -->
+	<main class="min-h-0 flex-1 overflow-hidden rounded-lg bg-surface p-2">
+		<div class="flex h-full min-h-0 w-full max-w-2xl flex-col overflow-y-auto rounded bg-muted p-4">
+			{#if editor.mode === "edit"}
+				{#if editor.type === "player"}
+					<!-- Keyed on the player object (not just the id) so the editor re-reads it after a refresh from osu! -->
+					{#key editorPlayer}
+						<PlayerEditor
+							player={editorPlayer!}
 							allSkins={data.skins}
-							onback={() => (editor = { mode: "edit", type: "player", id: playerId })}
+							{tagSuggestions}
+							onSave={() => (editor = { mode: "idle" })}
 						/>
-					{/if}
+					{/key}
+				{:else if editorSkin}
+					<!-- Keyed on the skin object for the same reason as the player editor -->
+					{#key editorSkin}
+						<SkinEditor
+							skin={editorSkin}
+							allPlayers={data.players}
+							{tagSuggestions}
+							onSave={() => (editor = { mode: "idle" })}
+							onDelete={() => (editor = { mode: "idle" })}
+						/>
+					{/key}
 				{/if}
-			</div>
+			{:else}
+				<p>Theres nothing here.</p>
+			{/if}
 		</div>
 	</main>
 </div>
