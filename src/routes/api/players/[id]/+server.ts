@@ -1,36 +1,44 @@
-import { json, type RequestEvent } from "@sveltejs/kit";
+import * as v from "valibot";
 import { api } from "$convex/_generated/api";
+import type { Id } from "$convex/_generated/dataModel";
 import { requireAdmin } from "$lib/server/auth";
 import { mutate } from "$lib/server/convex";
-import { clamp } from "$lib/utils/helpers";
-import { normalizeTags } from "$lib/tags";
+import { convexId, hue, links, tags, trimmedString } from "$lib/server/schemas";
+import { parseBody } from "$lib/server/validation";
+import type { RequestHandler } from "./$types";
 
-export async function PATCH(event: RequestEvent) {
+const PlayerBody = v.object({
+	name: v.optional(trimmedString),
+	cover_url: v.optional(v.pipe(v.string(), v.trim())),
+	hue,
+	description: v.optional(v.string()),
+	// Blank rows from the editor are dropped rather than rejected.
+	previous_usernames: v.optional(
+		v.pipe(
+			v.array(v.pipe(v.string(), v.trim())),
+			v.transform((names) => names.filter(Boolean))
+		)
+	),
+	links: v.optional(links),
+	tags: v.optional(tags),
+	skin_ids: v.array(convexId)
+});
+
+export const PATCH: RequestHandler = async (event) => {
 	const admin = requireAdmin(event);
-
-	const body = await event.request.json();
-	const { name, cover_url, previous_usernames, description, links, skin_ids } = body;
-	const tags = Array.isArray(body.tags) ? normalizeTags(body.tags) : undefined;
-	const hue = typeof body.hue === "number" ? clamp(body.hue, 0, 360) : body.hue;
+	const { skin_ids, ...fields } = await parseBody(event.request, PlayerBody);
 
 	await mutate(api.players.update, {
 		actor_osu_id: admin.osu_id,
-		id: event.params.id!,
-		name,
-		cover_url,
-		previous_usernames,
-		hue,
-		description,
-		links,
-		tags,
-		skin_ids: skin_ids ?? []
+		id: event.params.id,
+		...fields,
+		skin_ids: skin_ids as Id<"skins">[]
 	});
+	return new Response(null, { status: 204 });
+};
 
-	return json({ success: true });
-}
-
-export async function DELETE(event: RequestEvent) {
+export const DELETE: RequestHandler = async (event) => {
 	const admin = requireAdmin(event);
-	await mutate(api.players.remove, { actor_osu_id: admin.osu_id, id: event.params.id! });
-	return json({ success: true });
-}
+	await mutate(api.players.remove, { actor_osu_id: admin.osu_id, id: event.params.id });
+	return new Response(null, { status: 204 });
+};

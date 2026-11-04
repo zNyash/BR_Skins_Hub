@@ -6,7 +6,7 @@
 	import Button from "$comp/ui/button/button.svelte";
 	import * as Dialog from "$comp/ui/dialog";
 	import { Input } from "$comp/ui/input";
-	import type { Id } from "$convex/_generated/dataModel";
+	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { parseOsuId } from "$lib/utils/osu";
 
 	type Props = {
@@ -42,21 +42,18 @@
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ osu_id: osuId })
 			});
-			if (response.status === 404) throw new Error("osu! user not found");
 			if (!response.ok) throw new Error(await readErrorMessage(response));
 
-			const { id, name, existed } = (await response.json()) as {
-				id: Id<"players">;
-				name: string;
-				existed: boolean;
-			};
+			// 201 means it was created, 200 that it already existed (and was re-synced).
+			const existed = response.status === 200;
+			const { player } = (await response.json()) as { player: Doc<"players"> };
 
 			// Reload the player list first, so the editor can find the new player.
 			await invalidate("app:players");
-			if (existed) toast.info(`${name} already exists, opened their editor`);
+			if (existed) toast.info(`${player.name} already exists, opened their editor`);
 
 			open = false;
-			onCreated(id);
+			onCreated(player._id);
 		} catch (e) {
 			errorMessage = e instanceof Error ? e.message : "Failed to create player";
 		} finally {

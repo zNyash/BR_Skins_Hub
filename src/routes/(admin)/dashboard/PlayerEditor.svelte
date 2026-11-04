@@ -93,7 +93,11 @@
 		isRefreshing = true;
 		errorMessage = null;
 		try {
-			const response = await fetch(`/api/player/refresh?osu_id=${player.osu_id}`);
+			const response = await fetch("/api/players/sync", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ osu_id: player.osu_id })
+			});
 			if (!response.ok) throw new Error(await readErrorMessage(response));
 			// The page re-creates this editor when the player data changes, so the draft picks up the fresh data.
 			await invalidate("app:players");

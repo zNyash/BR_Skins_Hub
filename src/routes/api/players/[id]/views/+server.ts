@@ -1,19 +1,12 @@
-import { type RequestEvent } from "@sveltejs/kit";
-import { json } from "@sveltejs/kit";
+import { api } from "$convex/_generated/api";
 import { mutate } from "$lib/server/convex";
 import { createRateLimiter } from "$lib/server/rateLimit";
-import { api } from "$convex/_generated/api";
+import type { RequestHandler } from "./$types";
 
-const rateLimiter = createRateLimiter({
-	key: "player-views",
-	maxRequests: 5,
-	windowMs: 60_000
-});
+const rateLimiter = createRateLimiter({ key: "player-views", maxRequests: 5, windowMs: 60_000 });
 
-export async function POST(event: RequestEvent) {
+export const POST: RequestHandler = async (event) => {
 	rateLimiter.check(event);
-
-	await mutate(api.players.incrementViews, { id: event.params.id! });
-
-	return json({ success: true });
-}
+	await mutate(api.players.incrementViews, { id: event.params.id });
+	return new Response(null, { status: 204 });
+};
