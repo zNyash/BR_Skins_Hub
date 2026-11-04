@@ -5,12 +5,14 @@ import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
 import type { Id } from "$convex/_generated/dataModel";
 import { clamp } from "$lib/utils/helpers";
+import { normalizeTags } from "$lib/utils/tags";
 
 export async function PATCH(event: RequestEvent) {
 	requireAdmin(event);
 
 	const body = await event.request.json();
 	const { osu_id, name, cover_url, previous_usernames, description, links } = body;
+	const tags = Array.isArray(body.tags) ? normalizeTags(body.tags) : undefined;
 
 	// Handling the min and max values for hue here before sending to the database
 	let { hue } = body;
@@ -26,7 +28,8 @@ export async function PATCH(event: RequestEvent) {
 			previous_usernames,
 			hue,
 			description,
-			links
+			links,
+			tags
 		});
 
 		if (!player) return error(500, "Impossible case happend: convex returned a null player.");

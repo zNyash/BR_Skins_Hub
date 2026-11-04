@@ -6,12 +6,14 @@ export const createSkin = mutation({
 		name: v.string(),
 		author: v.optional(v.string()),
 		download_url: v.string(),
-		preview_images: v.array(v.string())
+		preview_images: v.array(v.string()),
+		tags: v.optional(v.array(v.string()))
 	},
 	handler: async (ctx, args) => {
 		return await ctx.db.insert("skins", {
 			...args,
-			download_count: 0
+			download_count: 0,
+			updated_at: Date.now()
 		});
 	}
 });
@@ -36,11 +38,12 @@ export const updateSkin = mutation({
 		name: v.optional(v.string()),
 		author: v.optional(v.string()),
 		download_url: v.optional(v.string()),
-		preview_images: v.optional(v.array(v.string()))
+		preview_images: v.optional(v.array(v.string())),
+		tags: v.optional(v.array(v.string()))
 	},
 	handler: async (ctx, args) => {
 		const { _id, ...data } = args;
-		await ctx.db.patch(_id, data);
+		await ctx.db.patch(_id, { ...data, updated_at: Date.now() });
 	}
 });
 

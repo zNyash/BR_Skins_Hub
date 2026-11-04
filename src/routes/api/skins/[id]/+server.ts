@@ -3,6 +3,7 @@ import { json } from "@sveltejs/kit";
 import { requireAdmin } from "$lib/server/admin";
 import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
+import { normalizeTags } from "$lib/utils/tags";
 import { UTApi } from "uploadthing/server";
 import type { Id } from "$convex/_generated/dataModel";
 
@@ -29,6 +30,7 @@ export async function PATCH(event: RequestEvent) {
 	const _id = event.params.id as Id<"skins">;
 	const body = await event.request.json();
 	const { name, author, download_url, preview_images } = body;
+	const tags = Array.isArray(body.tags) ? normalizeTags(body.tags) : undefined;
 
 	// Delete images that were removed during editing
 	const existing = await convex.query(api.skins.getSkin, { id: _id });
@@ -43,7 +45,8 @@ export async function PATCH(event: RequestEvent) {
 		name,
 		author,
 		download_url,
-		preview_images
+		preview_images,
+		tags
 	});
 
 	return json({ success: true });

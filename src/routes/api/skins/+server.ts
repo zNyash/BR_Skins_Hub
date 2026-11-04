@@ -3,12 +3,14 @@ import { json, error } from "@sveltejs/kit";
 import { requireAdmin } from "$lib/server/admin";
 import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
+import { normalizeTags } from "$lib/utils/tags";
 
 export async function POST(event: RequestEvent) {
 	requireAdmin(event);
 
 	const body = await event.request.json();
 	const { name, author, download_url, preview_images } = body;
+	const tags = Array.isArray(body.tags) ? normalizeTags(body.tags) : undefined;
 
 	if (!name || !download_url) error(400, "name and download_url are required");
 
@@ -16,7 +18,8 @@ export async function POST(event: RequestEvent) {
 		name,
 		author,
 		download_url,
-		preview_images: preview_images ?? []
+		preview_images: preview_images ?? [],
+		tags
 	});
 
 	return json({ id });

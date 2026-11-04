@@ -34,9 +34,15 @@ export const upsertPlayer = mutation({
 					value: v.string()
 				})
 			)
-		)
+		),
+		tags: v.optional(v.array(v.string())),
+		/** True when the data comes from the osu! API, which also marks the player as synced. */
+		from_osu: v.optional(v.boolean())
 	},
 	handler: async (ctx, args) => {
+		const now = Date.now();
+		const syncedAt = args.from_osu ? now : undefined;
+
 		const existing = await ctx.db
 			.query("players")
 			.withIndex("by_osu_id", (q) => q.eq("osu_id", args.osu_id))
@@ -50,6 +56,9 @@ export const upsertPlayer = mutation({
 			if (args.hue !== undefined) patch.hue = args.hue;
 			if (args.description !== undefined) patch.description = args.description;
 			if (args.links !== undefined) patch.links = args.links;
+			if (args.tags !== undefined) patch.tags = args.tags;
+			patch.updated_at = now;
+			if (syncedAt !== undefined) patch.synced_at = syncedAt;
 			await ctx.db.patch(existing._id, patch);
 			return await ctx.db.get(existing._id);
 		}
@@ -63,7 +72,10 @@ export const upsertPlayer = mutation({
 			previous_usernames: args.previous_usernames ?? [],
 			hue: args.hue,
 			description: args.description,
-			links: args.links
+			links: args.links,
+			tags: args.tags,
+			updated_at: now,
+			synced_at: syncedAt
 		});
 		return await ctx.db.get(id);
 	}
@@ -131,7 +143,7 @@ export const updatePlayerProfile = mutation({
 			throw new Error("Forbidden");
 		}
 
-		const patch: Partial<Doc<"players">> = {};
+		const patch: Partial<Doc<"players">> = { updated_at: Date.now() };
 
 		if (args.description !== undefined) patch.description = args.description;
 		if (args.links !== undefined)

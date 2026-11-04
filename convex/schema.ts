@@ -27,7 +27,12 @@ export default defineSchema({
 				})
 			)
 		),
-		views: v.optional(v.number())
+		views: v.optional(v.number()),
+		tags: v.optional(v.array(v.string())),
+		/** Last content change (edits, osu! syncs). Not bumped by views or skin assignments. */
+		updated_at: v.optional(v.number()),
+		/** Last time name/cover/usernames were fetched from osu!. Missing = never synced. */
+		synced_at: v.optional(v.number())
 	}).index("by_osu_id", ["osu_id"]),
 
 	/* ----- */
@@ -38,7 +43,10 @@ export default defineSchema({
 		author: v.optional(v.string()),
 		download_url: v.string(),
 		download_count: v.number(),
-		preview_images: v.array(v.string())
+		preview_images: v.array(v.string()),
+		tags: v.optional(v.array(v.string())),
+		/** Last content change. Not bumped by downloads or player assignments. */
+		updated_at: v.optional(v.number())
 	}).index("by_name", ["name"]),
 
 	/* ------------------------- */
