@@ -1,6 +1,6 @@
 import { json, type RequestEvent } from "@sveltejs/kit";
 import { api } from "$convex/_generated/api";
-import { requireAdmin } from "$lib/server/admin";
+import { requireAdmin } from "$lib/server/auth";
 import { mutate } from "$lib/server/convex";
 import { clamp } from "$lib/utils/helpers";
 import { normalizeTags } from "$lib/utils/tags";

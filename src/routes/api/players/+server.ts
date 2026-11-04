@@ -1,6 +1,6 @@
 import { type RequestEvent } from "@sveltejs/kit";
 import { json, error } from "@sveltejs/kit";
-import { requireAdmin } from "$lib/server/admin";
+import { requireAdmin } from "$lib/server/auth";
 import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
 import { fetchAndUpsertPlayer } from "$lib/server/osu";

@@ -1,30 +1,10 @@
 import { type RequestEvent } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
-import { requireAdmin } from "$lib/server/admin";
+import { requireAdmin } from "$lib/server/auth";
 import { convex, mutate } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
 import { normalizeTags } from "$lib/utils/tags";
-import { getUploadThingKey } from "$lib/utils/uploadthingUrl";
-import { UTApi } from "uploadthing/server";
-
-const utapi = new UTApi();
-
-// Only UploadThing-hosted images can be deleted; external urls (Drive, s-ul, ...) are skipped.
-// Called after the database write succeeds, and a failure here never fails the request:
-// a leftover file only wastes storage, while a missing file would break the skin.
-async function deleteUploadThingImages(urls: string[]) {
-	const keys = urls.map(getUploadThingKey).filter((key) => key !== null);
-	if (keys.length === 0) return;
-
-	try {
-		const { deletedCount } = await utapi.deleteFiles(keys);
-		if (deletedCount < keys.length) {
-			console.warn(`[uploadthing] deleted ${deletedCount}/${keys.length} files`, keys);
-		}
-	} catch (e) {
-		console.error("[uploadthing] failed to delete files", keys, e);
-	}
-}
+import { deleteUploadThingImages } from "$lib/server/uploadthing";
 
 export async function PATCH(event: RequestEvent) {
 	const admin = requireAdmin(event);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getUploadThingKey } from "./uploadthingUrl";
+import { getUploadThingKey } from "./uploadthing";
 
 describe("getUploadThingKey", () => {
 	it("extracts the key from current ufs.sh urls", () => {
