@@ -13,7 +13,7 @@
 	let { data } = $props();
 	const clipboard = useCopyLink();
 
-	function handleDownload(e: Event) {
+	function handleDownload() {
 		fetch(resolve("/api/skins/[id]/download", { id: data.skin._id }), {
 			method: "POST"
 		});

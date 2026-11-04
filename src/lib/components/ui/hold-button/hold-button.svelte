@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { cn } from "$lib/utils";
-	import { Button } from "$lib/components/ui/button";
-	import type { Snippet } from "svelte";
+	import { Button, type ButtonProps } from "$lib/components/ui/button";
 
 	type Direction = "top" | "bottom" | "left" | "right";
 
@@ -12,30 +11,19 @@
 		children,
 		fillColor = "bg-black/10",
 		from = "bottom",
-		onmousedown,
-		onmouseup,
-		ontouchstart,
-		ontouchend,
 		...rest
-	}: {
+	}: ButtonProps & {
 		duration?: number;
 		onComplete?: () => void;
-		class?: string;
-		children: Snippet;
 		fillColor?: string;
 		from?: Direction;
-		onmousedown?: (e: MouseEvent) => void;
-		onmouseup?: (e: MouseEvent) => void;
-		ontouchstart?: (e: TouchEvent) => void;
-		ontouchend?: (e: TouchEvent) => void;
-		[key: string]: any;
 	} = $props();
 
 	let isHolding = $state(false);
 	let completed = $state(false);
 	let timer: ReturnType<typeof setTimeout> | null = null;
 
-	function startHold(e: any) {
+	function startHold() {
 		if (completed) return;
 		isHolding = true;
 
@@ -51,7 +39,7 @@
 		}, duration);
 	}
 
-	function cancelHold(e: any) {
+	function cancelHold() {
 		if (completed) return;
 		isHolding = false;
 		if (timer) {
@@ -89,24 +77,14 @@
 
 <Button
 	class={cn("relative overflow-hidden select-none", className)}
-	onmousedown={(e) => {
-		startHold(e);
-		onmousedown?.(e);
-	}}
-	onmouseup={(e) => {
-		cancelHold(e);
-		onmouseup?.(e);
-	}}
+	onmousedown={startHold}
+	onmouseup={cancelHold}
 	onmouseleave={cancelHold}
 	ontouchstart={(e) => {
 		if (e.cancelable) e.preventDefault();
-		startHold(e);
-		ontouchstart?.(e);
+		startHold();
 	}}
-	ontouchend={(e) => {
-		cancelHold(e);
-		ontouchend?.(e);
-	}}
+	ontouchend={cancelHold}
 	{...rest}
 >
 	<div
@@ -116,6 +94,6 @@
 	></div>
 
 	<span class="pointer-events-none relative z-10 flex items-center gap-2">
-		{@render children()}
+		{@render children?.()}
 	</span>
 </Button>
