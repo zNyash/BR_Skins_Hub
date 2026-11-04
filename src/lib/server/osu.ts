@@ -3,7 +3,7 @@ import { OSU_CLIENT_ID, OSU_CLIENT_SECRET } from "$env/static/private";
 import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
 import { error } from "@sveltejs/kit";
-import { mergeUsernames } from "$lib/utils/osu";
+import { mergeUsernames } from "$convex/lib/usernames";
 import type { UsersDetailsResponse } from "osu-api-extended/dist/types/v2/users_details";
 
 type OsuProfile = Pick<
