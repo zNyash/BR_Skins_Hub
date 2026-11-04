@@ -82,3 +82,30 @@ export const updatePlayerSkins = mutation({
 		);
 	}
 });
+
+// Mirror of updatePlayerSkins, from the skin's side: sets exactly which players use this skin.
+export const updateSkinPlayers = mutation({
+	args: {
+		skin_id: v.id("skins"),
+		player_ids: v.array(v.id("players"))
+	},
+	handler: async (ctx, args) => {
+		const currentRelations = await ctx.db
+			.query("playerSkins")
+			.withIndex("by_skin", (q) => q.eq("skin_id", args.skin_id))
+			.collect();
+
+		const currentPlayerIds = new Set(currentRelations.map((r) => r.player_id));
+		const targetPlayerIds = new Set(args.player_ids);
+
+		const toRemove = currentRelations.filter((r) => !targetPlayerIds.has(r.player_id));
+		const toAdd = [...targetPlayerIds].filter((id) => !currentPlayerIds.has(id));
+
+		await Promise.all(toRemove.map((r) => ctx.db.delete(r._id)));
+		await Promise.all(
+			toAdd.map((playerId) =>
+				ctx.db.insert("playerSkins", { player_id: playerId, skin_id: args.skin_id })
+			)
+		);
+	}
+});
