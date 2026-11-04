@@ -360,6 +360,7 @@
 **Interfaces:**
 
 - Produces:
+
   ```ts
   type SortOption<T> = {
   	value: string;
@@ -392,6 +393,7 @@
 
   - `query`, `sortBy` and `orderBy` are `$state` behind getters and setters. `results` is `$derived` (fuzzy filter with threshold 0.4 by default, then sort).
   - `SkinWithPlayers` comes from Task 14. Until then, define it locally in this file and move it in Task 14.
+
 - Also export `type ListQuery<T> = ReturnType<typeof useListQuery<T>>`. `search-sorted.svelte` uses `<script lang="ts" generics="T">` with props `{ list: ListQuery<T>; placeholder: string }` (no `any`). It binds to `list.query` and `list.sortBy` and toggles `list.orderBy`.
 - Page snapshots: `capture: () => ({ query: x.query, sortBy: x.sortBy, orderBy: x.orderBy })`, and `restore` assigns them back.
 
