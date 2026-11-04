@@ -1,8 +1,7 @@
-import { convex } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
+import { convex } from "$lib/server/convex";
 
 export async function load({ depends }) {
 	depends("app:players");
-	const players = await convex.query(api.players.listPlayers);
-	return { players };
+	return { players: await convex.query(api.players.list, {}) };
 }

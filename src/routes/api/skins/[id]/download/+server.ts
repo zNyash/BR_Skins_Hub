@@ -1,9 +1,8 @@
 import { type RequestEvent } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
-import { convex } from "$lib/server/convex";
+import { mutate } from "$lib/server/convex";
 import { createRateLimiter } from "$lib/server/rateLimit";
 import { api } from "$convex/_generated/api";
-import type { Id } from "$convex/_generated/dataModel";
 
 const rateLimiter = createRateLimiter({
 	key: "skin-downloads",
@@ -14,9 +13,7 @@ const rateLimiter = createRateLimiter({
 export async function POST(event: RequestEvent) {
 	rateLimiter.check(event);
 
-	const id = event.params.id as Id<"skins">;
-
-	await convex.mutation(api.skins.incrementSkinDownloads, { id });
+	await mutate(api.skins.incrementDownloads, { id: event.params.id! });
 
 	return json({ success: true });
 }

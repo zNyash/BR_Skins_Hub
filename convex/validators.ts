@@ -16,7 +16,8 @@ export const playerLink = v.object({
 export const playerFields = {
 	name: v.optional(v.string()),
 	cover_url: v.optional(v.string()),
-	hue: v.optional(v.number()),
+	/** null clears it (JSON drops undefined, so null is how "remove" reaches Convex). */
+	hue: v.optional(v.union(v.number(), v.null())),
 	description: v.optional(v.string()),
 	previous_usernames: v.optional(v.array(v.string())),
 	links: v.optional(v.array(playerLink)),

@@ -86,8 +86,9 @@
 			}
 			const preview_images = resolveImageUrls(draft.images, uploadedUrls);
 
-			// 2. Save the skin. The server deletes images that were removed from the list.
-			const skinResponse = await fetch(`/api/skins/${skin._id}`, {
+			// 2. Save the skin and who uses it, in one transaction.
+			//    The server deletes images that were removed from the list.
+			const response = await fetch(`/api/skins/${skin._id}`, {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -95,18 +96,11 @@
 					author: draft.skin.author.trim(),
 					download_url: draft.skin.download_url.trim(),
 					tags: draft.skin.tags,
-					preview_images
+					preview_images,
+					player_ids: draft.playerIds
 				})
 			});
-			if (!skinResponse.ok) throw new Error(await readErrorMessage(skinResponse));
-
-			// 3. Save who uses this skin.
-			const playersResponse = await fetch(`/api/skin-players/${skin._id}`, {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ player_ids: draft.playerIds })
-			});
-			if (!playersResponse.ok) throw new Error(await readErrorMessage(playersResponse));
+			if (!response.ok) throw new Error(await readErrorMessage(response));
 
 			onSave();
 			await invalidate("app:skins");

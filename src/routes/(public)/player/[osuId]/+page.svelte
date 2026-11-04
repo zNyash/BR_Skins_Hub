@@ -20,7 +20,7 @@
 	let orderBy = $state<OrderBy>("desc");
 
 	const filtered = useFuzzyFilter(
-		() => data.skins,
+		() => data.player.skins,
 		() => inputValue,
 		{ keys: ["name", "tags"], threshold: 0.4 }
 	);
@@ -98,7 +98,7 @@
 				bind:orderBy
 				bind:inputValue
 			/>
-			<p class="text-xs">Loaded {data.skins.length} {data.skins.length === 1 ? "skin" : "skins"}</p>
+			<p class="text-xs">Loaded {data.player.skins.length} {data.player.skins.length === 1 ? "skin" : "skins"}</p>
 		</div>
 		<div class="common-grid">
 			{#each sorted.results as skin (skin._id)}

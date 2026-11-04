@@ -1,15 +1,13 @@
-import { convex } from "$lib/server/convex";
-import { isAdminId } from "$lib/server/admin";
 import { api } from "$convex/_generated/api";
-import type { AuthUser } from "$lib/types.js";
+import { isAdminId } from "$lib/server/admin";
+import { serverQuery } from "$lib/server/convex";
+import type { AuthUser } from "$lib/types";
 import { osuAvatar } from "$lib/utils/osu";
 
 export async function load({ locals }) {
 	if (!locals.user) return { user: null };
 
-	const authUser = await convex.query(api.auth.getAuthUser, {
-		osu_id: locals.user.osu_id
-	});
+	const authUser = await serverQuery(api.auth.getUser, { osu_id: locals.user.osu_id });
 
 	return {
 		user: {

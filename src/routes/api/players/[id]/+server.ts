@@ -1,55 +1,36 @@
-import { type RequestEvent } from "@sveltejs/kit";
-import { json, error } from "@sveltejs/kit";
-import { requireAdmin } from "$lib/server/admin";
-import { convex } from "$lib/server/convex";
+import { json, type RequestEvent } from "@sveltejs/kit";
 import { api } from "$convex/_generated/api";
-import type { Id } from "$convex/_generated/dataModel";
+import { requireAdmin } from "$lib/server/admin";
+import { mutate } from "$lib/server/convex";
 import { clamp } from "$lib/utils/helpers";
 import { normalizeTags } from "$lib/utils/tags";
 
 export async function PATCH(event: RequestEvent) {
-	requireAdmin(event);
+	const admin = requireAdmin(event);
 
 	const body = await event.request.json();
-	const { osu_id, name, cover_url, previous_usernames, description, links } = body;
+	const { name, cover_url, previous_usernames, description, links, skin_ids } = body;
 	const tags = Array.isArray(body.tags) ? normalizeTags(body.tags) : undefined;
+	const hue = typeof body.hue === "number" ? clamp(body.hue, 0, 360) : body.hue;
 
-	// Handling the min and max values for hue here before sending to the database
-	let { hue } = body;
-	hue = hue !== undefined ? clamp(hue, 0, 360) : undefined;
+	await mutate(api.players.update, {
+		actor_osu_id: admin.osu_id,
+		id: event.params.id!,
+		name,
+		cover_url,
+		previous_usernames,
+		hue,
+		description,
+		links,
+		tags,
+		skin_ids: skin_ids ?? []
+	});
 
-	if (!osu_id) error(400, "osu_id is required");
-
-	try {
-		const player = await convex.mutation(api.players.upsertPlayer, {
-			osu_id,
-			name,
-			cover_url,
-			previous_usernames,
-			hue,
-			description,
-			links,
-			tags
-		});
-
-		if (!player) return error(500, "Impossible case happend: convex returned a null player.");
-
-		return json({ player });
-	} catch (e) {
-		error(500, e instanceof Error ? e.message : "Failed to update player");
-	}
+	return json({ success: true });
 }
 
 export async function DELETE(event: RequestEvent) {
-	requireAdmin(event);
-
-	const player_id = event.params.id as Id<"players">;
-
-	try {
-		await convex.mutation(api.players.deletePlayer, { player_id });
-
-		return json({ success: true });
-	} catch (e) {
-		error(500, e instanceof Error ? e.message : "Failed to delete player");
-	}
+	const admin = requireAdmin(event);
+	await mutate(api.players.remove, { actor_osu_id: admin.osu_id, id: event.params.id! });
+	return json({ success: true });
 }

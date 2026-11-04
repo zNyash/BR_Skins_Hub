@@ -13,7 +13,7 @@ export async function POST(event: RequestEvent) {
 	if (!Number.isInteger(osuId) || osuId <= 0) error(400, "A valid osu_id is required");
 
 	// Creating an existing player would overwrite it, so hand back the existing one instead.
-	const existing = await convex.query(api.players.getPlayerByOsuId, { osu_id: osuId });
+	const existing = await convex.query(api.players.get, { osu_id: osuId });
 	if (existing) return json({ id: existing._id, name: existing.name, existed: true });
 
 	const player = await fetchAndUpsertPlayer(osuId);

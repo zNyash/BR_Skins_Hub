@@ -3,7 +3,7 @@ import { redirect } from "@sveltejs/kit";
 import { auth } from "osu-api-extended";
 import { OSU_CLIENT_ID, OSU_CLIENT_SECRET, CURRENT_DOMAIN } from "$env/static/private";
 import { createToken } from "$lib/server/auth";
-import { convex } from "$lib/server/convex";
+import { mutate } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
 import { syncPlayerFromProfile } from "$lib/server/osu";
 
@@ -20,15 +20,14 @@ export async function GET(event: RequestEvent) {
 	});
 	if (!profile) redirect(302, "/login");
 
-	await convex.mutation(api.auth.upsertUser, {
+	await mutate(api.auth.upsertUser, {
 		osu_id: profile.id,
 		username: profile.username
 	});
 
 	// Logging in is a free, fresh osu! profile, so fully sync the player if they have a page.
 	// Never create one here: players are only added by admins.
-	const player = await convex.query(api.players.getPlayerByOsuId, { osu_id: profile.id });
-	if (player) await syncPlayerFromProfile(profile);
+	await syncPlayerFromProfile(profile, true);
 
 	const token = await createToken({ osu_id: profile.id });
 

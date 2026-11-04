@@ -79,14 +79,14 @@
 
 		<Separator class="bg-border" />
 
-		{#if data.players.length > 0}
+		{#if data.skin.players.length > 0}
 			<div class="flex flex-col gap-2">
 				<p class="text-sm text-text-muted">
-					Used by {data.players.length}
-					{data.players.length === 1 ? "player" : "players"}
+					Used by {data.skin.players.length}
+					{data.skin.players.length === 1 ? "player" : "players"}
 				</p>
 				<div class="common-grid">
-					{#each data.players as player (player._id)}
+					{#each data.skin.players as player (player._id)}
 						<a href={resolve("/(public)/player/[osuId]", { osuId: String(player.osu_id) })}>
 							<PlayerCard {player} />
 						</a>

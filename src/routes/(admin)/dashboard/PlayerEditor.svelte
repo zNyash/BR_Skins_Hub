@@ -72,19 +72,13 @@
 		errorMessage = null;
 
 		try {
-			const playerResponse = await fetch(`/api/players/${player._id}`, {
+			// Fields and skin assignments are saved together, in one transaction.
+			const response = await fetch(`/api/players/${player._id}`, {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ osu_id: player.osu_id, ...draft.player })
+				body: JSON.stringify({ ...draft.player, skin_ids: draft.skinIds })
 			});
-			if (!playerResponse.ok) throw new Error(await readErrorMessage(playerResponse));
-
-			const skinResponse = await fetch(`/api/player-skins/${player._id}`, {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ skin_ids: draft.skinIds })
-			});
-			if (!skinResponse.ok) throw new Error(await readErrorMessage(skinResponse));
+			if (!response.ok) throw new Error(await readErrorMessage(response));
 
 			onSave();
 			await invalidate("app:players");

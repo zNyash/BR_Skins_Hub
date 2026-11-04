@@ -1,20 +1,14 @@
-import { type RequestEvent } from "@sveltejs/kit";
-import { json, error } from "@sveltejs/kit";
-import { convex } from "$lib/server/convex";
+import { error, json, type RequestEvent } from "@sveltejs/kit";
 import { api } from "$convex/_generated/api";
-import type { Id } from "$convex/_generated/dataModel";
+import { mutate } from "$lib/server/convex";
 
 export async function PATCH(event: RequestEvent) {
 	if (!event.locals.user) error(401, "Unauthorized");
 
-	const body = await event.request.json();
-	const { description, links } = body;
+	const { description, links } = await event.request.json();
 
-	const id = event.params.id as Id<"players">;
-
-	await convex.mutation(api.players.updatePlayerProfile, {
-		id,
-		requester_osu_id: event.locals.user.osu_id,
+	await mutate(api.players.updateOwnProfile, {
+		actor_osu_id: event.locals.user.osu_id,
 		description,
 		links
 	});

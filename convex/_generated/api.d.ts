@@ -12,7 +12,6 @@ import type * as auth from "../auth.js";
 import type * as lib_functions from "../lib/functions.js";
 import type * as lib_relations from "../lib/relations.js";
 import type * as lib_usernames from "../lib/usernames.js";
-import type * as playerSkins from "../playerSkins.js";
 import type * as players from "../players.js";
 import type * as skins from "../skins.js";
 import type * as validators from "../validators.js";
@@ -28,7 +27,6 @@ declare const fullApi: ApiFromModules<{
   "lib/functions": typeof lib_functions;
   "lib/relations": typeof lib_relations;
   "lib/usernames": typeof lib_usernames;
-  playerSkins: typeof playerSkins;
   players: typeof players;
   skins: typeof skins;
   validators: typeof validators;
