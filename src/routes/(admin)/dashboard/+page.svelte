@@ -142,7 +142,8 @@
 								fillColor="bg-black/40"
 								class="w-full justify-start"
 								from="left"
-								onComplete={() => askToDelete({ type: "player", id: player._id, name: player.name })}
+								onComplete={() =>
+									askToDelete({ type: "player", id: player._id, name: player.name })}
 							>
 								<Icon name="trash" />
 								<p>Delete</p>

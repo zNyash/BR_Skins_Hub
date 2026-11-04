@@ -76,11 +76,11 @@ convex/
 
 Built with `customQuery` / `customMutation` from `convex-helpers` (new dependency).
 
-| Level | Requirement | Used for |
-|---|---|---|
-| public | none (plain `query`) | reading public data: players, skins |
-| server | `secret` arg equals `process.env.CONVEX_SERVER_SECRET` | counters, login sync, osu! sync, auth users, own-profile updates |
-| admin | server requirement + `actor_osu_id` is in `process.env.ADMIN_OSU_IDS` | creating, editing, deleting players and skins |
+| Level  | Requirement                                                           | Used for                                                         |
+| ------ | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| public | none (plain `query`)                                                  | reading public data: players, skins                              |
+| server | `secret` arg equals `process.env.CONVEX_SERVER_SECRET`                | counters, login sync, osu! sync, auth users, own-profile updates |
+| admin  | server requirement + `actor_osu_id` is in `process.env.ADMIN_OSU_IDS` | creating, editing, deleting players and skins                    |
 
 - The wrapper consumes `secret` (and checks `actor_osu_id` for admin) so handlers never see the
   secret.
@@ -89,23 +89,23 @@ Built with `customQuery` / `customMutation` from `convex-helpers` (new dependenc
 
 ### Functions
 
-| Function | Access | Behavior |
-|---|---|---|
-| `players.list` | public | all players |
-| `players.get({ osu_id })` | public | player with `skins: Doc<"skins">[]` attached, or `null` |
+| Function                                                                               | Access | Behavior                                                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `players.list`                                                                         | public | all players                                                                                                                                                                                                                             |
+| `players.get({ osu_id })`                                                              | public | player with `skins: Doc<"skins">[]` attached, or `null`                                                                                                                                                                                 |
 | `players.syncFromOsu({ osu_id, name, cover_url, previous_usernames, only_if_exists })` | server | upsert by `osu_id`; merges usernames (existing order kept, new ones appended, none dropped); sets `synced_at` and `updated_at`. With `only_if_exists`, does nothing when the player doesn't exist (login). Returns the player or `null` |
-| `players.update({ id, ...editableFields, skin_ids })` | admin | patches fields and sets relations in one transaction; `404` if missing |
-| `players.updateOwnProfile({ actor_osu_id, description?, links? })` | server | finds the actor's linked player via `authUsers`; `403` if none. Empty links are dropped |
-| `players.incrementViews({ id })` | server | |
-| `players.remove({ id })` | admin | deletes relations, clears `player_id` on any `authUsers` pointing at it, deletes the player |
-| `skins.list` | public | all skins, no players (keeps the public `/skins` payload small) |
-| `skins.listWithPlayers` | public | all skins with `players` attached, built in memory from 3 collects |
-| `skins.get({ id })` | public | skin with `players` attached, or `null` |
-| `skins.upsert({ id?, ...fields, player_ids? })` | admin | no `id`: insert (`download_count: 0`); with `id`: patch. Sets relations when `player_ids` is given. Returns the id |
-| `skins.incrementDownloads({ id })` | server | |
-| `skins.remove({ id })` | admin | deletes relations, then the skin; returns the deleted skin's `preview_images` so the API can clean up files |
-| `auth.getUser({ osu_id })` | server | |
-| `auth.upsertUser({ osu_id, username })` | server | insert, or a single `patch` of `username` and `player_id` |
+| `players.update({ id, ...editableFields, skin_ids })`                                  | admin  | patches fields and sets relations in one transaction; `404` if missing                                                                                                                                                                  |
+| `players.updateOwnProfile({ actor_osu_id, description?, links? })`                     | server | finds the actor's linked player via `authUsers`; `403` if none. Empty links are dropped                                                                                                                                                 |
+| `players.incrementViews({ id })`                                                       | server |                                                                                                                                                                                                                                         |
+| `players.remove({ id })`                                                               | admin  | deletes relations, clears `player_id` on any `authUsers` pointing at it, deletes the player                                                                                                                                             |
+| `skins.list`                                                                           | public | all skins, no players (keeps the public `/skins` payload small)                                                                                                                                                                         |
+| `skins.listWithPlayers`                                                                | public | all skins with `players` attached, built in memory from 3 collects                                                                                                                                                                      |
+| `skins.get({ id })`                                                                    | public | skin with `players` attached, or `null`                                                                                                                                                                                                 |
+| `skins.upsert({ id?, ...fields, player_ids? })`                                        | admin  | no `id`: insert (`download_count: 0`); with `id`: patch. Sets relations when `player_ids` is given. Returns the id                                                                                                                      |
+| `skins.incrementDownloads({ id })`                                                     | server |                                                                                                                                                                                                                                         |
+| `skins.remove({ id })`                                                                 | admin  | deletes relations, then the skin; returns the deleted skin's `preview_images` so the API can clean up files                                                                                                                             |
+| `auth.getUser({ osu_id })`                                                             | server |                                                                                                                                                                                                                                         |
+| `auth.upsertUser({ osu_id, username })`                                                | server | insert, or a single `patch` of `username` and `player_id`                                                                                                                                                                               |
 
 Why players have no generic upsert: players are only ever created from osu! data, so
 `syncFromOsu` is the upsert; admin edits are plain updates by id. Skins are created and edited by
@@ -143,19 +143,19 @@ Loaders become single queries: the player page calls `players.get`, the skin pag
 
 ### Routes
 
-| Route | Auth | Behavior |
-|---|---|---|
-| `POST /api/players` | admin | body `{ osu_id }`; fetches from osu! and calls `syncFromOsu`; `201 { player }` if created, `200 { player }` if it already existed (re-synced) |
-| `POST /api/players/sync` | logged in; rate-limited 3/min unless admin | body `{ osu_id }`; refreshes an existing player from osu! (`only_if_exists`); never creates; `404 "Player not found"` if missing; `204` |
-| `PATCH /api/players/[id]` | admin | body: editable fields + `skin_ids`; `204` |
-| `DELETE /api/players/[id]` | admin | `204` |
-| `POST /api/players/[id]/views` | public; rate-limited 5/min | `204` |
-| `PATCH /api/me/profile` | logged in | body `{ description?, links? }`; `204` |
-| `POST /api/skins` | admin | body: skin fields; `201 { id }` |
-| `PATCH /api/skins/[id]` | admin | body: skin fields + `player_ids`; deletes removed UploadThing images after the write; `204` |
-| `DELETE /api/skins/[id]` | admin | deletes the skin's UploadThing images after the write; `204` |
-| `POST /api/skins/[id]/download` | public; rate-limited 5/min | `204` |
-| `/api/uploadthing` | admin (in UploadThing middleware) | unchanged behavior; middleware uses a shared `getSessionUser(request)` helper instead of hand-parsing cookies |
+| Route                           | Auth                                       | Behavior                                                                                                                                      |
+| ------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/players`             | admin                                      | body `{ osu_id }`; fetches from osu! and calls `syncFromOsu`; `201 { player }` if created, `200 { player }` if it already existed (re-synced) |
+| `POST /api/players/sync`        | logged in; rate-limited 3/min unless admin | body `{ osu_id }`; refreshes an existing player from osu! (`only_if_exists`); never creates; `404 "Player not found"` if missing; `204`       |
+| `PATCH /api/players/[id]`       | admin                                      | body: editable fields + `skin_ids`; `204`                                                                                                     |
+| `DELETE /api/players/[id]`      | admin                                      | `204`                                                                                                                                         |
+| `POST /api/players/[id]/views`  | public; rate-limited 5/min                 | `204`                                                                                                                                         |
+| `PATCH /api/me/profile`         | logged in                                  | body `{ description?, links? }`; `204`                                                                                                        |
+| `POST /api/skins`               | admin                                      | body: skin fields; `201 { id }`                                                                                                               |
+| `PATCH /api/skins/[id]`         | admin                                      | body: skin fields + `player_ids`; deletes removed UploadThing images after the write; `204`                                                   |
+| `DELETE /api/skins/[id]`        | admin                                      | deletes the skin's UploadThing images after the write; `204`                                                                                  |
+| `POST /api/skins/[id]/download` | public; rate-limited 5/min                 | `204`                                                                                                                                         |
+| `/api/uploadthing`              | admin (in UploadThing middleware)          | unchanged behavior; middleware uses a shared `getSessionUser(request)` helper instead of hand-parsing cookies                                 |
 
 Removed: `/api/player-skins/[playerId]`, `/api/skin-players/[skinId]`, `/api/player/refresh`.
 
@@ -223,17 +223,17 @@ move into `$lib/server/uploadthing.ts`.
 
 ### Backend messages
 
-| Situation | Response |
-|---|---|
-| Unknown player/skin id | `404 "Player not found"` / `"Skin not found"` |
-| Not an admin | `403 "Only admins can do this"` |
-| Someone else's profile | `403 "You can only edit your own profile"` |
-| osu! user missing | `404 "No osu! user with ID <id>"` |
-| osu! API failing | `502 "Couldn't reach osu!, try again in a moment"` |
-| Rate limited | `429 "Too many requests, try again in <n>s"` |
-| Not logged in | `401 "You need to log in first"` |
-| Bad body | `400 "<field> <problem>"` |
-| Unexpected | `500 "<message> (ref <id>)"`, details only in server logs |
+| Situation              | Response                                                  |
+| ---------------------- | --------------------------------------------------------- |
+| Unknown player/skin id | `404 "Player not found"` / `"Skin not found"`             |
+| Not an admin           | `403 "Only admins can do this"`                           |
+| Someone else's profile | `403 "You can only edit your own profile"`                |
+| osu! user missing      | `404 "No osu! user with ID <id>"`                         |
+| osu! API failing       | `502 "Couldn't reach osu!, try again in a moment"`        |
+| Rate limited           | `429 "Too many requests, try again in <n>s"`              |
+| Not logged in          | `401 "You need to log in first"`                          |
+| Bad body               | `400 "<field> <problem>"`                                 |
+| Unexpected             | `500 "<message> (ref <id>)"`, details only in server logs |
 
 ### Frontend
 
@@ -305,21 +305,21 @@ lists, the copy-link buttons.
 
 ### Folder structure and naming
 
-| Now | After |
-|---|---|
-| `$lib/utils/fuzzyFilter.svelte.ts`, `sorted.svelte.ts` | `$lib/hooks/list-query.svelte.ts` |
-| `$lib/utils/clipboard.svelte.ts` | `$lib/hooks/copy-link.svelte.ts` |
-| `$lib/utils/skinImages.ts` (+ test) | `src/routes/(admin)/dashboard/skin-images.ts` (+ test) |
-| `$lib/utils/uploadthingUrl.ts` (+ test) | `$lib/server/uploadthing.ts` (+ test) |
-| `$lib/utils/uploadthing.ts` (client helper) | `$lib/uploadthing.ts` |
-| `$lib/utils/http.ts` (+ test) | `$lib/api.ts` (+ test) |
-| `$lib/utils/osu.ts` | `$lib/osu.ts` (`osuAvatar`, `parseOsuId`) |
-| `$lib/utils/tags.ts` (+ test) | `$lib/tags.ts` (+ test) |
-| `$lib/utils/helpers.ts` | deleted |
-| `$lib/server/admin.ts` | merged into `$lib/server/auth.ts` |
-| `$lib/components/ui/hold-button/` | `$comp/hold-button.svelte` |
-| `src/routes/(public)/login/` | `src/routes/auth/login/` |
-| dashboard `PlayerEditor.svelte` etc. (PascalCase) | kebab-case: `player-editor.svelte`, `skin-editor.svelte`, `player-creator-dialog.svelte`, `skin-creator-dialog.svelte`, `assign-skins-dialog.svelte`, `assign-players-dialog.svelte` |
+| Now                                                    | After                                                                                                                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `$lib/utils/fuzzyFilter.svelte.ts`, `sorted.svelte.ts` | `$lib/hooks/list-query.svelte.ts`                                                                                                                                                    |
+| `$lib/utils/clipboard.svelte.ts`                       | `$lib/hooks/copy-link.svelte.ts`                                                                                                                                                     |
+| `$lib/utils/skinImages.ts` (+ test)                    | `src/routes/(admin)/dashboard/skin-images.ts` (+ test)                                                                                                                               |
+| `$lib/utils/uploadthingUrl.ts` (+ test)                | `$lib/server/uploadthing.ts` (+ test)                                                                                                                                                |
+| `$lib/utils/uploadthing.ts` (client helper)            | `$lib/uploadthing.ts`                                                                                                                                                                |
+| `$lib/utils/http.ts` (+ test)                          | `$lib/api.ts` (+ test)                                                                                                                                                               |
+| `$lib/utils/osu.ts`                                    | `$lib/osu.ts` (`osuAvatar`, `parseOsuId`)                                                                                                                                            |
+| `$lib/utils/tags.ts` (+ test)                          | `$lib/tags.ts` (+ test)                                                                                                                                                              |
+| `$lib/utils/helpers.ts`                                | deleted                                                                                                                                                                              |
+| `$lib/server/admin.ts`                                 | merged into `$lib/server/auth.ts`                                                                                                                                                    |
+| `$lib/components/ui/hold-button/`                      | `$comp/hold-button.svelte`                                                                                                                                                           |
+| `src/routes/(public)/login/`                           | `src/routes/auth/login/`                                                                                                                                                             |
+| dashboard `PlayerEditor.svelte` etc. (PascalCase)      | kebab-case: `player-editor.svelte`, `skin-editor.svelte`, `player-creator-dialog.svelte`, `skin-creator-dialog.svelte`, `assign-skins-dialog.svelte`, `assign-players-dialog.svelte` |
 
 The `$lib/utils/` folder disappears; `$lib/utils.ts` stays (shadcn imports `cn` from it).
 

@@ -41,7 +41,8 @@
 		<Dialog.Header>
 			<Dialog.Title>Delete {kind}</Dialog.Title>
 			<Dialog.Description>
-				Type <strong class="text-foreground">{name}</strong> to delete this {kind}. This can't be undone.
+				Type <strong class="text-foreground">{name}</strong> to delete this {kind}. This can't be
+				undone.
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -55,7 +56,12 @@
 					<Button {...props} type="button" variant="secondary">Cancel</Button>
 				{/snippet}
 			</Dialog.Close>
-			<Button form="delete-form" type="submit" variant="destructive" disabled={!matches || isDeleting}>
+			<Button
+				form="delete-form"
+				type="submit"
+				variant="destructive"
+				disabled={!matches || isDeleting}
+			>
 				{#if isDeleting}
 					<Icon name="loader-circle" class="animate-spin" />
 					Deleting

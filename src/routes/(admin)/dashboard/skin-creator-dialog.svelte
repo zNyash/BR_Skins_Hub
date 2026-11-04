@@ -94,7 +94,6 @@
 					<p class="text-xs text-muted-foreground">That doesn't look like a valid URL.</p>
 				{/if}
 			</div>
-
 		</form>
 
 		<Dialog.Footer>

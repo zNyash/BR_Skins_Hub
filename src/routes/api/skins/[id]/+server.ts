@@ -38,7 +38,10 @@ export const PATCH: RequestHandler = async (event) => {
 
 export const DELETE: RequestHandler = async (event) => {
 	const admin = requireAdmin(event);
-	const images = await mutate(api.skins.remove, { actor_osu_id: admin.osu_id, id: event.params.id });
+	const images = await mutate(api.skins.remove, {
+		actor_osu_id: admin.osu_id,
+		id: event.params.id
+	});
 	await deleteUploadThingImages(images);
 	return new Response(null, { status: 204 });
 };

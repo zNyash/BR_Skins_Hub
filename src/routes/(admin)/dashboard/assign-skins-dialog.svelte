@@ -55,7 +55,6 @@
 		onAssign([...selected]);
 		open = false;
 	}
-
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>

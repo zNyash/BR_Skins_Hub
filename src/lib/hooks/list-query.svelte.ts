@@ -4,7 +4,6 @@ import type { SkinWithPlayers } from "$lib/types";
 
 // --- Types ---
 
-
 export type OrderBy = "asc" | "desc";
 
 export type SortOption<T> = {

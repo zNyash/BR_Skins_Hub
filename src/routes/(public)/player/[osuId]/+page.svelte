@@ -72,7 +72,10 @@
 	<section class="section">
 		<div class="flex w-full items-center justify-between">
 			<SearchSorted list={skins} placeholder="Search skins by name..." />
-			<p class="text-xs">Loaded {data.player.skins.length} {data.player.skins.length === 1 ? "skin" : "skins"}</p>
+			<p class="text-xs">
+				Loaded {data.player.skins.length}
+				{data.player.skins.length === 1 ? "skin" : "skins"}
+			</p>
 		</div>
 		<div class="common-grid">
 			{#each skins.results as skin (skin._id)}

@@ -15,7 +15,6 @@
 		none: ""
 	};
 
-
 	let {
 		skin,
 		linked = true,

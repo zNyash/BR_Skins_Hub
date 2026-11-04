@@ -22,6 +22,7 @@
 - Never write the words "vulnerability", "impersonation" or "anyone can call" into the repo (public on GitHub).
 
 **Deviations from the spec, decided while planning:**
+
 - `$lib/server/convex.ts` exports `convex` (public queries), `serverQuery(fn, args)` and `mutate(fn, args)`. The spec's `query` is named `serverQuery`, because public queries must not receive a `secret` arg.
 - The two relation routes (`/api/player-skins`, `/api/skin-players`) are removed in Task 4 rather than phase 3, because `playerSkins.ts` disappears there and the app has to keep working.
 
@@ -40,6 +41,7 @@
 ### Task 1: Remove dead code, unused deps, and fix existing lint errors
 
 **Files:**
+
 - Delete: `src/routes/(admin)/dashboard_old/`; `src/lib/components/ui/{alert-dialog,badge,card,empty,form,label,navigation-menu,scroll-area,skeleton}/`
 - Modify: `package.json`, `bun.lock`, `src/routes/layout.css` (drop `@plugin "@iconify/tailwind4";`), `src/routes/(public)/+page.svelte` (drop the commented palette), `src/routes/(public)/+layout.svelte` (drop `isHidden`, its `$effect`, `class:-translate-y-full`; keep `isFloating`), `src/lib/components/ui/hold-button/hold-button.svelte` (replace `any` with real types: `startHold()` / `cancelHold()` take no params, rest props typed `HTMLButtonAttributes`-style via `ButtonProps` from `$comp/ui/button`), `src/routes/(public)/skins/[skinId]/+page.svelte` (drop unused `e`)
 
@@ -56,11 +58,13 @@
 ### Task 2: Convex pure helpers: usernames and relations
 
 **Files:**
+
 - Modify: `vite.config.ts` (server project `include`: add `"convex/**/*.{test,spec}.{js,ts}"`)
 - Create: `convex/lib/usernames.ts`, `convex/lib/usernames.test.ts` (move `mergeUsernames` and its tests out of `src/lib/utils/osu.ts` / `osu.test.ts`; `parseOsuId` and `osuAvatar` stay)
 - Create: `convex/lib/relations.ts`, `convex/lib/relations.test.ts`
 
 **Interfaces:**
+
 - Produces: `mergeUsernames(existing: string[], incoming: string[]): string[]`
 - Produces: `setPlayerSkins(db: DatabaseWriter, playerId: Id<"players">, skinIds: Id<"skins">[]): Promise<void>` and `setSkinPlayers(db: DatabaseWriter, skinId: Id<"skins">, playerIds: Id<"players">[]): Promise<void>` (`DatabaseWriter` from `convex/_generated/server`). Both make the relation rows match the target list exactly.
 - Produces: `deleteRelations(db: DatabaseWriter, by: { player: Id<"players"> } | { skin: Id<"skins"> }): Promise<void>`
@@ -78,10 +82,12 @@
 ### Task 3: Access wrappers, shared validators, server secret
 
 **Files:**
+
 - Create: `convex/lib/functions.ts`, `convex/lib/functions.test.ts`, `convex/validators.ts`
 - Modify: `package.json` (`bun add convex-helpers`), `example.env` (add `CONVEX_SERVER_SECRET=`), `convex/schema.ts` (use `playerLink` from validators)
 
 **Interfaces:**
+
 - Produces in `convex/lib/functions.ts`:
   - `type ErrorData = { status: number; message: string }`
   - `fail(status: number, message: string): never` throws `new ConvexError<ErrorData>({ status, message })`
@@ -101,12 +107,14 @@
 ### Task 4: Rewrite Convex functions and update their callers
 
 **Files:**
+
 - Rewrite: `convex/players.ts`, `convex/skins.ts`, `convex/auth.ts`
 - Delete: `convex/playerSkins.ts`, `src/routes/api/player-skins/`, `src/routes/api/skin-players/`
 - Create: `src/lib/server/convex.ts` (rewrite), `src/lib/server/convex.test.ts`
 - Modify (callers): `src/routes/+layout.server.ts`, `src/routes/(public)/+page.server.ts`, `(public)/skins/+page.server.ts`, `(public)/skins/[skinId]/+page.server.ts`, `(public)/player/[osuId]/+page.server.ts`, `(admin)/dashboard/+page.server.ts`, `src/lib/server/osu.ts`, `src/routes/auth/callback/+server.ts`, all `src/routes/api/**/+server.ts`, `src/routes/(admin)/dashboard/PlayerEditor.svelte` and `SkinEditor.svelte` (send `skin_ids` / `player_ids` inside the PATCH body; drop the second fetch)
 
 **Interfaces:**
+
 - Consumes: Task 2 helpers, Task 3 wrappers and validators.
 - Produces (Convex), exactly as in the spec's function table:
   - `players.list()`, `players.get({ osu_id })` → `(Doc<"players"> & { skins: Doc<"skins">[] }) | null`
@@ -154,12 +162,14 @@
 ### Task 5: Auth and UploadThing server modules
 
 **Files:**
+
 - Modify: `src/lib/server/auth.ts` (absorbs `admin.ts`); delete `src/lib/server/admin.ts`
 - Modify: `src/lib/server/uploadthing.ts` (absorbs `src/lib/utils/uploadthingUrl.ts` + test → `src/lib/server/uploadthing.test.ts`, and `deleteUploadThingImages` from `api/skins/[id]/+server.ts`)
 - Create: `src/lib/server/auth.test.ts`
 - Modify: every importer of `$lib/server/admin` and `$lib/utils/uploadthingUrl`
 
 **Interfaces:**
+
 - Produces in `$lib/server/auth.ts`:
   - `createToken({ osu_id }): Promise<string>`, `verifyToken(token): Promise<{ osu_id: number } | null>` (unchanged)
   - `getSessionUser(request: Request): Promise<{ osu_id: number } | null>` (reads the `session` cookie from the `cookie` header with `parse` from the `cookie` package, which SvelteKit already depends on; add it explicitly with `bun add cookie`)
@@ -179,10 +189,12 @@
 ### Task 6: Request validation
 
 **Files:**
+
 - Create: `src/lib/server/validation.ts`, `src/lib/server/schemas.ts`, `src/lib/server/validation.test.ts`
 - Move: `src/lib/utils/tags.ts` + test → `src/lib/tags.ts` + test (update importers)
 
 **Interfaces:**
+
 - Produces: `parseBody<S extends v.GenericSchema>(request: Request, schema: S): Promise<v.InferOutput<S>>`
   - Invalid JSON → `400 "Request body must be valid JSON"`.
   - Schema failure → `400` with `` `${dotPath} ${message}` `` from the first issue (`v.getDotPath`). The message comes from each schema's own text, e.g. `"must be a valid URL"`.
@@ -210,12 +222,14 @@
 ### Task 7: Rebuild API routes
 
 **Files:**
+
 - Rewrite: `src/routes/api/players/+server.ts` (POST), `api/players/[id]/+server.ts` (PATCH, DELETE), `api/players/[id]/views/+server.ts`, `api/skins/+server.ts`, `api/skins/[id]/+server.ts`, `api/skins/[id]/download/+server.ts`
 - Create: `src/routes/api/players/sync/+server.ts`, `src/routes/api/me/profile/+server.ts`
 - Delete: `src/routes/api/player/refresh/`, `src/routes/api/players/[id]/profile/`
 - Modify: `src/lib/server/osu.ts`, `src/routes/(admin)/dashboard/PlayerEditor.svelte` (refresh → `POST /api/players/sync` with `{ osu_id }`), `PlayerCreatorDialog.svelte` (reads `{ player }` and `response.status === 200` means it existed)
 
 **Interfaces:**
+
 - Consumes: `requireUser`, `requireAdmin`, `isAdmin` (Task 5); `parseBody` + schemas (Task 6); `mutate`, `convex` (Task 4); `deleteUploadThingImages` (Task 5); `createRateLimiter` (unchanged).
 - Produces in `osu.ts`: `fetchOsuProfile(osuId: number): Promise<{ id: number; username: string; cover_url?: string; previous_usernames: string[] }>`. The osu! client login and lookup are wrapped:
   - No user → `404 "No osu! user with ID <id>"`.
@@ -243,11 +257,13 @@
 ### Task 8: Move login and validate the redirect target
 
 **Files:**
+
 - Move: `src/routes/(public)/login/+server.ts` → `src/routes/auth/login/+server.ts`
 - Create: `src/lib/server/redirect.ts`, `src/lib/server/redirect.test.ts`
 - Modify: `src/lib/components/user-icon.svelte`, `src/routes/(admin)/+layout.server.ts`, `src/routes/auth/callback/+server.ts` (`/login` → `/auth/login`)
 
 **Interfaces:**
+
 - Produces: `safeRedirectTarget(from: string | null, siteUrl: string): string`. Returns `from` resolved against `siteUrl` when its origin equals `new URL(siteUrl).origin`, otherwise `"/"`. It never throws.
 
 - [ ] **Step 1: Write failing tests** with `site = "https://brskins.com"`:
@@ -271,10 +287,12 @@
 ### Task 9: `request()` helper and toasts
 
 **Files:**
+
 - Create: `src/lib/api.ts`, `src/lib/api.test.ts` (move `readErrorMessage` and its tests from `src/lib/utils/http.ts` / `http.test.ts`, then delete those)
 - Modify: `src/routes/+layout.svelte` (add `<Toaster />`), `src/routes/(admin)/dashboard/+page.svelte` (remove `<Toaster />`), `PlayerEditor.svelte`, `SkinEditor.svelte`, `PlayerCreatorDialog.svelte`, `SkinCreatorDialog.svelte`
 
 **Interfaces:**
+
 - Produces: `request<T = undefined>(path: string, options?: { method?: string; body?: unknown }): Promise<T>`. It sends a JSON body and `Content-Type` when `body` is given, returns `undefined` for `204` and parsed JSON otherwise, and throws `new Error(await readErrorMessage(response))` when `!response.ok`.
 
 - [ ] **Step 1: Write failing tests** (stub `globalThis.fetch` with `vi.stubGlobal`):
@@ -288,8 +306,9 @@
   - Create → `"Player created"` / `"Skin created"`
   - Refresh → `"Synced from osu!"`
   - Delete → `"Skin deleted"`
-  
+
   Remove the `errorMessage` state and the red header text everywhere. Inline field hints stay.
+
 - [ ] **Step 4:** Run → PASS. Gate.
 - [ ] **Step 5:** Manually: save a skin with the download URL set to `x` by editing the request (or temporarily remove the client-side `canSave` check). The toast shows `download_url must be a valid URL`.
 - [ ] **Step 6:** Commit: `feat(ui): show request results as toasts`.
@@ -297,6 +316,7 @@
 ### Task 10: Error page
 
 **Files:**
+
 - Create: `src/routes/+error.svelte`
 
 - [ ] **Step 1:** Implement it with `page.status`, `page.error.message` and `page.error.errorId` from `$app/state`.
@@ -313,6 +333,7 @@
 ### Task 11: Folder moves, renames and import conventions
 
 **Files (moves; update every importer):**
+
 - `src/lib/utils/clipboard.svelte.ts` → `src/lib/hooks/copy-link.svelte.ts`
 - `src/lib/utils/skinImages.ts` (+ test) → `src/routes/(admin)/dashboard/skin-images.ts` (+ test)
 - `src/lib/utils/uploadthing.ts` → `src/lib/uploadthing.ts`
@@ -331,20 +352,44 @@
 ### Task 12: `useListQuery` and search-sorted
 
 **Files:**
+
 - Create: `src/lib/hooks/list-query.svelte.ts`
 - Delete: `src/lib/utils/fuzzyFilter.svelte.ts`, `src/lib/utils/sorted.svelte.ts` (and the now-empty `src/lib/utils/`)
 - Modify: `src/lib/constants.ts` (keeps only `POPOVER_SETTINGS`), `src/lib/components/search-sorted.svelte`, `src/routes/(public)/+page.svelte`, `(public)/skins/+page.svelte`, `(public)/player/[osuId]/+page.svelte`, `(admin)/dashboard/+page.svelte`, `assign-skins-dialog.svelte`, `assign-players-dialog.svelte`
 
 **Interfaces:**
+
 - Produces:
   ```ts
-  type SortOption<T> = { value: string; label: string; ascIcon: string; descIcon: string; compare: (a: T, b: T) => number };
-  type ListConfig<T> = { keys: IFuseOptions<T>["keys"]; threshold?: number; sortOptions: readonly SortOption<T>[]; defaultSort: string; defaultOrder: "asc" | "desc" };
-  function useListQuery<T>(list: () => T[], config: ListConfig<T>): { query: string; sortBy: string; orderBy: "asc" | "desc"; readonly results: T[]; readonly sortOptions: readonly SortOption<T>[] };
-  export const PLAYER_LIST: ListConfig<Doc<"players">>;   // keys name, osu_id, previous_usernames, tags; default name/asc
-  export const SKIN_LIST: ListConfig<Doc<"skins">>;       // keys name, tags; default date/desc
+  type SortOption<T> = {
+  	value: string;
+  	label: string;
+  	ascIcon: string;
+  	descIcon: string;
+  	compare: (a: T, b: T) => number;
+  };
+  type ListConfig<T> = {
+  	keys: IFuseOptions<T>["keys"];
+  	threshold?: number;
+  	sortOptions: readonly SortOption<T>[];
+  	defaultSort: string;
+  	defaultOrder: "asc" | "desc";
+  };
+  function useListQuery<T>(
+  	list: () => T[],
+  	config: ListConfig<T>
+  ): {
+  	query: string;
+  	sortBy: string;
+  	orderBy: "asc" | "desc";
+  	readonly results: T[];
+  	readonly sortOptions: readonly SortOption<T>[];
+  };
+  export const PLAYER_LIST: ListConfig<Doc<"players">>; // keys name, osu_id, previous_usernames, tags; default name/asc
+  export const SKIN_LIST: ListConfig<Doc<"skins">>; // keys name, tags; default date/desc
   export const DASHBOARD_SKIN_LIST: ListConfig<SkinWithPlayers>; // SKIN_LIST + keys author, players.name, players.previous_usernames
   ```
+
   - `query`, `sortBy` and `orderBy` are `$state` behind getters and setters. `results` is `$derived` (fuzzy filter with threshold 0.4 by default, then sort).
   - `SkinWithPlayers` comes from Task 14. Until then, define it locally in this file and move it in Task 14.
 - Also export `type ListQuery<T> = ReturnType<typeof useListQuery<T>>`. `search-sorted.svelte` uses `<script lang="ts" generics="T">` with props `{ list: ListQuery<T>; placeholder: string }` (no `any`). It binds to `list.query` and `list.sortBy` and toggles `list.orderBy`.
@@ -357,10 +402,12 @@
 ### Task 13: Delete dialog and hold-to-delete everywhere
 
 **Files:**
+
 - Create: `src/routes/(admin)/dashboard/delete-dialog.svelte`
 - Modify: `src/lib/components/hold-button.svelte` (the direction `switch` becomes `const FILL = { top: { origin: "origin-top", axis: "Y" }, ... }`), `player-editor.svelte`, `skin-editor.svelte`, `dashboard/+page.svelte`
 
 **Interfaces:**
+
 - Produces: `delete-dialog.svelte` props `{ open: boolean (bindable); name: string; kind: "player" | "skin"; onConfirm: () => Promise<void> }`.
   - Text: `Type <strong>{name}</strong> to delete this {kind}.`
   - The Delete button is disabled unless `input === name`.
@@ -370,7 +417,7 @@
   - `await request(\`/api/players/${id}\`, { method: "DELETE" })`, then `toast.success("Player deleted")`.
   - Close the editor if it showed that item (`selected = null`).
   - `invalidate("app:players")` / `invalidate("app:skins")`.
-  
+
   The sidebar's context-menu `HoldButton`s get `onComplete` that opens the dialog for that item.
 
 - [ ] **Step 1:** Implement and wire up the dialog in all four places.
@@ -383,10 +430,12 @@
 ### Task 14: Tag input, shared types, dashboard state
 
 **Files:**
+
 - Create: `src/routes/(admin)/dashboard/tag-input.svelte`
 - Modify: `src/lib/types.ts`, `src/lib/utils.ts`, `src/app.d.ts`, `player-editor.svelte`, `skin-editor.svelte`, `assign-skins-dialog.svelte`, `assign-players-dialog.svelte`, `dashboard/+page.svelte`, `src/lib/hooks/list-query.svelte.ts` (import `SkinWithPlayers` from `$lib/types`)
 
 **Interfaces:**
+
 - Produces: `tag-input.svelte` props `{ tags: string[] (bindable); suggestions: string[]; id: string }`. It contains the input, datalist, Enter/`,`/blur add logic and removable chips moved from the editors, uses `normalizeTags`, and only offers suggestions that aren't already chosen.
 - Produces in `$lib/types.ts`:
   - `AuthUser` (`player_id: Id<"players"> | null`)
@@ -403,6 +452,7 @@
 ### Task 15: Small component fixes and script order pass
 
 **Files:**
+
 - Modify: `src/lib/components/page-heading.svelte`, `image-carousel.svelte`, `user-icon.svelte`, `navbar.svelte`, then every `.svelte` file outside `components/ui/` for the script order
 
 - [ ] **Step 1:** Make the component fixes:

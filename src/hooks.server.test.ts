@@ -9,7 +9,12 @@ describe("handleError", () => {
 
 	it("passes 404s through without logging or a reference id", async () => {
 		const log = vi.spyOn(console, "error").mockImplementation(() => {});
-		const result = await handleError({ error: new Error("x"), event, status: 404, message: "Not Found" });
+		const result = await handleError({
+			error: new Error("x"),
+			event,
+			status: 404,
+			message: "Not Found"
+		});
 		expect(result).toEqual({ message: "Not Found" });
 		expect(log).not.toHaveBeenCalled();
 	});

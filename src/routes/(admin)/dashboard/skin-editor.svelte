@@ -165,7 +165,6 @@
 	function removePlayer(playerId: Id<"players">) {
 		draft.playerIds = draft.playerIds.filter((id) => id !== playerId);
 	}
-
 </script>
 
 <div class="flex flex-col gap-2">
@@ -226,7 +225,7 @@
 			{/if}
 		</div>
 
-			<TagInput id="skin-tags" bind:tags={draft.skin.tags} suggestions={tagSuggestions} />
+		<TagInput id="skin-tags" bind:tags={draft.skin.tags} suggestions={tagSuggestions} />
 
 		<!-- Preview images -->
 		<section
