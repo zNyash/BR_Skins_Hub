@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { readErrorMessage } from "$lib/utils/http";
+	import { toast } from "svelte-sonner";
+	import { request } from "$lib/api";
 	import { onDestroy } from "svelte";
 	import { flip } from "svelte/animate";
 	import { invalidate } from "$app/navigation";
@@ -42,7 +43,6 @@
 	let draft = $state(structuredClone(initialDraft));
 
 	let isSaving = $state(false);
-	let errorMessage = $state<string | null>(null);
 
 	// Files can't be JSON-compared, so images are compared by a stable key (url or blob preview).
 	const imageKey = (item: ImageItem) => (item.kind === "url" ? item.url : item.preview);
@@ -73,7 +73,6 @@
 		if (!canSave || isSaving) return;
 
 		isSaving = true;
-		errorMessage = null;
 
 		try {
 			// 1. Upload new files (in their current order), then swap them for their urls.
@@ -88,38 +87,36 @@
 
 			// 2. Save the skin and who uses it, in one transaction.
 			//    The server deletes images that were removed from the list.
-			const response = await fetch(`/api/skins/${skin._id}`, {
+			await request(`/api/skins/${skin._id}`, {
 				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
+				body: {
 					name: draft.skin.name.trim(),
 					author: draft.skin.author.trim(),
 					download_url: draft.skin.download_url.trim(),
 					tags: draft.skin.tags,
 					preview_images,
 					player_ids: draft.playerIds
-				})
+				}
 			});
-			if (!response.ok) throw new Error(await readErrorMessage(response));
+			toast.success("Skin saved");
 
 			onSave();
 			await invalidate("app:skins");
 		} catch (e) {
-			errorMessage = e instanceof Error ? e.message : "Failed to save";
+			toast.error((e as Error).message);
 		} finally {
 			isSaving = false;
 		}
 	}
 
 	async function handleDelete() {
-		errorMessage = null;
 		try {
-			const response = await fetch(`/api/skins/${skin._id}`, { method: "DELETE" });
-			if (!response.ok) throw new Error(await readErrorMessage(response));
+			await request(`/api/skins/${skin._id}`, { method: "DELETE" });
+			toast.success("Skin deleted");
 			onDelete();
 			await invalidate("app:skins");
 		} catch (e) {
-			errorMessage = e instanceof Error ? e.message : "Failed to delete";
+			toast.error((e as Error).message);
 		}
 	}
 
@@ -209,7 +206,6 @@
 			<p class="text-xs font-normal">
 				{skin.name} · updated {formatDate(skin.updated_at ?? skin._creationTime)}
 			</p>
-			<p class="text-xs font-normal text-red-400">{errorMessage}</p>
 		</div>
 
 		<div class="flex gap-2">

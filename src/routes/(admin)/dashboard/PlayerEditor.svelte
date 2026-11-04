@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { readErrorMessage } from "$lib/utils/http";
+	import { toast } from "svelte-sonner";
+	import { request } from "$lib/api";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import * as Select from "$comp/ui/select";
@@ -51,7 +52,6 @@
 
 	let isSaving = $state(false);
 	let isRefreshing = $state(false);
-	let errorMessage = $state<string | null>(null);
 
 	let isDirty = $derived.by(() => {
 		const current = $state.snapshot(draft);
@@ -69,21 +69,18 @@
 
 		if (!isDirty) return;
 		isSaving = true;
-		errorMessage = null;
 
 		try {
 			// Fields and skin assignments are saved together, in one transaction.
-			const response = await fetch(`/api/players/${player._id}`, {
+			await request(`/api/players/${player._id}`, {
 				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ ...draft.player, skin_ids: draft.skinIds })
+				body: { ...draft.player, skin_ids: draft.skinIds }
 			});
-			if (!response.ok) throw new Error(await readErrorMessage(response));
-
+			toast.success("Player saved");
 			onSave();
 			await invalidate("app:players");
 		} catch (e) {
-			errorMessage = e instanceof Error ? e.message : "Failed to save";
+			toast.error((e as Error).message);
 		} finally {
 			isSaving = false;
 		}
@@ -91,18 +88,13 @@
 
 	async function refreshFromOsu() {
 		isRefreshing = true;
-		errorMessage = null;
 		try {
-			const response = await fetch("/api/players/sync", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ osu_id: player.osu_id })
-			});
-			if (!response.ok) throw new Error(await readErrorMessage(response));
+			await request("/api/players/sync", { method: "POST", body: { osu_id: player.osu_id } });
+			toast.success("Synced from osu!");
 			// The page re-creates this editor when the player data changes, so the draft picks up the fresh data.
 			await invalidate("app:players");
 		} catch (e) {
-			errorMessage = e instanceof Error ? e.message : "Failed to refresh from osu!";
+			toast.error((e as Error).message);
 		} finally {
 			isRefreshing = false;
 		}
@@ -161,7 +153,6 @@
 		<div class="flex flex-col">
 			<p class="text-lg font-medium">Editing player</p>
 			<p class="text-xs font-normal">{player.name}</p>
-			<p class="text-xs font-normal text-red-400">{errorMessage}</p>
 		</div>
 
 		<div class="flex gap-2">

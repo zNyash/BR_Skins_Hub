@@ -23,7 +23,6 @@
 	import PlayerCreatorDialog from "./PlayerCreatorDialog.svelte";
 	import SkinEditor from "./SkinEditor.svelte";
 	import SkinCreatorDialog from "./SkinCreatorDialog.svelte";
-	import { Toaster } from "$comp/ui/sonner";
 
 	// ---------- Types ----------
 	// Creating happens in dialogs; only editing uses the main panel.
@@ -107,7 +106,6 @@
 </script>
 
 <PageHeading title="Dashboard" description="Admin Dashboard" />
-<Toaster />
 
 <PlayerCreatorDialog
 	bind:open={isCreatingPlayer}

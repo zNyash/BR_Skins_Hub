@@ -16,3 +16,24 @@ export async function readErrorMessage(response: Response): Promise<string> {
 		return text; // not JSON, so it's already a plain text message
 	}
 }
+
+/**
+ * Calls our API with a JSON body. Resolves the parsed response (undefined for 204),
+ * or rejects with the backend's error message, ready to show in a toast.
+ */
+export async function request<T = undefined>(
+	path: string,
+	options: { method?: string; body?: unknown } = {}
+): Promise<T> {
+	const response = await fetch(path, {
+		method: options.method ?? "GET",
+		...(options.body !== undefined && {
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(options.body)
+		})
+	});
+
+	if (!response.ok) throw new Error(await readErrorMessage(response));
+	if (response.status === 204) return undefined as T;
+	return (await response.json()) as T;
+}

@@ -10,7 +10,7 @@ import type { RequestHandler } from "./$types";
 
 const CreatePlayerBody = v.object({ osu_id: osuId });
 
-/** Creates a player from their osu! profile. An existing player is re-synced and returned with 200. */
+/** Creates a player from their osu! profile. An existing player is re-synced and returned with 200 (created: false). */
 export const POST: RequestHandler = async (event) => {
 	requireAdmin(event);
 	const { osu_id } = await parseBody(event.request, CreatePlayerBody);
@@ -25,5 +25,5 @@ export const POST: RequestHandler = async (event) => {
 		only_if_exists: false
 	});
 
-	return json({ player }, { status: existed ? 200 : 201 });
+	return json({ player, created: !existed }, { status: existed ? 200 : 201 });
 };

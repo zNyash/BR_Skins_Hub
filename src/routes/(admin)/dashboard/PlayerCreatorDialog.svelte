@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { readErrorMessage } from "$lib/utils/http";
+	import { request } from "$lib/api";
 	import { invalidate } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 	import Icon from "$comp/icon.svelte";
@@ -18,14 +18,12 @@
 
 	let input = $state("");
 	let isCreating = $state(false);
-	let errorMessage = $state<string | null>(null);
 
 	const osuId = $derived(parseOsuId(input));
 
 	function handleOpenChange(isOpen: boolean) {
 		if (isOpen) {
 			input = "";
-			errorMessage = null;
 		}
 	}
 
@@ -34,28 +32,22 @@
 		if (!osuId || isCreating) return;
 
 		isCreating = true;
-		errorMessage = null;
 
 		try {
-			const response = await fetch("/api/players", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ osu_id: osuId })
-			});
-			if (!response.ok) throw new Error(await readErrorMessage(response));
-
-			// 201 means it was created, 200 that it already existed (and was re-synced).
-			const existed = response.status === 200;
-			const { player } = (await response.json()) as { player: Doc<"players"> };
+			const { player, created } = await request<{ player: Doc<"players">; created: boolean }>(
+				"/api/players",
+				{ method: "POST", body: { osu_id: osuId } }
+			);
 
 			// Reload the player list first, so the editor can find the new player.
 			await invalidate("app:players");
-			if (existed) toast.info(`${player.name} already exists, opened their editor`);
+			if (created) toast.success(`${player.name} created`);
+			else toast.info(`${player.name} already exists, opened their editor`);
 
 			open = false;
 			onCreated(player._id);
 		} catch (e) {
-			errorMessage = e instanceof Error ? e.message : "Failed to create player";
+			toast.error((e as Error).message);
 		} finally {
 			isCreating = false;
 		}
@@ -83,9 +75,6 @@
 				<p class="text-xs text-muted-foreground">
 					That doesn't look like an osu! ID or profile link.
 				</p>
-			{/if}
-			{#if errorMessage}
-				<p class="text-xs text-red-400">{errorMessage}</p>
 			{/if}
 		</form>
 

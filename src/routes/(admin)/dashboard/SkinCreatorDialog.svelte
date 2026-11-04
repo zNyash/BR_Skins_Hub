@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { readErrorMessage } from "$lib/utils/http";
+	import { toast } from "svelte-sonner";
+	import { request } from "$lib/api";
 	import { invalidate } from "$app/navigation";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
@@ -17,7 +18,6 @@
 	const emptyForm = { name: "", author: "", download_url: "" };
 	let form = $state({ ...emptyForm });
 	let isCreating = $state(false);
-	let errorMessage = $state<string | null>(null);
 
 	const nameValid = $derived(form.name.trim().length > 0);
 	const urlValid = $derived(URL.canParse(form.download_url.trim()));
@@ -25,7 +25,6 @@
 	function handleOpenChange(isOpen: boolean) {
 		if (isOpen) {
 			form = { ...emptyForm };
-			errorMessage = null;
 		}
 	}
 
@@ -34,22 +33,18 @@
 		if (!nameValid || !urlValid || isCreating) return;
 
 		isCreating = true;
-		errorMessage = null;
 
 		try {
-			const response = await fetch("/api/skins", {
+			const { id } = await request<{ id: Id<"skins"> }>("/api/skins", {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
+				body: {
 					name: form.name.trim(),
 					author: form.author.trim() || undefined,
 					download_url: form.download_url.trim(),
 					preview_images: []
-				})
+				}
 			});
-			if (!response.ok) throw new Error(await readErrorMessage(response));
-
-			const { id } = (await response.json()) as { id: Id<"skins"> };
+			toast.success("Skin created");
 
 			// Reload the skin list first, so the editor can find the new skin.
 			await invalidate("app:skins");
@@ -57,7 +52,7 @@
 			open = false;
 			onCreated(id);
 		} catch (e) {
-			errorMessage = e instanceof Error ? e.message : "Failed to create skin";
+			toast.error((e as Error).message);
 		} finally {
 			isCreating = false;
 		}
@@ -100,9 +95,6 @@
 				{/if}
 			</div>
 
-			{#if errorMessage}
-				<p class="text-xs text-red-400">{errorMessage}</p>
-			{/if}
 		</form>
 
 		<Dialog.Footer>
