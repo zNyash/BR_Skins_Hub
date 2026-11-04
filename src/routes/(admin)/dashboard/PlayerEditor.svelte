@@ -8,7 +8,7 @@
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { invalidate } from "$app/navigation";
 	import AssignSkinsDialog from "./AssignSkinsDialog.svelte";
-	import { normalizeTags } from "$lib/utils/tags";
+	import { normalizeTags } from "$lib/tags";
 
 	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
 

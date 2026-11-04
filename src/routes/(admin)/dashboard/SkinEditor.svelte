@@ -8,7 +8,7 @@
 	import HoldButton from "$comp/ui/hold-button/hold-button.svelte";
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
-	import { normalizeTags } from "$lib/utils/tags";
+	import { normalizeTags } from "$lib/tags";
 	import { osuAvatar } from "$lib/utils/osu";
 	import { moveItem, resolveImageUrls, type ImageItem } from "$lib/utils/skinImages";
 	import { createUploadThing } from "$lib/utils/uploadthing";

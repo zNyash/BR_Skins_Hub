@@ -3,7 +3,7 @@ import { api } from "$convex/_generated/api";
 import { requireAdmin } from "$lib/server/auth";
 import { mutate } from "$lib/server/convex";
 import { clamp } from "$lib/utils/helpers";
-import { normalizeTags } from "$lib/utils/tags";
+import { normalizeTags } from "$lib/tags";
 
 export async function PATCH(event: RequestEvent) {
 	const admin = requireAdmin(event);

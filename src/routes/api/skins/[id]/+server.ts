@@ -3,7 +3,7 @@ import { json } from "@sveltejs/kit";
 import { requireAdmin } from "$lib/server/auth";
 import { convex, mutate } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
-import { normalizeTags } from "$lib/utils/tags";
+import { normalizeTags } from "$lib/tags";
 import { deleteUploadThingImages } from "$lib/server/uploadthing";
 
 export async function PATCH(event: RequestEvent) {

@@ -3,7 +3,7 @@ import { json, error } from "@sveltejs/kit";
 import { requireAdmin } from "$lib/server/auth";
 import { mutate } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
-import { normalizeTags } from "$lib/utils/tags";
+import { normalizeTags } from "$lib/tags";
 
 export async function POST(event: RequestEvent) {
 	const admin = requireAdmin(event);
