@@ -66,19 +66,25 @@
 			</div>
 			<div class="-mt-14 flex w-full items-center justify-between px-12">
 				<div class="flex items-end gap-2">
-					<img
-						src={osuAvatar(data.player.osu_id)}
-						alt="{data.player.name} Profile Picture"
-						class="size-28 shape-squircle rounded-3xl object-cover drop-shadow-lg"
-					/>
-					<Popover.Root>
-						<Popover.Trigger {...POPOVER_SETTINGS} class="text-start">
-							<p class="text-2xl font-bold">{data.player.name}</p>
-						</Popover.Trigger>
-						<Popover.Content class="w-fit px-2 py-1 outline outline-border">
-							<p class="text-sm">{data.player.previous_usernames?.join(", ")}</p>
-						</Popover.Content>
-					</Popover.Root>
+					<a href={`https://osu.ppy.sh/users/${data.player.osu_id}`} target="_blank">
+						<img
+							src={osuAvatar(data.player.osu_id)}
+							alt="{data.player.name} Profile Picture"
+							class="size-28 shape-squircle rounded-3xl object-cover drop-shadow-lg"
+						/>
+					</a>
+					{#if data.player.previous_usernames && data.player.previous_usernames.length > 0}
+						<Popover.Root>
+							<Popover.Trigger {...POPOVER_SETTINGS} class="text-start">
+								<p class="text-2xl font-bold">{data.player.name}</p>
+							</Popover.Trigger>
+							<Popover.Content class="w-fit px-2 py-1 outline outline-border">
+								<p class="text-sm">{data.player.previous_usernames?.join(", ")}</p>
+							</Popover.Content>
+						</Popover.Root>
+					{:else}
+						<p class="text-2xl font-bold">{data.player.name}</p>
+					{/if}
 				</div>
 			</div>
 		</div>
