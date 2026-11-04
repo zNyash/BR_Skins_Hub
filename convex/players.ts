@@ -172,6 +172,12 @@ export const deletePlayer = mutation({
 		player_id: v.id("players")
 	},
 	handler: async (ctx, args) => {
+		// Remove its assignments too, otherwise skins would point at a player that no longer exists.
+		const relations = await ctx.db
+			.query("playerSkins")
+			.withIndex("by_player", (q) => q.eq("player_id", args.player_id))
+			.collect();
+		await Promise.all(relations.map((r) => ctx.db.delete(r._id)));
 		await ctx.db.delete(args.player_id);
 	}
 });
