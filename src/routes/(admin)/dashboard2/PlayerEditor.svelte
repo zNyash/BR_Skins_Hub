@@ -6,11 +6,7 @@
 	import { Textarea } from "$comp/ui/textarea";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { invalidate } from "$app/navigation";
-	import { SKIN_SORT_OPTIONS, type OrderBy, type SkinSortBy } from "$lib/constants";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte";
-	import { useSorted } from "$lib/utils/sorted.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
-	import { Badge } from "$lib/components/ui/badge/index.js";
+	import AssignSkinsDialog from "./AssignSkinsDialog.svelte";
 
 	type SkinWithPlayers = Doc<"skins"> & { players: Doc<"players">[] };
 
@@ -48,23 +44,8 @@
 	};
 	let draft = $state(structuredClone(initialDraft));
 
-	let inputValue = $state("");
-	let sortBy = $state<SkinSortBy>("date");
-	let orderBy = $state<OrderBy>("desc");
 	let isSaving = $state(false);
 	let saveError = $state<string | null>(null);
-
-	const filtered = useFuzzyFilter(
-		() => allSkins,
-		() => inputValue,
-		{ keys: ["name"], threshold: 0.4 }
-	);
-	const sorted = useSorted(
-		() => filtered.results,
-		() => sortBy,
-		() => orderBy,
-		SKIN_SORT_OPTIONS
-	);
 
 	let isDirty = $derived.by(() => {
 		const current = $state.snapshot(draft);
@@ -76,7 +57,6 @@
 	});
 
 	let assignedSkins = $derived(allSkins.filter((skin) => draft.skinIds.includes(skin._id)));
-	let availableSkins = $derived(sorted.results.filter((skin) => !draft.skinIds.includes(skin._id)));
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -127,8 +107,10 @@
 		draft.player.links.splice(index, 1);
 	}
 
-	function addSkin(skinId: Id<"skins">) {
-		draft.skinIds.push(skinId);
+	function addSkins(skinIds: Id<"skins">[]) {
+		for (const id of skinIds) {
+			if (!draft.skinIds.includes(id)) draft.skinIds.push(id);
+		}
 	}
 	function removeSkin(skinId: Id<"skins">) {
 		draft.skinIds = draft.skinIds.filter((id) => id !== skinId);
@@ -241,48 +223,52 @@
 				{/each}
 			</div>
 
-			<div class="flex w-full flex-col gap-1 p-1">
-				<SearchSorted
-					placeholder="Search skins by name..."
-					sortOptions={SKIN_SORT_OPTIONS}
-					bind:sortBy
-					bind:orderBy
-					bind:inputValue
-				/>
-				<div class="flex w-full flex-wrap gap-2 gap-y-1">
-					{#each assignedSkins as skin}
-						<Badge variant="outline"
-							>{skin.name}
-							<button type="button" onclick={() => removeSkin(skin._id)}>
-								<Icon name="x" class="size-4 hover:brightness-125" />
-							</button>
-						</Badge>
-					{/each}
-				</div>
+			<div class="mt-2 flex flex-col gap-2 border-t border-border pt-3">
+				<span class="flex items-center justify-between">
+					<span class="flex items-center gap-2 text-sm font-medium">
+						Skins
+						<span class="rounded-full bg-primary/20 px-2 text-xs">{assignedSkins.length}</span>
+					</span>
+					<AssignSkinsDialog
+						{allSkins}
+						assignedIds={draft.skinIds}
+						playerName={draft.player.name}
+						onAssign={addSkins}
+					/>
+				</span>
 
-				<div class="grid h-fit grid-cols-2 flex-col gap-2">
-					{#each availableSkins as skin}
-						<div class="group/skin flex flex-col rounded bg-layer-2 hover:ring hover:ring-primary">
-							<span class="relative">
-								<img src={skin.preview_images[0]} alt="" class="rounded-t" />
-								<div
-									class="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover/skin:opacity-100"
-								>
-									<Button
-										variant="secondary"
-										class="bg-layer-3"
-										type="button"
-										onclick={() => addSkin(skin._id)}
-									>
-										<Icon name="plus" />
-										Assign
-									</Button>
+				{#if assignedSkins.length === 0}
+					<p class="py-4 text-center text-sm text-muted-foreground">No skins assigned yet.</p>
+				{:else}
+					<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+						{#each assignedSkins as skin (skin._id)}
+							<div
+								class="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-md bg-layer-2 p-1.5"
+							>
+								<img
+									src={skin.preview_images[0]}
+									alt=""
+									class="aspect-video w-16 rounded object-cover"
+								/>
+								<div class="min-w-0">
+									<p class="truncate text-sm">{skin.name}</p>
+									<p class="truncate text-xs text-muted-foreground">
+										by {skin.author ?? "Unknown"}
+									</p>
 								</div>
-							</span>
-							<p class="p-1">{skin.name}</p>
-						</div>
-					{/each}
-				</div>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-sm"
+									aria-label="Remove {skin.name}"
+									onclick={() => removeSkin(skin._id)}
+								>
+									<Icon name="x" />
+								</Button>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</span>
 	</form>
