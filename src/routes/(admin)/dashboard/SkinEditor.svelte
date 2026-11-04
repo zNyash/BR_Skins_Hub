@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { readErrorMessage } from "$lib/utils/http";
 	import { onDestroy } from "svelte";
 	import { flip } from "svelte/animate";
 	import { invalidate } from "$app/navigation";
@@ -97,7 +98,7 @@
 					preview_images
 				})
 			});
-			if (!skinResponse.ok) throw new Error(await skinResponse.text());
+			if (!skinResponse.ok) throw new Error(await readErrorMessage(skinResponse));
 
 			// 3. Save who uses this skin.
 			const playersResponse = await fetch(`/api/skin-players/${skin._id}`, {
@@ -105,7 +106,7 @@
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ player_ids: draft.playerIds })
 			});
-			if (!playersResponse.ok) throw new Error(await playersResponse.text());
+			if (!playersResponse.ok) throw new Error(await readErrorMessage(playersResponse));
 
 			onSave();
 			await invalidate("app:skins");
@@ -120,7 +121,7 @@
 		errorMessage = null;
 		try {
 			const response = await fetch(`/api/skins/${skin._id}`, { method: "DELETE" });
-			if (!response.ok) throw new Error(await response.text());
+			if (!response.ok) throw new Error(await readErrorMessage(response));
 			onDelete();
 			await invalidate("app:skins");
 		} catch (e) {

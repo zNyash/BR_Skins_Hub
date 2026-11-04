@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { readErrorMessage } from "$lib/utils/http";
 	import { invalidate } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 	import Icon from "$comp/icon.svelte";
@@ -42,7 +43,7 @@
 				body: JSON.stringify({ osu_id: osuId })
 			});
 			if (response.status === 404) throw new Error("osu! user not found");
-			if (!response.ok) throw new Error(await response.text());
+			if (!response.ok) throw new Error(await readErrorMessage(response));
 
 			const { id, name, existed } = (await response.json()) as {
 				id: Id<"players">;

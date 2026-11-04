@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { readErrorMessage } from "$lib/utils/http";
 	import { invalidate } from "$app/navigation";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
@@ -46,7 +47,7 @@
 					preview_images: []
 				})
 			});
-			if (!response.ok) throw new Error(await response.text());
+			if (!response.ok) throw new Error(await readErrorMessage(response));
 
 			const { id } = (await response.json()) as { id: Id<"skins"> };
 

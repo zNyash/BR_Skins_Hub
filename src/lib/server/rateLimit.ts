@@ -1,4 +1,4 @@
-import type { RequestEvent } from "@sveltejs/kit";
+import { error, type RequestEvent } from "@sveltejs/kit";
 
 type RateLimiterOptions = {
 	key: string;
@@ -49,13 +49,9 @@ export function createRateLimiter({ key, maxRequests, windowMs }: RateLimiterOpt
 
 			if (existing.count > maxRequests) {
 				const retryAfterSeconds = Math.ceil((existing.resetAt - now) / 1000);
-				throw new Response(JSON.stringify({ message: "Too many requests" }), {
-					status: 429,
-					headers: {
-						"Content-Type": "application/json",
-						"Retry-After": String(retryAfterSeconds)
-					}
-				});
+				// Must be SvelteKit's error(): any other thrown value (like a Response) is treated
+				// as a crash and turns into an opaque 500 "Error: {}".
+				error(429, `Too many requests, try again in ${retryAfterSeconds}s`);
 			}
 		}
 	};

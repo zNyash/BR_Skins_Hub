@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { readErrorMessage } from "$lib/utils/http";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import * as Select from "$comp/ui/select";
@@ -76,14 +77,14 @@
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ osu_id: player.osu_id, ...draft.player })
 			});
-			if (!playerResponse.ok) throw new Error(await playerResponse.text());
+			if (!playerResponse.ok) throw new Error(await readErrorMessage(playerResponse));
 
 			const skinResponse = await fetch(`/api/player-skins/${player._id}`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ skin_ids: draft.skinIds })
 			});
-			if (!skinResponse.ok) throw new Error(await skinResponse.text());
+			if (!skinResponse.ok) throw new Error(await readErrorMessage(skinResponse));
 
 			onSave();
 			await invalidate("app:players");
@@ -99,7 +100,7 @@
 		errorMessage = null;
 		try {
 			const response = await fetch(`/api/player/refresh?osu_id=${player.osu_id}`);
-			if (!response.ok) throw new Error(await response.text());
+			if (!response.ok) throw new Error(await readErrorMessage(response));
 			// The page re-creates this editor when the player data changes, so the draft picks up the fresh data.
 			await invalidate("app:players");
 		} catch (e) {
