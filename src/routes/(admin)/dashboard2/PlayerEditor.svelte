@@ -45,7 +45,8 @@
 	let draft = $state(structuredClone(initialDraft));
 
 	let isSaving = $state(false);
-	let saveError = $state<string | null>(null);
+	let isRefreshing = $state(false);
+	let errorMessage = $state<string | null>(null);
 
 	let isDirty = $derived.by(() => {
 		const current = $state.snapshot(draft);
@@ -63,7 +64,7 @@
 
 		if (!isDirty) return;
 		isSaving = true;
-		saveError = null;
+		errorMessage = null;
 
 		try {
 			const playerResponse = await fetch(`/api/players/${player._id}`, {
@@ -83,9 +84,24 @@
 			onSave();
 			await invalidate("app:players");
 		} catch (e) {
-			saveError = e instanceof Error ? e.message : "Failed to save";
+			errorMessage = e instanceof Error ? e.message : "Failed to save";
 		} finally {
 			isSaving = false;
+		}
+	}
+
+	async function refreshFromOsu() {
+		isRefreshing = true;
+		errorMessage = null;
+		try {
+			const response = await fetch(`/api/player/refresh?osu_id=${player.osu_id}`);
+			if (!response.ok) throw new Error(await response.text());
+			// The page re-creates this editor when the player data changes, so the draft picks up the fresh data.
+			await invalidate("app:players");
+		} catch (e) {
+			errorMessage = e instanceof Error ? e.message : "Failed to refresh from osu!";
+		} finally {
+			isRefreshing = false;
 		}
 	}
 
@@ -122,10 +138,22 @@
 		<div class="flex flex-col">
 			<p class="text-lg font-medium">Editing player</p>
 			<p class="text-xs font-normal">{player.name}</p>
-			<p class="text-xs font-normal text-red-400">{saveError}</p>
+			<p class="text-xs font-normal text-red-400">{errorMessage}</p>
 		</div>
 
-		<div>
+		<div class="flex gap-2">
+			<Button
+				type="button"
+				variant="secondary"
+				disabled={isDirty || isRefreshing}
+				title={isDirty
+					? "Save or discard your changes first"
+					: "Fetch name, cover and usernames from osu!"}
+				onclick={refreshFromOsu}
+			>
+				<Icon name="refresh-cw" class={isRefreshing ? "animate-spin" : ""} />
+				Refresh from osu!
+			</Button>
 			{#if isDirty}
 				<Button type="button" variant="secondary" onclick={discard}>
 					<Icon name="brush-cleaning" />
@@ -243,7 +271,7 @@
 					<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
 						{#each assignedSkins as skin (skin._id)}
 							<div
-								class="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-md bg-layer-2 p-1.5"
+								class="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-md bg-layer-2/50 p-1.5"
 							>
 								<img
 									src={skin.preview_images[0]}

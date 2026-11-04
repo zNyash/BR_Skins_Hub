@@ -20,11 +20,13 @@
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import PlayerEditor from "./PlayerEditor.svelte";
+	import PlayerCreatorDialog from "./PlayerCreatorDialog.svelte";
+	import { Toaster } from "$comp/ui/sonner";
 
 	// ---------- Types ----------
+	// Creating happens in dialogs; only editing uses the main panel.
 	type EditorState =
 		| { mode: "idle" }
-		| { mode: "create"; type: "player" | "skin" }
 		| { mode: "edit"; type: "player"; id: string }
 		| { mode: "edit"; type: "skin"; id: string };
 
@@ -34,6 +36,12 @@
 	let editor = $state<EditorState>({
 		mode: "idle"
 	});
+	let isCreatingPlayer = $state(false);
+
+	function openCreator() {
+		if (activeTab === "players") isCreatingPlayer = true;
+		// TODO: skin creator dialog
+	}
 
 	const editorPlayer = $derived.by(() => {
 		const e = editor;
@@ -89,6 +97,12 @@
 </script>
 
 <PageHeading title="Dashboard" description="Admin Dashboard" />
+<Toaster />
+
+<PlayerCreatorDialog
+	bind:open={isCreatingPlayer}
+	onCreated={(id) => (editor = { mode: "edit", type: "player", id })}
+/>
 
 <svelte:window onkeydown={quitEditMode} />
 
@@ -100,7 +114,7 @@
 					<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
 					<Tabs.Trigger value="skins" class="dark:data-active:bg-popover">Skins</Tabs.Trigger>
 				</Tabs.List>
-				<Button variant={editor.mode === "idle" ? "default" : "secondary"}>
+				<Button variant={editor.mode === "idle" ? "default" : "secondary"} onclick={openCreator}>
 					<Icon name="plus" />
 					New
 				</Button>
@@ -207,7 +221,8 @@
 		<div class="flex h-full min-h-0 w-full max-w-2xl flex-col overflow-y-auto rounded bg-muted p-4">
 			{#if editor.mode === "edit"}
 				{#if editor.type === "player"}
-					{#key editor.id}
+					<!-- Keyed on the player object (not just the id) so the editor re-reads it after a refresh from osu! -->
+					{#key editorPlayer}
 						<PlayerEditor
 							player={editorPlayer!}
 							allSkins={data.skins}
