@@ -8,7 +8,7 @@ import { api } from "$convex/_generated/api";
 
 export async function GET(event: RequestEvent) {
 	const code = event.url.searchParams.get("code");
-	if (!code) redirect(302, "/login");
+	if (!code) redirect(302, "/auth/login");
 
 	// Fetch osu! profile
 	const profile = await auth.authorize({
@@ -17,7 +17,7 @@ export async function GET(event: RequestEvent) {
 		client_secret: OSU_CLIENT_SECRET,
 		redirect_url: `${CURRENT_DOMAIN}/auth/callback`
 	});
-	if (!profile) redirect(302, "/login");
+	if (!profile) redirect(302, "/auth/login");
 
 	await mutate(api.auth.upsertUser, {
 		osu_id: profile.id,

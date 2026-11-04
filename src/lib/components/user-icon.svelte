@@ -27,7 +27,7 @@
 
 	async function login() {
 		const currentUrl = window.location.href;
-		const loginUrl = new URL("/login", window.location.origin);
+		const loginUrl = new URL("/auth/login", window.location.origin);
 		loginUrl.searchParams.set("from", currentUrl);
 
 		window.location.href = loginUrl.toString();
