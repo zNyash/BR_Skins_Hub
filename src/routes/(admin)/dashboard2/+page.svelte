@@ -21,6 +21,8 @@
 	import Button from "$comp/ui/button/button.svelte";
 	import PlayerEditor from "./PlayerEditor.svelte";
 	import PlayerCreatorDialog from "./PlayerCreatorDialog.svelte";
+	import SkinEditor from "./SkinEditor.svelte";
+	import SkinCreatorDialog from "./SkinCreatorDialog.svelte";
 	import { Toaster } from "$comp/ui/sonner";
 
 	// ---------- Types ----------
@@ -37,10 +39,11 @@
 		mode: "idle"
 	});
 	let isCreatingPlayer = $state(false);
+	let isCreatingSkin = $state(false);
 
 	function openCreator() {
 		if (activeTab === "players") isCreatingPlayer = true;
-		// TODO: skin creator dialog
+		else isCreatingSkin = true;
 	}
 
 	const editorPlayer = $derived.by(() => {
@@ -110,12 +113,17 @@
 	bind:open={isCreatingPlayer}
 	onCreated={(id) => (editor = { mode: "edit", type: "player", id })}
 />
+<SkinCreatorDialog
+	bind:open={isCreatingSkin}
+	onCreated={(id) => (editor = { mode: "edit", type: "skin", id })}
+/>
 
 <svelte:window onkeydown={quitEditMode} />
 
 <div class="flex h-[calc(100vh-44px)] min-h-0 gap-2 bg-card p-2">
 	<aside class="flex w-full max-w-xs gap-2 overflow-y-auto rounded-lg bg-surface p-2">
-		<Tabs.Root bind:value={activeTab}>
+		<!-- min-w-0: let the tabs shrink to the sidebar width, otherwise long truncated names widen it -->
+		<Tabs.Root bind:value={activeTab} class="w-full min-w-0">
 			<span class="grid w-full grid-cols-[2fr_1fr] gap-2">
 				<Tabs.List class="w-full bg-card">
 					<Tabs.Trigger value="players" class="dark:data-active:bg-popover">Players</Tabs.Trigger>
@@ -200,9 +208,12 @@
 										</Popover.Content>
 									</Popover.Root>
 								</span>
-								<div>
-									<p>{skin.name}</p>
-								</div>
+								<button
+									class="min-w-0 flex-1 self-stretch truncate text-left"
+									onclick={() => (editor = { mode: "edit", type: "skin", id: skin._id })}
+								>
+									{skin.name}
+								</button>
 							</div>
 						</ContextMenu.Trigger>
 						<ContextMenu.Content>
@@ -237,8 +248,17 @@
 							onSave={() => (editor = { mode: "idle" })}
 						/>
 					{/key}
-				{:else}
-					<p>Skin {editorSkin?.name}</p>
+				{:else if editorSkin}
+					<!-- Keyed on the skin object for the same reason as the player editor -->
+					{#key editorSkin}
+						<SkinEditor
+							skin={editorSkin}
+							allPlayers={data.players}
+							{tagSuggestions}
+							onSave={() => (editor = { mode: "idle" })}
+							onDelete={() => (editor = { mode: "idle" })}
+						/>
+					{/key}
 				{/if}
 			{:else}
 				<p>Theres nothing here.</p>
