@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sortPlayerSkins } from "./skin-order";
+import { sortPlayerSkins } from "./order";
 
 const entry = (id: string, created: number, position?: number) => ({
 	id,

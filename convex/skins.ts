@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { query, type QueryCtx } from "./_generated/server";
 import { adminMutation, fail, serverMutation } from "./lib/functions";
 import { deleteRelations, setSkinPlayers } from "./lib/relations";
@@ -26,16 +26,18 @@ export const listWithPlayers = query({
 		]);
 
 		const playersById = new Map(players.map((p) => [p._id, p]));
-		const playerIdsBySkin = new Map<Id<"skins">, Id<"players">[]>();
-		for (const { skin_id, player_id } of relations) {
-			playerIdsBySkin.set(skin_id, [...(playerIdsBySkin.get(skin_id) ?? []), player_id]);
+		const relationsBySkin = new Map<Id<"skins">, Doc<"playerSkins">[]>();
+		for (const r of relations) {
+			relationsBySkin.set(r.skin_id, [...(relationsBySkin.get(r.skin_id) ?? []), r]);
 		}
 
+		// Each player also carries this skin's place and visibility on their page (for the dashboard editor).
 		return skins.map((skin) => ({
 			...skin,
-			players: (playerIdsBySkin.get(skin._id) ?? [])
-				.map((id) => playersById.get(id))
-				.filter((p) => p !== undefined)
+			players: (relationsBySkin.get(skin._id) ?? []).flatMap((r) => {
+				const player = playersById.get(r.player_id);
+				return player ? [{ ...player, position: r.position, hidden: r.hidden ?? false }] : [];
+			})
 		}));
 	}
 });

@@ -79,7 +79,7 @@
 			// Fields and skin assignments are saved together, in one transaction.
 			await request(`/api/players/${player._id}`, {
 				method: "PATCH",
-				body: { ...draft.player, skin_ids: draft.skinIds }
+				body: { ...draft.player, skins: draft.skinIds.map((id) => ({ id, hidden: false })) }
 			});
 			toast.success("Player saved");
 			onSave();

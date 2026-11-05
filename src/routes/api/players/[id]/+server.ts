@@ -3,7 +3,7 @@ import { api } from "$convex/_generated/api";
 import type { Id } from "$convex/_generated/dataModel";
 import { requireAdmin } from "$lib/server/auth";
 import { mutate } from "$lib/server/convex";
-import { convexId, hue, links, tags, trimmedString } from "$lib/server/schemas";
+import { hue, links, playerSkins, tags, trimmedString } from "$lib/server/schemas";
 import { parseBody } from "$lib/server/validation";
 import type { RequestHandler } from "./$types";
 
@@ -21,18 +21,18 @@ const PlayerBody = v.object({
 	),
 	links: v.optional(links),
 	tags: v.optional(tags),
-	skin_ids: v.array(convexId)
+	skins: playerSkins
 });
 
 export const PATCH: RequestHandler = async (event) => {
 	const admin = requireAdmin(event);
-	const { skin_ids, ...fields } = await parseBody(event.request, PlayerBody);
+	const { skins, ...fields } = await parseBody(event.request, PlayerBody);
 
 	await mutate(api.players.update, {
 		actor_osu_id: admin.osu_id,
 		id: event.params.id,
 		...fields,
-		skin_ids: skin_ids as Id<"skins">[]
+		skins: skins.map((s) => ({ ...s, id: s.id as Id<"skins"> }))
 	});
 	return new Response(null, { status: 204 });
 };

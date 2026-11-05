@@ -34,8 +34,8 @@
 
 | File | Responsibility |
 | --- | --- |
-| `convex/lib/skin-order.ts` (new) | Pure `sortPlayerSkins`, shared by Convex and the dashboard |
-| `convex/lib/skin-order.test.ts` (new) | Its tests |
+| `convex/lib/order.ts` (new) | Pure `sortPlayerSkins`, shared by Convex and the dashboard |
+| `convex/lib/order.test.ts` (new) | Its tests |
 | `convex/schema.ts` | `position`, `hidden` on `playerSkins` |
 | `convex/lib/relations.ts` (+ test) | All relation writes: `setPlayerSkins`, `setSkinPlayers`, `reorderSkins`, `setSkinHidden` |
 | `convex/players.ts` | `get` returns sorted skins with `hidden` + `order`; `update` takes `skins` |
@@ -55,13 +55,13 @@
 ### Task 1: Pure sort order
 
 **Files:**
-- Create: `convex/lib/skin-order.ts`
-- Test: `convex/lib/skin-order.test.ts`
+- Create: `convex/lib/order.ts`
+- Test: `convex/lib/order.test.ts`
 
 **Interfaces:**
 - Produces: `sortPlayerSkins<T extends { position?: number; skin: { _creationTime: number } }>(entries: readonly T[]): T[]`. Returns a new array: entries with a `position` ascending first, then entries without one by `skin._creationTime` descending. Does not mutate the input.
 
-- [ ] **Step 1: Write the failing tests** in `convex/lib/skin-order.test.ts`
+- [ ] **Step 1: Write the failing tests** in `convex/lib/order.test.ts`
 
 ```ts
 const e = (id: string, created: number, position?: number) => ({ id, position, skin: { _creationTime: created } });
@@ -76,10 +76,10 @@ it("mixes positioned and unpositioned", () =>
 it("does not mutate the input", () => { const input = [e("a", 1), e("b", 2)]; sortPlayerSkins(input); expect(ids(input)).toEqual(["a", "b"]); });
 ```
 
-- [ ] **Step 2: Run and confirm it fails**: `bun run test convex/lib/skin-order.test.ts` → FAIL (module not found).
-- [ ] **Step 3: Implement `sortPlayerSkins`** in `convex/lib/skin-order.ts`. Import only types (no `_generated/server`), so `src` can import it via `$convex/lib/skin-order`.
+- [ ] **Step 2: Run and confirm it fails**: `bun run test convex/lib/order.test.ts` → FAIL (module not found).
+- [ ] **Step 3: Implement `sortPlayerSkins`** in `convex/lib/order.ts`. Import only types (no `_generated/server`), so `src` can import it via `$convex/lib/order`.
 - [ ] **Step 4: Run and confirm it passes**: same command → PASS.
-- [ ] **Step 5: Commit**: `git add convex/lib/skin-order*` → `feat(convex): add player skin sort order`
+- [ ] **Step 5: Commit**: `git add convex/lib/order*` → `feat(convex): add player skin sort order`
 
 ---
 
@@ -268,7 +268,7 @@ it("no longer accepts skin_ids alone", () =>
 - Modify: `src/routes/(admin)/dashboard/player-editor.svelte` (draft, dirty check, `addSkins`/`removeSkin`, skins section markup ~lines 267–315)
 
 **Interfaces:**
-- Consumes: `sortPlayerSkins` (Task 1, via `$convex/lib/skin-order`); `SkinWithPlayers` players with `position`/`hidden` (Task 3); `dndOptions`, `DND_FLIP_MS`, `GHOST_CLASS` (Task 4).
+- Consumes: `sortPlayerSkins` (Task 1, via `$convex/lib/order`); `SkinWithPlayers` players with `position`/`hidden` (Task 3); `dndOptions`, `DND_FLIP_MS`, `GHOST_CLASS` (Task 4).
 - Produces: `type DraftSkin = { id: Id<"skins">; hidden: boolean }` and `skinsChanged(a: readonly DraftSkin[], b: readonly DraftSkin[]): boolean`, true when the length, any id at an index, or any `hidden` at an index differs. Both in `player-skins.ts`.
 
 - [ ] **Step 1: Write the failing tests** in `player-skins.test.ts`
