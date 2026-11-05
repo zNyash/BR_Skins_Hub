@@ -49,20 +49,24 @@ The sort lives in a pure, tested function `sortPlayerSkins` (in `convex/lib/rela
 All in `convex/lib/relations.ts`.
 
 **`setPlayerSkins(db, playerId, skins: { id, hidden }[])`** (admin player editor). The array order is the custom order.
+
 - Missing relations are inserted with `position = index` and `hidden`.
 - Relations not in the list are deleted.
 - Existing rows are patched **only if** their `position` or `hidden` differs.
 
 **`setSkinPlayers(db, skinId, playerIds)`** (admin skin editor). Unchanged, except for the position of new relations:
+
 - If the player has any positioned rows, the new row gets `position = min(position) - 1`. Positions may go negative.
 - Otherwise it gets no position, and the date fallback already shows it first.
 - New rows are visible.
 
 **`reorderSkins(db, playerId, skinIds)`** (for the future settings page; built and tested now, not exposed):
+
 - `skinIds` must be exactly the player's current skins, with no missing, extra or duplicate ids. Otherwise `fail(400, "Skin list doesn't match the player's skins")`, with nothing written.
 - Sets `position = index`, patching only changed rows. Never touches `hidden`.
 
 **`setSkinHidden(db, playerId, skinId, hidden)`** (for the future settings page; built and tested now, not exposed):
+
 - `fail(404, ...)` if the player doesn't use that skin.
 - Patches `hidden`.
 

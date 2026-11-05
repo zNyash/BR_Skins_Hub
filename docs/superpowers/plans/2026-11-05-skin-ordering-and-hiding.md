@@ -32,48 +32,67 @@
 
 ## File Structure
 
-| File | Responsibility |
-| --- | --- |
-| `convex/lib/order.ts` (new) | Pure `sortPlayerSkins`, shared by Convex and the dashboard |
-| `convex/lib/order.test.ts` (new) | Its tests |
-| `convex/schema.ts` | `position`, `hidden` on `playerSkins` |
-| `convex/lib/relations.ts` (+ test) | All relation writes: `setPlayerSkins`, `setSkinPlayers`, `reorderSkins`, `setSkinHidden` |
-| `convex/players.ts` | `get` returns sorted skins with `hidden` + `order`; `update` takes `skins` |
-| `convex/skins.ts` | `listWithPlayers` players carry `position` + `hidden` |
-| `src/routes/api/players/[id]/+server.ts` (+ new test) | Body `skins: {id, hidden}[]`, duplicate check |
-| `src/lib/dnd.ts` (new) | Shared dnd settings (flip duration, tilt/shadow transform, ghost class) |
-| `src/routes/(admin)/dashboard/skin-images.ts` (+ test) | `ImageItem` gets `id`; `moveItem` removed |
-| `src/routes/(admin)/dashboard/skin-editor.svelte` | Images use `dndzone` |
-| `src/routes/(admin)/dashboard/player-skins.ts` (new, + test) | Pure `skinsChanged` for the editor's dirty check |
-| `src/routes/(admin)/dashboard/player-editor.svelte` | Ordered `{id, hidden}` draft, `dndzone`, eye toggle |
-| `src/lib/hooks/list-query.svelte.ts` (+ new `list-query.test.ts`) | `PLAYER_SKIN_LIST` with "Custom" sort |
-| `src/lib/components/skin-card.svelte` | Optional `hidden` prop |
-| `src/routes/(public)/player/[osuId]/+page.svelte` | Hidden toggle, uses `PLAYER_SKIN_LIST` |
+| File                                                              | Responsibility                                                                           |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `convex/lib/order.ts` (new)                                       | Pure `sortPlayerSkins`, shared by Convex and the dashboard                               |
+| `convex/lib/order.test.ts` (new)                                  | Its tests                                                                                |
+| `convex/schema.ts`                                                | `position`, `hidden` on `playerSkins`                                                    |
+| `convex/lib/relations.ts` (+ test)                                | All relation writes: `setPlayerSkins`, `setSkinPlayers`, `reorderSkins`, `setSkinHidden` |
+| `convex/players.ts`                                               | `get` returns sorted skins with `hidden` + `order`; `update` takes `skins`               |
+| `convex/skins.ts`                                                 | `listWithPlayers` players carry `position` + `hidden`                                    |
+| `src/routes/api/players/[id]/+server.ts` (+ new test)             | Body `skins: {id, hidden}[]`, duplicate check                                            |
+| `src/lib/dnd.ts` (new)                                            | Shared dnd settings (flip duration, tilt/shadow transform, ghost class)                  |
+| `src/routes/(admin)/dashboard/skin-images.ts` (+ test)            | `ImageItem` gets `id`; `moveItem` removed                                                |
+| `src/routes/(admin)/dashboard/skin-editor.svelte`                 | Images use `dndzone`                                                                     |
+| `src/routes/(admin)/dashboard/player-skins.ts` (new, + test)      | Pure `skinsChanged` for the editor's dirty check                                         |
+| `src/routes/(admin)/dashboard/player-editor.svelte`               | Ordered `{id, hidden}` draft, `dndzone`, eye toggle                                      |
+| `src/lib/hooks/list-query.svelte.ts` (+ new `list-query.test.ts`) | `PLAYER_SKIN_LIST` with "Custom" sort                                                    |
+| `src/lib/components/skin-card.svelte`                             | Optional `hidden` prop                                                                   |
+| `src/routes/(public)/player/[osuId]/+page.svelte`                 | Hidden toggle, uses `PLAYER_SKIN_LIST`                                                   |
 
 ---
 
 ### Task 1: Pure sort order
 
 **Files:**
+
 - Create: `convex/lib/order.ts`
 - Test: `convex/lib/order.test.ts`
 
 **Interfaces:**
+
 - Produces: `sortPlayerSkins<T extends { position?: number; skin: { _creationTime: number } }>(entries: readonly T[]): T[]`. Returns a new array: entries with a `position` ascending first, then entries without one by `skin._creationTime` descending. Does not mutate the input.
 
 - [ ] **Step 1: Write the failing tests** in `convex/lib/order.test.ts`
 
 ```ts
-const e = (id: string, created: number, position?: number) => ({ id, position, skin: { _creationTime: created } });
+const e = (id: string, created: number, position?: number) => ({
+	id,
+	position,
+	skin: { _creationTime: created }
+});
 const ids = (list: { id: string }[]) => list.map((x) => x.id);
 
 it("sorts positioned entries by position", () =>
-	expect(ids(sortPlayerSkins([e("a", 1, 2), e("b", 2, 0), e("c", 3, 1)]))).toEqual(["b", "c", "a"]));
+	expect(ids(sortPlayerSkins([e("a", 1, 2), e("b", 2, 0), e("c", 3, 1)]))).toEqual([
+		"b",
+		"c",
+		"a"
+	]));
 it("sorts unpositioned entries newest first", () =>
 	expect(ids(sortPlayerSkins([e("a", 1), e("b", 3), e("c", 2)]))).toEqual(["b", "c", "a"]));
 it("mixes positioned and unpositioned", () =>
-	expect(ids(sortPlayerSkins([e("old", 1), e("new", 9), e("p1", 5, -1), e("p0", 2, 0)]))).toEqual(["p1", "p0", "new", "old"]));
-it("does not mutate the input", () => { const input = [e("a", 1), e("b", 2)]; sortPlayerSkins(input); expect(ids(input)).toEqual(["a", "b"]); });
+	expect(ids(sortPlayerSkins([e("old", 1), e("new", 9), e("p1", 5, -1), e("p0", 2, 0)]))).toEqual([
+		"p1",
+		"p0",
+		"new",
+		"old"
+	]));
+it("does not mutate the input", () => {
+	const input = [e("a", 1), e("b", 2)];
+	sortPlayerSkins(input);
+	expect(ids(input)).toEqual(["a", "b"]);
+});
 ```
 
 - [ ] **Step 2: Run and confirm it fails**: `bun run test convex/lib/order.test.ts` → FAIL (module not found).
@@ -86,11 +105,13 @@ it("does not mutate the input", () => { const input = [e("a", 1), e("b", 2)]; so
 ### Task 2: Schema and relation helpers
 
 **Files:**
+
 - Modify: `convex/schema.ts` (`playerSkins` table)
 - Modify: `convex/lib/relations.ts`
 - Test: `convex/lib/relations.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing from Task 1.
 - Produces (all in `convex/lib/relations.ts`):
   - `type SkinEntry = { id: Id<"skins">; hidden: boolean }` (exported)
@@ -100,7 +121,7 @@ it("does not mutate the input", () => { const input = [e("a", 1), e("b", 2)]; so
   - `setSkinHidden(db, playerId, skinId: Id<"skins">, hidden: boolean): Promise<void>`
 
 - [ ] **Step 1: Add the schema fields** to `playerSkins` in `convex/schema.ts`, with the doc comments copied from the spec's Data model section:
-  `position: v.optional(v.number())`, `hidden: v.optional(v.boolean())`.
+      `position: v.optional(v.number())`, `hidden: v.optional(v.boolean())`.
 
 - [ ] **Step 2: Extend the fake db and write the failing tests** in `convex/lib/relations.test.ts`
   - `Row` gains `position?: number; hidden?: boolean`. `fakeDb` gains `patch: async (id, fields) => Object.assign(row, fields)` and records each patched id in a returned `patched: string[]`.
@@ -111,7 +132,10 @@ it("does not mutate the input", () => { const input = [e("a", 1), e("b", 2)]; so
 // setPlayerSkins
 it("saves array order as position and hidden flags", async () => {
 	const { db, rows } = fakeDb([{ player_id: "p1", skin_id: "s1" }]);
-	await setPlayerSkins(db, player("p1"), [{ id: skin("s2"), hidden: true }, { id: skin("s1"), hidden: false }]);
+	await setPlayerSkins(db, player("p1"), [
+		{ id: skin("s2"), hidden: true },
+		{ id: skin("s1"), hidden: false }
+	]);
 	expect(at(rows, "s2")).toMatchObject({ position: 0, hidden: true });
 	expect(at(rows, "s1")).toMatchObject({ position: 1, hidden: false });
 });
@@ -120,14 +144,20 @@ it("patches only rows whose position or hidden changed", async () => {
 		{ player_id: "p1", skin_id: "s1", position: 0, hidden: false },
 		{ player_id: "p1", skin_id: "s2", position: 1, hidden: false }
 	]);
-	await setPlayerSkins(db, player("p1"), [{ id: skin("s1"), hidden: false }, { id: skin("s2"), hidden: true }]);
+	await setPlayerSkins(db, player("p1"), [
+		{ id: skin("s1"), hidden: false },
+		{ id: skin("s2"), hidden: true }
+	]);
 	expect(patched).toHaveLength(1); // only s2
 });
 // existing "ignores duplicate ids" keeps passing: [{s1}, {s1}] → one row, position 0
 
 // setSkinPlayers
 it("puts a new relation on top of a player's custom order", async () => {
-	const { db, rows } = fakeDb([{ player_id: "p1", skin_id: "s1", position: 0 }, { player_id: "p1", skin_id: "s2", position: 1 }]);
+	const { db, rows } = fakeDb([
+		{ player_id: "p1", skin_id: "s1", position: 0 },
+		{ player_id: "p1", skin_id: "s2", position: 1 }
+	]);
 	await setSkinPlayers(db, skin("s3"), [player("p1")]);
 	expect(at(rows, "s3")?.position).toBe(-1);
 });
@@ -139,7 +169,10 @@ it("leaves position empty when the player has no custom order", async () => {
 
 // reorderSkins
 it("sets positions from the given order and keeps hidden", async () => {
-	const { db, rows } = fakeDb([{ player_id: "p1", skin_id: "s1", hidden: true }, { player_id: "p1", skin_id: "s2" }]);
+	const { db, rows } = fakeDb([
+		{ player_id: "p1", skin_id: "s1", hidden: true },
+		{ player_id: "p1", skin_id: "s2" }
+	]);
 	await reorderSkins(db, player("p1"), [skin("s2"), skin("s1")]);
 	expect(at(rows, "s2")?.position).toBe(0);
 	expect(at(rows, "s1")).toMatchObject({ position: 1, hidden: true });
@@ -149,8 +182,13 @@ it.each([
 	["extra", ["s1", "s2", "s3"]],
 	["duplicate", ["s1", "s1"]]
 ])("rejects a %s id without writing", async (_, list) => {
-	const { db, patched } = fakeDb([{ player_id: "p1", skin_id: "s1" }, { player_id: "p1", skin_id: "s2" }]);
-	await expect(reorderSkins(db, player("p1"), list.map(skin))).rejects.toMatchObject({ data: { status: 400 } });
+	const { db, patched } = fakeDb([
+		{ player_id: "p1", skin_id: "s1" },
+		{ player_id: "p1", skin_id: "s2" }
+	]);
+	await expect(reorderSkins(db, player("p1"), list.map(skin))).rejects.toMatchObject({
+		data: { status: 400 }
+	});
 	expect(patched).toEqual([]);
 });
 
@@ -162,11 +200,13 @@ it("toggles hidden", async () => {
 });
 it("rejects a skin the player doesn't use", async () => {
 	const { db } = fakeDb([{ player_id: "p2", skin_id: "s1" }]);
-	await expect(setSkinHidden(db, player("p1"), skin("s1"), true)).rejects.toMatchObject({ data: { status: 404 } });
+	await expect(setSkinHidden(db, player("p1"), skin("s1"), true)).rejects.toMatchObject({
+		data: { status: 404 }
+	});
 });
 ```
 
-  The fake `withIndex` already filters on any `eq` fields, so `by_player_skin` works for `setSkinHidden`.
+The fake `withIndex` already filters on any `eq` fields, so `by_player_skin` works for `setSkinHidden`.
 
 - [ ] **Step 3: Run and confirm they fail**: `bun run test convex/lib/relations.test.ts` → the new tests FAIL.
 - [ ] **Step 4: Implement the four helpers** in `convex/lib/relations.ts`:
@@ -183,6 +223,7 @@ it("rejects a skin the player doesn't use", async () => {
 ### Task 3: Queries, admin mutation and API
 
 **Files:**
+
 - Modify: `convex/players.ts` (`get`, `update`)
 - Modify: `convex/skins.ts` (`listWithPlayers`)
 - Modify: `src/routes/api/players/[id]/+server.ts`
@@ -190,6 +231,7 @@ it("rejects a skin the player doesn't use", async () => {
 - Test: `src/routes/api/players/[id]/body.test.ts` (new)
 
 **Interfaces:**
+
 - Consumes: `sortPlayerSkins` (Task 1); `setPlayerSkins`, `SkinEntry` (Task 2).
 - Produces:
   - `api.players.get` returns `{ ...player, skins: (Doc<"skins"> & { hidden: boolean; order: number })[] }`, already sorted. `order` is the index in that sorted list. `PlayerWithSkins` in `src/lib/types.ts` follows automatically.
@@ -201,17 +243,31 @@ it("rejects a skin the player doesn't use", async () => {
 
 ```ts
 it("accepts ordered skins with hidden flags", () =>
-	expect(v.safeParse(PlayerBody, { skins: [{ id: "a", hidden: true }, { id: "b", hidden: false }] }).success).toBe(true));
+	expect(
+		v.safeParse(PlayerBody, {
+			skins: [
+				{ id: "a", hidden: true },
+				{ id: "b", hidden: false }
+			]
+		}).success
+	).toBe(true));
 it("rejects duplicate skin ids", () =>
-	expect(v.safeParse(PlayerBody, { skins: [{ id: "a", hidden: false }, { id: "a", hidden: true }] }).success).toBe(false));
+	expect(
+		v.safeParse(PlayerBody, {
+			skins: [
+				{ id: "a", hidden: false },
+				{ id: "a", hidden: true }
+			]
+		}).success
+	).toBe(false));
 it("no longer accepts skin_ids alone", () =>
 	expect(v.safeParse(PlayerBody, { skin_ids: ["a"] }).success).toBe(false));
 ```
 
 - [ ] **Step 2: Run and confirm it fails**: `bun run test src/routes/api/players` → FAIL (`PlayerBody` not exported / no `skins`).
 - [ ] **Step 3: Update the API route**: export `PlayerBody`; replace `skin_ids` with
-  `skins: v.pipe(v.array(v.object({ id: convexId, hidden: v.boolean() })), v.check((list) => new Set(list.map((s) => s.id)).size === list.length, "must not contain the same skin twice"))`.
-  Pass `skins` to `api.players.update`, casting `id` to `Id<"skins">` the way `skin_ids` was cast before.
+      `skins: v.pipe(v.array(v.object({ id: convexId, hidden: v.boolean() })), v.check((list) => new Set(list.map((s) => s.id)).size === list.length, "must not contain the same skin twice"))`.
+      Pass `skins` to `api.players.update`, casting `id` to `Id<"skins">` the way `skin_ids` was cast before.
 - [ ] **Step 4: Update `players.update`** to take `skins` and call `setPlayerSkins(ctx.db, playerId, skins)`.
 - [ ] **Step 5: Update `players.get`**: build entries `{ skin, position: r.position, hidden: r.hidden ?? false }` from relations, dropping deleted skins, then `sortPlayerSkins`. Return `skins: sorted.map((e, order) => ({ ...e.skin, hidden: e.hidden, order }))`.
 - [ ] **Step 6: Update `skins.listWithPlayers`**: keep the relation alongside each player id, and return `players` entries as `{ ...player, position: r.position, hidden: r.hidden ?? false }`.
@@ -224,12 +280,14 @@ it("no longer accepts skin_ids alone", () =>
 ### Task 4: Shared drag settings + skin editor images
 
 **Files:**
+
 - Modify: `package.json` / `bun.lock` (`bun add svelte-dnd-action`)
 - Create: `src/lib/dnd.ts`
 - Modify: `src/routes/(admin)/dashboard/skin-images.ts`, `skin-images.test.ts`
 - Modify: `src/routes/(admin)/dashboard/skin-editor.svelte` (script `imageKey`/`dragIndex`/`handleTileDragEnter`/`handleSectionDrop`; markup lines ~230–330)
 
 **Interfaces:**
+
 - Produces, in `src/lib/dnd.ts`:
   - `DND_FLIP_MS = 150`
   - `liftDraggedElement(element?: HTMLElement): void`, to pass as `transformDraggedElement`. It sets `transform: rotate(-2deg) scale(1.03)`, a large `box-shadow`, and `cursor: grabbing` on the dragged copy.
@@ -263,11 +321,13 @@ it("no longer accepts skin_ids alone", () =>
 ### Task 5: Player editor: order and hide skins
 
 **Files:**
+
 - Create: `src/routes/(admin)/dashboard/player-skins.ts`
 - Test: `src/routes/(admin)/dashboard/player-skins.test.ts`
 - Modify: `src/routes/(admin)/dashboard/player-editor.svelte` (draft, dirty check, `addSkins`/`removeSkin`, skins section markup ~lines 267–315)
 
 **Interfaces:**
+
 - Consumes: `sortPlayerSkins` (Task 1, via `$convex/lib/order`); `SkinWithPlayers` players with `position`/`hidden` (Task 3); `dndOptions`, `DND_FLIP_MS`, `GHOST_CLASS` (Task 4).
 - Produces: `type DraftSkin = { id: Id<"skins">; hidden: boolean }` and `skinsChanged(a: readonly DraftSkin[], b: readonly DraftSkin[]): boolean`, true when the length, any id at an index, or any `hidden` at an index differs. Both in `player-skins.ts`.
 
@@ -275,7 +335,8 @@ it("no longer accepts skin_ids alone", () =>
 
 ```ts
 const s = (id: string, hidden = false) => ({ id: id as Id<"skins">, hidden });
-it("is false for identical lists", () => expect(skinsChanged([s("a"), s("b")], [s("a"), s("b")])).toBe(false));
+it("is false for identical lists", () =>
+	expect(skinsChanged([s("a"), s("b")], [s("a"), s("b")])).toBe(false));
 it("detects a reorder", () => expect(skinsChanged([s("a"), s("b")], [s("b"), s("a")])).toBe(true));
 it("detects a hidden change", () => expect(skinsChanged([s("a")], [s("a", true)])).toBe(true));
 it("detects an added skin", () => expect(skinsChanged([s("a")], [s("a"), s("b")])).toBe(true));
@@ -302,12 +363,14 @@ it("detects an added skin", () => expect(skinsChanged([s("a")], [s("a"), s("b")]
 ### Task 6: Profile page: custom sort and hidden toggle
 
 **Files:**
+
 - Modify: `src/lib/hooks/list-query.svelte.ts`
 - Test: `src/lib/hooks/list-query.test.ts` (new; server project, imports the `.svelte.ts` module)
 - Modify: `src/lib/components/skin-card.svelte`
 - Modify: `src/routes/(public)/player/[osuId]/+page.svelte`
 
 **Interfaces:**
+
 - Consumes: `PlayerWithSkins["skins"][number]` = `Doc<"skins"> & { hidden: boolean; order: number }` (Task 3).
 - Produces: `PLAYER_SKIN_LIST: ListConfig<PlayerSkin>` (`type PlayerSkin = PlayerWithSkins["skins"][number]`, exported from `src/lib/types.ts`) = `SKIN_LIST` options with a `byCustom` option first (`value: "custom"`, `label: "Custom"`, `ascIcon: "arrow-down-1-0"`, `descIcon: "arrow-up-1-0"`, compare `a.order - b.order`), `defaultSort: "custom"`, `defaultOrder: "asc"`. `SkinCard` prop `hidden?: boolean` (default false).
 
@@ -316,8 +379,10 @@ it("detects an added skin", () => expect(skinsChanged([s("a")], [s("a"), s("b")]
 ```ts
 const custom = PLAYER_SKIN_LIST.sortOptions.find((o) => o.value === "custom")!;
 const sk = (order: number) => ({ order }) as PlayerSkin;
-it("defaults to custom ascending", () => expect([PLAYER_SKIN_LIST.defaultSort, PLAYER_SKIN_LIST.defaultOrder]).toEqual(["custom", "asc"]));
-it("compares by server order", () => expect([sk(2), sk(0), sk(1)].sort(custom.compare).map((s) => s.order)).toEqual([0, 1, 2]));
+it("defaults to custom ascending", () =>
+	expect([PLAYER_SKIN_LIST.defaultSort, PLAYER_SKIN_LIST.defaultOrder]).toEqual(["custom", "asc"]));
+it("compares by server order", () =>
+	expect([sk(2), sk(0), sk(1)].sort(custom.compare).map((s) => s.order)).toEqual([0, 1, 2]));
 ```
 
 - [ ] **Step 2: Run and confirm it fails**: `bun run test src/lib/hooks` → FAIL. If importing a `.svelte.ts` from the node project fails to compile, move the config objects to `src/lib/hooks/list-configs.ts`, re-export them from `list-query.svelte.ts`, and test that file instead.

@@ -41,9 +41,7 @@ export const get = query({
 				hidden: r.hidden ?? false
 			}))
 		);
-		const existing = entries.filter(
-			(e): e is typeof e & { skin: Doc<"skins"> } => e.skin !== null
-		);
+		const existing = entries.filter((e): e is typeof e & { skin: Doc<"skins"> } => e.skin !== null);
 
 		// Already in display order; `order` lets the page's "Custom" sort (and its reverse) use it.
 		const skins = sortPlayerSkins(existing).map((e, order) => ({
