@@ -26,7 +26,7 @@
 2. **Search while hidden skins are off** must not surface hidden skins. Guaranteed by filtering before `useListQuery` (Task 6, Step 4). Checked manually in Task 7.
 3. **Duplicate ids in the admin PATCH body** must be a 400, not a silently reordered list. Pinned in Task 3 (`rejects duplicate skin ids`).
 4. **Reordering alone (or only hiding) must make the player editor dirty**, and Discard must restore the original order and visibility. Pinned by the pure `skinsChanged` test in Task 5.
-5. **Dropping files from the computer onto the images section must still add them** after the move to `svelte-dnd-action`, and clicking a tile's ✕ must not start a drag. Checked manually in Task 7.
+5. **Dropping files from the computer anywhere on the window (with a skin open) must add them** after the move to `svelte-dnd-action`, and clicking a tile's ✕ must not start a drag. Checked manually in Task 7.
 
 ---
 
@@ -245,9 +245,16 @@ it("no longer accepts skin_ids alone", () =>
   - Create items with `id` (initial: `id: url`; added files: `id: preview`). Replace `imageKey(item)` with `item.id` (the dirty check compares `images.map((i) => i.id)`; `<img src>` uses `item.kind === "url" ? item.url : item.preview`).
   - Remove `dragIndex`, `handleTileDragEnter`, `animate:flip` and the tiles' `draggable` / `ondrag*` attributes. Put `draggable="false"` on the `<img>`.
   - The tiles grid becomes `<div use:dndzone={dndOptions(draft.images)} onconsider={(e) => (draft.images = e.detail.items)} onfinalize={(e) => (draft.images = e.detail.items)}>` and holds **only image tiles**, with `animate:flip={{ duration: DND_FLIP_MS }}` on each. Add `GHOST_CLASS` when it's the shadow item.
-  - The "Drop images or click" tile moves out of the zone, to a full-width strip below the grid, because a dndzone may contain only its items.
+  - The "Drop images or click" tile is removed (a dndzone may contain only its items). It is replaced by:
+    - A small "Add images" button (`Icon name="image-up"`, `size="sm"`, `variant="outline"`) in the "Preview images" header next to the count. It opens the hidden file input.
+    - Hint text above the grid: "Drag to reorder · first is the thumbnail · drop files anywhere to add".
+    - **Window-wide file drop**, replacing the section's `ondragover` / `ondrop`: `<svelte:window>` handlers in `skin-editor.svelte`, which is mounted only while a skin is open. They act only when `event.dataTransfer?.types.includes("Files")`:
+      - `ondragenter` / `ondragover`: `preventDefault()`, `isFileDragOver = true`.
+      - `ondragleave`: if `event.relatedTarget === null` (the pointer left the window), `isFileDragOver = false`.
+      - `ondrop`: `preventDefault()`, `isFileDragOver = false`, `addFiles(event.dataTransfer.files)`.
+    - While `isFileDragOver`: a `fixed inset-0 z-50` overlay (`pointer-events-none`, `bg-background/80 backdrop-blur-sm`, a large dashed `outline-primary` box in the center with `image-up` and "Drop images to add them to {draft.skin.name || "this skin"}").
+  - `svelte-dnd-action` uses pointer events, not HTML5 drag, so internal reorders never trigger the file overlay. `dragIndex` and its guards go away.
   - "THUMBNAIL" stays on index 0, and the grip icon on the rest.
-  - Keep the section's HTML5 `ondragover` / `ondrop` for files. `svelte-dnd-action` uses pointer events, so the `dragIndex === null` guards go away: `handleSectionDrop` just calls `addFiles(event.dataTransfer?.files)`.
 - [ ] **Step 6: Verify**: `bun run test` → PASS. `bun run check` → 0 errors. `bun run lint` → clean.
 - [ ] **Step 7: Commit**: `feat(dashboard): drag skin images with svelte-dnd-action`
 
@@ -334,7 +341,7 @@ Use the `run` skill (or `bun run dev` plus the Convex dev deployment) and walk t
 - [ ] Dashboard player editor: drag a skin. It lifts tilted with a shadow, a ghost marks the drop spot, and the others animate. Save, reopen: same order.
 - [ ] Hide a skin with the eye button: the row dims and reads "· hidden"; Save. Reorder only → Save becomes enabled. Discard restores order and visibility.
 - [ ] Assign a new skin: it appears first.
-- [ ] Skin editor: drag images with the same feel; the ✕ on a tile removes it without starting a drag; drop files from the computer onto the section → they're added; Save keeps the order.
+- [ ] Skin editor: drag images with the same feel; the ✕ on a tile removes it without starting a drag; drag files from the computer anywhere over the window → the "Drop images" overlay shows, dropping adds them, leaving the window hides it; "Add images" opens the picker; reordering images never shows the overlay; Save keeps the order.
 - [ ] From the skin editor, assign the skin to a player who has a custom order → it shows first on their profile.
 - [ ] Profile: default sort is "Custom" and matches the editor. Desc reverses it. The toggle shows "Show hidden skins (K)" only if K > 0. Hidden cards appear in place, dimmed, with the `eye-off` badge. Search doesn't find hidden skins while the toggle is off.
 - [ ] Skin page of a hidden skin still lists the player.
