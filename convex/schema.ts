@@ -41,7 +41,11 @@ export default defineSchema({
 	/* ------------------------- */
 	playerSkins: defineTable({
 		player_id: v.id("players"),
-		skin_id: v.id("skins")
+		skin_id: v.id("skins"),
+		/** Lower shows first. Missing = falls back to date order (newest first). */
+		position: v.optional(v.number()),
+		/** Hidden from the profile unless "Show hidden skins" is on. Missing = visible. */
+		hidden: v.optional(v.boolean())
 	})
 		.index("by_player", ["player_id"])
 		.index("by_skin", ["skin_id"])
