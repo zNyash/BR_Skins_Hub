@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { flip } from "svelte/animate";
-	import { dndzone } from "svelte-dnd-action";
 	import { toast } from "svelte-sonner";
 	import { invalidate } from "$app/navigation";
 	import HoldButton from "$comp/hold-button.svelte";
@@ -12,7 +11,7 @@
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { sortPlayerSkins } from "$convex/lib/order";
 	import { request } from "$lib/api";
-	import { DND_FLIP_MS, GHOST_CLASS, GHOST_OUTLINE_CLASS, dndOptions, isGhost } from "$lib/dnd";
+	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import type { SkinWithPlayers } from "$lib/types";
 	import { cn } from "$lib/utils";
 	import AssignSkinsDialog from "./assign-skins-dialog.svelte";
@@ -48,8 +47,7 @@
 		} satisfies Partial<Doc<"players">>;
 	}
 
-	// Each list item carries its skin doc: while dragging, the placeholder item gets a different id,
-	// so the doc can't be looked up by id there.
+	// Each list item carries its skin doc, so the list renders without looking skins up by id.
 	type SkinItem = DraftSkin & { skin: SkinWithPlayers };
 	const toItem = (skin: SkinWithPlayers, hidden: boolean): SkinItem => ({
 		id: skin._id,
@@ -305,16 +303,15 @@
 				{/if}
 				<div
 					class="grid grid-cols-1 gap-2 sm:grid-cols-2"
-					use:dndzone={dndOptions(draft.skins)}
-					onconsider={(e) => (draft.skins = e.detail.items)}
-					onfinalize={(e) => (draft.skins = e.detail.items)}
+					use:sortable={{ onMove: (from, to) => (draft.skins = moveItem(draft.skins, from, to)) }}
 				>
 					{#each draft.skins as item (item.id)}
 						<div
-							animate:flip={{ duration: DND_FLIP_MS }}
+							data-sortable-item
+							animate:flip={{ duration: 150 }}
 							class={cn(
-								"relative grid cursor-grab grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-md bg-layer-2/50 p-1.5",
-								isGhost(item) && GHOST_CLASS
+								"grid cursor-grab touch-manipulation grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-md bg-layer-2/50 p-1.5 select-none",
+								SORTABLE_GHOST_CLASS
 							)}
 						>
 							<img
@@ -352,9 +349,6 @@
 							>
 								<Icon name="x" />
 							</Button>
-							{#if isGhost(item)}
-								<span class={GHOST_OUTLINE_CLASS}></span>
-							{/if}
 						</div>
 					{/each}
 				</div>

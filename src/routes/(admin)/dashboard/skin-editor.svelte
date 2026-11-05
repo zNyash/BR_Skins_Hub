@@ -2,7 +2,6 @@
 	import { onDestroy } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { flip } from "svelte/animate";
-	import { dndzone } from "svelte-dnd-action";
 	import { invalidate } from "$app/navigation";
 	import HoldButton from "$comp/hold-button.svelte";
 	import Icon from "$comp/icon.svelte";
@@ -10,7 +9,7 @@
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { request } from "$lib/api";
-	import { DND_FLIP_MS, GHOST_CLASS, GHOST_OUTLINE_CLASS, dndOptions, isGhost } from "$lib/dnd";
+	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import { osuAvatar } from "$lib/osu";
 	import type { SkinWithPlayers } from "$lib/types";
 	import { createUploadThing } from "$lib/uploadthing";
@@ -141,7 +140,7 @@
 	}
 
 	// Dropping files from the computer anywhere on the page adds them while this editor is open.
-	// Reordering uses pointer events (svelte-dnd-action), not HTML5 drag, so only real file drags get here.
+	// Reordering uses pointer events (sortable), not HTML5 drag, so only real file drags get here.
 	const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes("Files") ?? false;
 
 	function handleWindowDragOver(event: DragEvent) {
@@ -286,17 +285,16 @@
 			{/if}
 			<div
 				class="grid grid-cols-2 gap-2 sm:grid-cols-4"
-				use:dndzone={dndOptions(draft.images)}
-				onconsider={(e) => (draft.images = e.detail.items)}
-				onfinalize={(e) => (draft.images = e.detail.items)}
+				use:sortable={{ onMove: (from, to) => (draft.images = moveItem(draft.images, from, to)) }}
 			>
 				{#each draft.images as item, i (item.id)}
 					<div
-						animate:flip={{ duration: DND_FLIP_MS }}
+						data-sortable-item
+						animate:flip={{ duration: 150 }}
 						class={cn(
-							"group/img relative aspect-video cursor-grab overflow-hidden rounded-md bg-layer-2",
-							item.kind === "file" && "outline-2 outline-offset-2 outline-primary outline-dashed",
-							isGhost(item) && GHOST_CLASS
+							"group/img relative aspect-video cursor-grab touch-manipulation overflow-hidden rounded-md bg-layer-2 select-none",
+							SORTABLE_GHOST_CLASS,
+							item.kind === "file" && "outline-2 outline-offset-2 outline-primary outline-dashed"
 						)}
 					>
 						<img
@@ -322,10 +320,6 @@
 							<span class="absolute bottom-1.5 left-1.5 rounded bg-black/70 px-1 text-[10px]">
 								not uploaded
 							</span>
-						{/if}
-
-						{#if isGhost(item)}
-							<span class={GHOST_OUTLINE_CLASS}></span>
 						{/if}
 
 						<button
