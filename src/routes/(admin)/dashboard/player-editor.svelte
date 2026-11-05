@@ -12,7 +12,7 @@
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { sortPlayerSkins } from "$convex/lib/order";
 	import { request } from "$lib/api";
-	import { DND_FLIP_MS, GHOST_CLASS, dndOptions, isGhost } from "$lib/dnd";
+	import { DND_FLIP_MS, GHOST_CLASS, GHOST_OUTLINE_CLASS, dndOptions, isGhost } from "$lib/dnd";
 	import type { SkinWithPlayers } from "$lib/types";
 	import { cn } from "$lib/utils";
 	import AssignSkinsDialog from "./assign-skins-dialog.svelte";
@@ -313,7 +313,7 @@
 						<div
 							animate:flip={{ duration: DND_FLIP_MS }}
 							class={cn(
-								"grid cursor-grab grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-md bg-layer-2/50 p-1.5",
+								"relative grid cursor-grab grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-md bg-layer-2/50 p-1.5",
 								isGhost(item) && GHOST_CLASS
 							)}
 						>
@@ -352,6 +352,9 @@
 							>
 								<Icon name="x" />
 							</Button>
+							{#if isGhost(item)}
+								<span class={GHOST_OUTLINE_CLASS}></span>
+							{/if}
 						</div>
 					{/each}
 				</div>

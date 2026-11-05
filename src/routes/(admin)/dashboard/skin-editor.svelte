@@ -10,7 +10,7 @@
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { request } from "$lib/api";
-	import { DND_FLIP_MS, GHOST_CLASS, dndOptions, isGhost } from "$lib/dnd";
+	import { DND_FLIP_MS, GHOST_CLASS, GHOST_OUTLINE_CLASS, dndOptions, isGhost } from "$lib/dnd";
 	import { osuAvatar } from "$lib/osu";
 	import type { SkinWithPlayers } from "$lib/types";
 	import { createUploadThing } from "$lib/uploadthing";
@@ -322,6 +322,10 @@
 							<span class="absolute bottom-1.5 left-1.5 rounded bg-black/70 px-1 text-[10px]">
 								not uploaded
 							</span>
+						{/if}
+
+						{#if isGhost(item)}
+							<span class={GHOST_OUTLINE_CLASS}></span>
 						{/if}
 
 						<button
