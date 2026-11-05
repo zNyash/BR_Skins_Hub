@@ -1,0 +1,57 @@
+import { describe, expect, it } from "vitest";
+import { moveItem, resolveImageUrls, type ImageItem } from "./skin-images";
+
+describe("moveItem", () => {
+	it("moves an item forward", () => {
+		expect(moveItem(["a", "b", "c", "d"], 0, 2)).toEqual(["b", "c", "a", "d"]);
+	});
+
+	it("moves an item backward", () => {
+		expect(moveItem(["a", "b", "c", "d"], 3, 0)).toEqual(["d", "a", "b", "c"]);
+	});
+
+	it("handles moving to the last position", () => {
+		expect(moveItem(["a", "b", "c"], 0, 2)).toEqual(["b", "c", "a"]);
+	});
+
+	it("returns an equal copy when from === to", () => {
+		const list = ["a", "b"];
+		const result = moveItem(list, 1, 1);
+		expect(result).toEqual(["a", "b"]);
+		expect(result).not.toBe(list);
+	});
+
+	it("does not mutate the input", () => {
+		const list = ["a", "b", "c"];
+		moveItem(list, 0, 2);
+		expect(list).toEqual(["a", "b", "c"]);
+	});
+
+	it("returns an unchanged copy for out-of-range indexes", () => {
+		expect(moveItem(["a", "b"], 5, 0)).toEqual(["a", "b"]);
+		expect(moveItem(["a", "b"], 0, -1)).toEqual(["a", "b"]);
+	});
+});
+
+describe("resolveImageUrls", () => {
+	const url = (u: string): ImageItem => ({ kind: "url", url: u });
+	const file = (name: string): ImageItem => ({
+		kind: "file",
+		file: new File([], name),
+		preview: `blob:${name}`
+	});
+
+	it("keeps existing urls as they are", () => {
+		expect(resolveImageUrls([url("a"), url("b")], [])).toEqual(["a", "b"]);
+	});
+
+	it("replaces files with uploaded urls in order, keeping positions", () => {
+		const items = [file("new1"), url("old"), file("new2")];
+		expect(resolveImageUrls(items, ["up1", "up2"])).toEqual(["up1", "old", "up2"]);
+	});
+
+	it("throws when the number of uploads does not match the number of files", () => {
+		expect(() => resolveImageUrls([file("x"), file("y")], ["only-one"])).toThrow();
+		expect(() => resolveImageUrls([url("a")], ["extra"])).toThrow();
+	});
+});

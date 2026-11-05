@@ -1,72 +1,47 @@
-import { type RequestEvent } from "@sveltejs/kit";
-import { json } from "@sveltejs/kit";
-import { requireAdmin } from "$lib/server/admin";
-import { convex } from "$lib/server/convex";
+import * as v from "valibot";
 import { api } from "$convex/_generated/api";
-import { normalizeTags } from "$lib/utils/tags";
-import { getUploadThingKey } from "$lib/utils/uploadthingUrl";
-import { UTApi } from "uploadthing/server";
 import type { Id } from "$convex/_generated/dataModel";
+import { requireAdmin } from "$lib/server/auth";
+import { convex, mutate } from "$lib/server/convex";
+import { convexId, httpUrl, tags, trimmedString } from "$lib/server/schemas";
+import { deleteUploadThingImages } from "$lib/server/uploadthing";
+import { parseBody } from "$lib/server/validation";
+import type { RequestHandler } from "./$types";
 
-const utapi = new UTApi();
+const SkinBody = v.object({
+	name: trimmedString,
+	author: v.optional(v.pipe(v.string(), v.trim())),
+	download_url: httpUrl,
+	preview_images: v.array(httpUrl),
+	tags: v.optional(tags),
+	player_ids: v.optional(v.array(convexId))
+});
 
-// Only UploadThing-hosted images can be deleted; external urls (Drive, s-ul, ...) are skipped.
-// Called after the database write succeeds, and a failure here never fails the request:
-// a leftover file only wastes storage, while a missing file would break the skin.
-async function deleteUploadThingImages(urls: string[]) {
-	const keys = urls.map(getUploadThingKey).filter((key) => key !== null);
-	if (keys.length === 0) return;
+/** Saves the skin and who uses it. Images removed from the list are deleted from UploadThing afterwards. */
+export const PATCH: RequestHandler = async (event) => {
+	const admin = requireAdmin(event);
+	const { player_ids, ...fields } = await parseBody(event.request, SkinBody);
 
-	try {
-		const { deletedCount } = await utapi.deleteFiles(keys);
-		if (deletedCount < keys.length) {
-			console.warn(`[uploadthing] deleted ${deletedCount}/${keys.length} files`, keys);
-		}
-	} catch (e) {
-		console.error("[uploadthing] failed to delete files", keys, e);
-	}
-}
-
-export async function PATCH(event: RequestEvent) {
-	requireAdmin(event);
-
-	const _id = event.params.id as Id<"skins">;
-	const body = await event.request.json();
-	const { name, author, download_url, preview_images } = body;
-	const tags = Array.isArray(body.tags) ? normalizeTags(body.tags) : undefined;
-
-	// Work out which images were removed during editing (before the update overwrites them)
-	const existing = await convex.query(api.skins.getSkin, { id: _id });
-	const incoming = new Set<string>(Array.isArray(preview_images) ? preview_images : []);
-	const removed =
-		existing && Array.isArray(preview_images)
-			? existing.preview_images.filter((url) => !incoming.has(url))
-			: [];
-
-	await convex.mutation(api.skins.updateSkin, {
-		_id,
-		name,
-		author,
-		download_url,
-		preview_images,
-		tags
+	const before = await convex.query(api.skins.get, { id: event.params.id });
+	await mutate(api.skins.upsert, {
+		actor_osu_id: admin.osu_id,
+		id: event.params.id,
+		...fields,
+		player_ids: player_ids as Id<"players">[] | undefined
 	});
 
-	await deleteUploadThingImages(removed);
+	const kept = new Set(fields.preview_images);
+	await deleteUploadThingImages(before?.preview_images.filter((url) => !kept.has(url)) ?? []);
 
-	return json({ success: true });
-}
+	return new Response(null, { status: 204 });
+};
 
-export async function DELETE(event: RequestEvent) {
-	requireAdmin(event);
-
-	const _id = event.params.id as Id<"skins">;
-
-	const skin = await convex.query(api.skins.getSkin, { id: _id });
-
-	await convex.mutation(api.skins.deleteSkin, { _id });
-
-	if (skin) await deleteUploadThingImages(skin.preview_images);
-
-	return json({ success: true });
-}
+export const DELETE: RequestHandler = async (event) => {
+	const admin = requireAdmin(event);
+	const images = await mutate(api.skins.remove, {
+		actor_osu_id: admin.osu_id,
+		id: event.params.id
+	});
+	await deleteUploadThingImages(images);
+	return new Response(null, { status: 204 });
+};

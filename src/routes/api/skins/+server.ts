@@ -1,26 +1,24 @@
-import { type RequestEvent } from "@sveltejs/kit";
-import { json, error } from "@sveltejs/kit";
-import { requireAdmin } from "$lib/server/admin";
-import { convex } from "$lib/server/convex";
+import { json } from "@sveltejs/kit";
+import * as v from "valibot";
 import { api } from "$convex/_generated/api";
-import { normalizeTags } from "$lib/utils/tags";
+import { requireAdmin } from "$lib/server/auth";
+import { mutate } from "$lib/server/convex";
+import { httpUrl, tags, trimmedString } from "$lib/server/schemas";
+import { parseBody } from "$lib/server/validation";
+import type { RequestHandler } from "./$types";
 
-export async function POST(event: RequestEvent) {
-	requireAdmin(event);
+const CreateSkinBody = v.object({
+	name: trimmedString,
+	author: v.optional(v.pipe(v.string(), v.trim())),
+	download_url: httpUrl,
+	preview_images: v.optional(v.array(httpUrl), []),
+	tags: v.optional(tags)
+});
 
-	const body = await event.request.json();
-	const { name, author, download_url, preview_images } = body;
-	const tags = Array.isArray(body.tags) ? normalizeTags(body.tags) : undefined;
+export const POST: RequestHandler = async (event) => {
+	const admin = requireAdmin(event);
+	const body = await parseBody(event.request, CreateSkinBody);
 
-	if (!name || !download_url) error(400, "name and download_url are required");
-
-	const id = await convex.mutation(api.skins.createSkin, {
-		name,
-		author,
-		download_url,
-		preview_images: preview_images ?? [],
-		tags
-	});
-
-	return json({ id });
-}
+	const id = await mutate(api.skins.upsert, { actor_osu_id: admin.osu_id, ...body });
+	return json({ id }, { status: 201 });
+};

@@ -3,13 +3,12 @@ import { redirect } from "@sveltejs/kit";
 import { auth } from "osu-api-extended";
 import { OSU_CLIENT_ID, OSU_CLIENT_SECRET, CURRENT_DOMAIN } from "$env/static/private";
 import { createToken } from "$lib/server/auth";
-import { convex } from "$lib/server/convex";
+import { mutate } from "$lib/server/convex";
 import { api } from "$convex/_generated/api";
-import { syncPlayerFromProfile } from "$lib/server/osu";
 
 export async function GET(event: RequestEvent) {
 	const code = event.url.searchParams.get("code");
-	if (!code) redirect(302, "/login");
+	if (!code) redirect(302, "/auth/login");
 
 	// Fetch osu! profile
 	const profile = await auth.authorize({
@@ -18,17 +17,22 @@ export async function GET(event: RequestEvent) {
 		client_secret: OSU_CLIENT_SECRET,
 		redirect_url: `${CURRENT_DOMAIN}/auth/callback`
 	});
-	if (!profile) redirect(302, "/login");
+	if (!profile) redirect(302, "/auth/login");
 
-	await convex.mutation(api.auth.upsertUser, {
+	await mutate(api.auth.upsertUser, {
 		osu_id: profile.id,
 		username: profile.username
 	});
 
 	// Logging in is a free, fresh osu! profile, so fully sync the player if they have a page.
 	// Never create one here: players are only added by admins.
-	const player = await convex.query(api.players.getPlayerByOsuId, { osu_id: profile.id });
-	if (player) await syncPlayerFromProfile(profile);
+	await mutate(api.players.syncFromOsu, {
+		osu_id: profile.id,
+		name: profile.username,
+		cover_url: profile.cover_url,
+		previous_usernames: profile.previous_usernames ?? [],
+		only_if_exists: true
+	});
 
 	const token = await createToken({ osu_id: profile.id });
 

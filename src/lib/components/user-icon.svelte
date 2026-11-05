@@ -1,24 +1,15 @@
 <script lang="ts">
-	import * as Avatar from "$lib/components/ui/avatar/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-	import { page } from "$app/state";
-	import type { AuthUser } from "$lib/types";
-	import Button from "./ui/button/button.svelte";
-	import Icon from "./icon.svelte";
-	import IOsuStandard from "./icons/i-osu-standard.svelte";
 	import { resolve } from "$app/paths";
-	import { osuAvatar } from "$lib/utils/osu";
+	import { page } from "$app/state";
+	import Icon from "$comp/icon.svelte";
+	import IOsuStandard from "$comp/icons/i-osu-standard.svelte";
+	import * as Avatar from "$comp/ui/avatar";
+	import Button from "$comp/ui/button/button.svelte";
+	import * as DropdownMenu from "$comp/ui/dropdown-menu";
+	import { osuAvatar } from "$lib/osu";
 
-	let user = page.data.user as AuthUser | null;
-
-	let username = $derived.by(() => {
-		if (user) {
-			const tempUsername = user.username?.split("");
-
-			return `${tempUsername?.[0]}${tempUsername?.[1]}`;
-		}
-		return "";
-	});
+	const user = $derived(page.data.user);
+	const initials = $derived(user?.username?.slice(0, 2) ?? "");
 
 	async function logout() {
 		await fetch("/auth/logout", { method: "POST" });
@@ -27,7 +18,7 @@
 
 	async function login() {
 		const currentUrl = window.location.href;
-		const loginUrl = new URL("/login", window.location.origin);
+		const loginUrl = new URL("/auth/login", window.location.origin);
 		loginUrl.searchParams.set("from", currentUrl);
 
 		window.location.href = loginUrl.toString();
@@ -42,7 +33,7 @@
 			>
 				<Avatar.Root class="group-hover/avatar:brightness-110">
 					<Avatar.Image src={osuAvatar(user.osu_id)} alt={user.username} />
-					<Avatar.Fallback>{username}</Avatar.Fallback>
+					<Avatar.Fallback>{initials}</Avatar.Fallback>
 				</Avatar.Root>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end">

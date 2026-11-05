@@ -16,6 +16,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 // Runs only for unexpected errors (not error()/redirect()). `error` is the original thrown value,
 // so logging it directly keeps details that SvelteKit's own "Error: {}" message loses.
 export const handleError: HandleServerError = ({ error, event, status, message }) => {
+	// Unknown urls land here too; they aren't crashes, so no log and no reference.
+	if (status === 404) return { message };
+
 	const errorId = crypto.randomUUID().slice(0, 8);
 	const kind = error instanceof Error ? error.name : `non-Error value (${typeof error})`;
 

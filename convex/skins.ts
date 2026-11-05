@@ -1,105 +1,106 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { query, type QueryCtx } from "./_generated/server";
+import { adminMutation, fail, serverMutation } from "./lib/functions";
+import { deleteRelations, setSkinPlayers } from "./lib/relations";
+import { skinFields } from "./validators";
 
-export const createSkin = mutation({
-	args: {
-		name: v.string(),
-		author: v.optional(v.string()),
-		download_url: v.string(),
-		preview_images: v.array(v.string()),
-		tags: v.optional(v.array(v.string()))
-	},
-	handler: async (ctx, args) => {
-		return await ctx.db.insert("skins", {
-			...args,
-			download_count: 0,
-			updated_at: Date.now()
-		});
-	}
+function normalizeSkinId(ctx: QueryCtx, id: string): Id<"skins"> {
+	return ctx.db.normalizeId("skins", id) ?? fail(404, "Skin not found");
+}
+
+/** All skins, without players (keeps the public listing small). */
+export const list = query({
+	args: {},
+	handler: (ctx) => ctx.db.query("skins").collect()
 });
 
-export const listSkins = query({
+/** All skins with the players using them, joined in memory from three collects. */
+export const listWithPlayers = query({
 	args: {},
 	handler: async (ctx) => {
-		return await ctx.db.query("skins").collect();
-	}
-});
-
-export const getSkin = query({
-	args: { id: v.id("skins") },
-	handler: async (ctx, args) => {
-		return await ctx.db.get(args.id);
-	}
-});
-
-export const updateSkin = mutation({
-	args: {
-		_id: v.id("skins"),
-		name: v.optional(v.string()),
-		author: v.optional(v.string()),
-		download_url: v.optional(v.string()),
-		preview_images: v.optional(v.array(v.string())),
-		tags: v.optional(v.array(v.string()))
-	},
-	handler: async (ctx, args) => {
-		const { _id, ...data } = args;
-		await ctx.db.patch(_id, { ...data, updated_at: Date.now() });
-	}
-});
-
-export const incrementSkinDownloads = mutation({
-	args: {
-		id: v.id("skins")
-	},
-	handler: async (ctx, args) => {
-		const skin = await ctx.db.get(args.id);
-		if (!skin) return;
-		await ctx.db.patch(args.id, {
-			download_count: (skin.download_count ?? 0) + 1
-		});
-	}
-});
-
-export const deleteSkin = mutation({
-	args: {
-		_id: v.id("skins")
-	},
-	handler: async (ctx, args) => {
-		// Remove its assignments too, otherwise players would point at a skin that no longer exists.
-		const relations = await ctx.db
-			.query("playerSkins")
-			.withIndex("by_skin", (q) => q.eq("skin_id", args._id))
-			.collect();
-		await Promise.all(relations.map((r) => ctx.db.delete(r._id)));
-		await ctx.db.delete(args._id);
-	}
-});
-
-export const listSkinsWithPlayers = query({
-	args: {},
-	handler: async (ctx) => {
-		const [skins, allRelations, allPlayers] = await Promise.all([
+		const [skins, relations, players] = await Promise.all([
 			ctx.db.query("skins").collect(),
 			ctx.db.query("playerSkins").collect(),
 			ctx.db.query("players").collect()
 		]);
 
-		// Maps for quick lookup
-		const playerMap = new Map(allPlayers.map((p) => [p._id, p])); // Map of players with _id as key
-		const relationsMap = new Map<string, typeof allRelations>(); // Map of relations with skin _id as key
-
-		// Store all the relations for a given skin by its _id
-		for (const relation of allRelations) {
-			const list = relationsMap.get(relation.skin_id) ?? [];
-			list.push(relation);
-			relationsMap.set(relation.skin_id, list);
+		const playersById = new Map(players.map((p) => [p._id, p]));
+		const playerIdsBySkin = new Map<Id<"skins">, Id<"players">[]>();
+		for (const { skin_id, player_id } of relations) {
+			playerIdsBySkin.set(skin_id, [...(playerIdsBySkin.get(skin_id) ?? []), player_id]);
 		}
 
-		return skins.map((skin) => {
-			const players = (relationsMap.get(skin._id) ?? [])
-				.map((r) => playerMap.get(r.player_id))
-				.filter((p) => p !== undefined);
-			return { ...skin, players };
-		});
+		return skins.map((skin) => ({
+			...skin,
+			players: (playerIdsBySkin.get(skin._id) ?? [])
+				.map((id) => playersById.get(id))
+				.filter((p) => p !== undefined)
+		}));
+	}
+});
+
+/** The skin with the players using it, or null (also for malformed ids). */
+export const get = query({
+	args: { id: v.string() },
+	handler: async (ctx, { id }) => {
+		const skinId = ctx.db.normalizeId("skins", id);
+		const skin = skinId && (await ctx.db.get(skinId));
+		if (!skin) return null;
+
+		const relations = await ctx.db
+			.query("playerSkins")
+			.withIndex("by_skin", (q) => q.eq("skin_id", skin._id))
+			.collect();
+		const players = await Promise.all(relations.map((r) => ctx.db.get(r.player_id)));
+
+		return { ...skin, players: players.filter((p) => p !== null) };
+	}
+});
+
+/** Creates the skin when no id is given, otherwise updates it. player_ids, when sent, sets exactly who uses it. */
+export const upsert = adminMutation({
+	args: {
+		id: v.optional(v.string()),
+		...skinFields,
+		player_ids: v.optional(v.array(v.id("players")))
+	},
+	handler: async (ctx, { id, player_ids, ...fields }) => {
+		const now = Date.now();
+		let skinId: Id<"skins">;
+
+		if (id === undefined) {
+			skinId = await ctx.db.insert("skins", { ...fields, download_count: 0, updated_at: now });
+		} else {
+			skinId = normalizeSkinId(ctx, id);
+			if (!(await ctx.db.get(skinId))) fail(404, "Skin not found");
+			await ctx.db.patch(skinId, { ...fields, updated_at: now });
+		}
+
+		if (player_ids) await setSkinPlayers(ctx.db, skinId, player_ids);
+		return skinId;
+	}
+});
+
+export const incrementDownloads = serverMutation({
+	args: { id: v.string() },
+	handler: async (ctx, { id }) => {
+		const skin = await ctx.db.get(normalizeSkinId(ctx, id));
+		if (!skin) fail(404, "Skin not found");
+		await ctx.db.patch(skin._id, { download_count: skin.download_count + 1 });
+	}
+});
+
+/** Deletes the skin and its relations. Returns its image urls so the caller can delete the files. */
+export const remove = adminMutation({
+	args: { id: v.string() },
+	handler: async (ctx, { id }) => {
+		const skinId = normalizeSkinId(ctx, id);
+		const skin = await ctx.db.get(skinId);
+		if (!skin) fail(404, "Skin not found");
+
+		await deleteRelations(ctx.db, { skin: skinId });
+		await ctx.db.delete(skinId);
+		return skin.preview_images;
 	}
 });

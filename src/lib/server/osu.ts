@@ -1,46 +1,40 @@
+import { error } from "@sveltejs/kit";
 import { auth, v2 } from "osu-api-extended";
 import { OSU_CLIENT_ID, OSU_CLIENT_SECRET } from "$env/static/private";
-import { convex } from "$lib/server/convex";
-import { api } from "$convex/_generated/api";
-import { error } from "@sveltejs/kit";
-import { mergeUsernames } from "$lib/utils/osu";
-import type { UsersDetailsResponse } from "osu-api-extended/dist/types/v2/users_details";
 
-type OsuProfile = Pick<
-	UsersDetailsResponse,
-	"id" | "username" | "cover_url" | "previous_usernames"
->;
+export type OsuProfile = {
+	id: number;
+	username: string;
+	cover_url?: string;
+	previous_usernames: string[];
+};
 
-/** Fetches the profile from osu! and creates or fully syncs the player. */
-export async function fetchAndUpsertPlayer(osu_id: number) {
-	await auth.login({
-		type: "v2",
-		client_id: Number(OSU_CLIENT_ID),
-		client_secret: OSU_CLIENT_SECRET,
-		scopes: ["public"]
-	});
+/** Fetches a public osu! profile. 404 if the user doesn't exist, 502 if osu! can't be reached. */
+export async function fetchOsuProfile(osuId: number): Promise<OsuProfile> {
+	let profile: Awaited<ReturnType<typeof v2.users.details>>;
+	try {
+		await auth.login({
+			type: "v2",
+			client_id: Number(OSU_CLIENT_ID),
+			client_secret: OSU_CLIENT_SECRET,
+			scopes: ["public"]
+		});
+		profile = await v2.users.details({ user: osuId, key: "id" });
+	} catch (e) {
+		// osu! answers an unknown user with { "error": null }, which osu-api-extended throws as "empty error".
+		if (e instanceof Error && e.message.includes("osu returned empty error")) {
+			error(404, `No osu! user with ID ${osuId}`);
+		}
+		console.error("[osu] request failed", e);
+		error(502, "Couldn't reach osu!, try again in a moment");
+	}
 
-	const profile = await v2.users.details({ user: osu_id, key: "id" });
-	if (!profile?.id) error(404, "osu! user not found");
+	if (!profile?.id) error(404, `No osu! user with ID ${osuId}`);
 
-	return syncPlayerFromProfile(profile);
-}
-
-/**
- * Writes osu! data to the player (creating it if needed) and marks it as synced.
- * Previous usernames are curated by admins, so new ones are added but none are dropped.
- */
-export async function syncPlayerFromProfile(profile: OsuProfile) {
-	const existing = await convex.query(api.players.getPlayerByOsuId, { osu_id: profile.id });
-
-	return convex.mutation(api.players.upsertPlayer, {
-		osu_id: profile.id,
-		name: profile.username,
+	return {
+		id: profile.id,
+		username: profile.username,
 		cover_url: profile.cover_url,
-		previous_usernames: mergeUsernames(
-			existing?.previous_usernames ?? [],
-			profile.previous_usernames ?? []
-		),
-		from_osu: true
-	});
+		previous_usernames: profile.previous_usernames ?? []
+	};
 }

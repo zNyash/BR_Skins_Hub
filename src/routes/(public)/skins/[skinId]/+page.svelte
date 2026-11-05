@@ -1,19 +1,18 @@
 <script lang="ts">
+	import Time from "svelte-time/Time.svelte";
 	import { resolve } from "$app/paths";
 	import Icon from "$comp/icon.svelte";
 	import ImageCarousel from "$comp/image-carousel.svelte";
+	import PageHeading from "$comp/page-heading.svelte";
 	import PlayerCard from "$comp/player-card.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import Separator from "$comp/ui/separator/separator.svelte";
-	import Time from "svelte-time/Time.svelte";
-
-	import { useCopyLink } from "$lib/utils/clipboard.svelte";
-	import PageHeading from "$comp/page-heading.svelte";
+	import { useCopyLink } from "$lib/hooks/copy-link.svelte";
 
 	let { data } = $props();
 	const clipboard = useCopyLink();
 
-	function handleDownload(e: Event) {
+	function handleDownload() {
 		fetch(resolve("/api/skins/[id]/download", { id: data.skin._id }), {
 			method: "POST"
 		});
@@ -79,14 +78,14 @@
 
 		<Separator class="bg-border" />
 
-		{#if data.players.length > 0}
+		{#if data.skin.players.length > 0}
 			<div class="flex flex-col gap-2">
 				<p class="text-sm text-text-muted">
-					Used by {data.players.length}
-					{data.players.length === 1 ? "player" : "players"}
+					Used by {data.skin.players.length}
+					{data.skin.players.length === 1 ? "player" : "players"}
 				</p>
 				<div class="common-grid">
-					{#each data.players as player (player._id)}
+					{#each data.skin.players as player (player._id)}
 						<a href={resolve("/(public)/player/[osuId]", { osuId: String(player.osu_id) })}>
 							<PlayerCard {player} />
 						</a>

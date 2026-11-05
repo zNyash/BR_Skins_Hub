@@ -10,7 +10,9 @@ declare global {
 		interface Locals {
 			user: { osu_id: number } | null;
 		}
-		// interface PageData {}
+		interface PageData {
+			user: import("$lib/types").AuthUser | null;
+		}
 		// interface PageState {}
 		// interface Platform {}
 	}

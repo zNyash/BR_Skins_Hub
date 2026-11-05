@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { playerLink } from "./validators";
 
 export default defineSchema({
 	/* ------- */
@@ -12,21 +13,7 @@ export default defineSchema({
 		hue: v.optional(v.number()),
 		previous_usernames: v.optional(v.array(v.string())),
 		description: v.optional(v.string()),
-		links: v.optional(
-			v.array(
-				v.object({
-					type: v.union(
-						v.literal("twitch"),
-						v.literal("twitter"),
-						v.literal("youtube"),
-						v.literal("github"),
-						v.literal("discord"),
-						v.literal("custom")
-					),
-					value: v.string()
-				})
-			)
-		),
+		links: v.optional(v.array(playerLink)),
 		views: v.optional(v.number()),
 		tags: v.optional(v.array(v.string())),
 		/** Last content change (edits, osu! syncs). Not bumped by views or skin assignments. */

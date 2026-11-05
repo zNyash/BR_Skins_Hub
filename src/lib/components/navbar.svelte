@@ -1,12 +1,12 @@
 <script lang="ts">
-	import Icon from "./icon.svelte";
-	import Button from "./ui/button/button.svelte";
-	import type { AuthUser } from "$lib/types";
-	import UserIcon from "./user-icon.svelte";
 	import { page } from "$app/state";
+	import Icon from "$comp/icon.svelte";
+	import Button from "$comp/ui/button/button.svelte";
+	import UserIcon from "$comp/user-icon.svelte";
 
-	let user = page.data.user as AuthUser | null;
-	let { isFloating } = $props();
+	let { isFloating }: { isFloating: boolean } = $props();
+
+	const user = $derived(page.data.user);
 </script>
 
 <nav

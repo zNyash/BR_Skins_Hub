@@ -1,23 +1,29 @@
-import { type RequestEvent } from "@sveltejs/kit";
-import { json, error } from "@sveltejs/kit";
-import { requireAdmin } from "$lib/server/admin";
-import { convex } from "$lib/server/convex";
+import { json } from "@sveltejs/kit";
+import * as v from "valibot";
 import { api } from "$convex/_generated/api";
-import { fetchAndUpsertPlayer } from "$lib/server/osu";
+import { requireAdmin } from "$lib/server/auth";
+import { convex, mutate } from "$lib/server/convex";
+import { fetchOsuProfile } from "$lib/server/osu";
+import { osuId } from "$lib/server/schemas";
+import { parseBody } from "$lib/server/validation";
+import type { RequestHandler } from "./$types";
 
-export async function POST(event: RequestEvent) {
+const CreatePlayerBody = v.object({ osu_id: osuId });
+
+/** Creates a player from their osu! profile. An existing player is re-synced and returned with 200 (created: false). */
+export const POST: RequestHandler = async (event) => {
 	requireAdmin(event);
+	const { osu_id } = await parseBody(event.request, CreatePlayerBody);
 
-	const { osu_id } = await event.request.json();
-	const osuId = Number(osu_id);
-	if (!Number.isInteger(osuId) || osuId <= 0) error(400, "A valid osu_id is required");
+	const existed = (await convex.query(api.players.get, { osu_id })) !== null;
+	const profile = await fetchOsuProfile(osu_id);
+	const player = await mutate(api.players.syncFromOsu, {
+		osu_id,
+		name: profile.username,
+		cover_url: profile.cover_url,
+		previous_usernames: profile.previous_usernames,
+		only_if_exists: false
+	});
 
-	// Creating an existing player would overwrite it, so hand back the existing one instead.
-	const existing = await convex.query(api.players.getPlayerByOsuId, { osu_id: osuId });
-	if (existing) return json({ id: existing._id, name: existing.name, existed: true });
-
-	const player = await fetchAndUpsertPlayer(osuId);
-	if (!player) error(500, "Failed to create player");
-
-	return json({ id: player._id, name: player.name, existed: false });
-}
+	return json({ player, created: !existed }, { status: existed ? 200 : 201 });
+};

@@ -13,8 +13,7 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			$convex: "./convex",
-			$comp: "./src/lib/components",
-			$routes: "./src/routes"
+			$comp: "./src/lib/components"
 		}
 	}
 };

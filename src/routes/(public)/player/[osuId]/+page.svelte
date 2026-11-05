@@ -1,35 +1,15 @@
 <script lang="ts">
+	import PageHeading from "$comp/page-heading.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
-	import {
-		SKIN_SORT_OPTIONS,
-		POPOVER_SETTINGS,
-		type OrderBy,
-		type SkinSortBy
-	} from "$lib/constants.js";
-	import { useFuzzyFilter } from "$lib/utils/fuzzyFilter.svelte.js";
-	import { useSorted } from "$lib/utils/sorted.svelte.js";
-	import { osuAvatar } from "$lib/utils/osu.js";
-	import * as Popover from "$comp/ui/popover/index.js";
-	import PageHeading from "$comp/page-heading.svelte";
+	import * as Popover from "$comp/ui/popover";
+	import { POPOVER_SETTINGS } from "$lib/constants";
+	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
+	import { osuAvatar } from "$lib/osu";
 
 	let { data } = $props();
 
-	let inputValue = $state("");
-	let sortBy = $state<SkinSortBy>("date");
-	let orderBy = $state<OrderBy>("desc");
-
-	const filtered = useFuzzyFilter(
-		() => data.skins,
-		() => inputValue,
-		{ keys: ["name", "tags"], threshold: 0.4 }
-	);
-	const sorted = useSorted(
-		() => filtered.results,
-		() => sortBy,
-		() => orderBy,
-		SKIN_SORT_OPTIONS
-	);
+	const skins = useListQuery(() => data.player.skins, SKIN_LIST);
 
 	let isCoverLoaded = $state(true);
 
@@ -66,36 +46,39 @@
 			</div>
 			<div class="-mt-14 flex w-full items-center justify-between px-12">
 				<div class="flex items-end gap-2">
-					<img
-						src={osuAvatar(data.player.osu_id)}
-						alt="{data.player.name} Profile Picture"
-						class="size-28 shape-squircle rounded-3xl object-cover drop-shadow-lg"
-					/>
-					<Popover.Root>
-						<Popover.Trigger {...POPOVER_SETTINGS} class="text-start">
-							<p class="text-2xl font-bold">{data.player.name}</p>
-						</Popover.Trigger>
-						<Popover.Content class="w-fit px-2 py-1 outline outline-border">
-							<p class="text-sm">{data.player.previous_usernames?.join(", ")}</p>
-						</Popover.Content>
-					</Popover.Root>
+					<a href={`https://osu.ppy.sh/users/${data.player.osu_id}`} target="_blank">
+						<img
+							src={osuAvatar(data.player.osu_id)}
+							alt="{data.player.name} Profile Picture"
+							class="size-28 shape-squircle rounded-3xl object-cover drop-shadow-lg"
+						/>
+					</a>
+					{#if data.player.previous_usernames && data.player.previous_usernames.length > 0}
+						<Popover.Root>
+							<Popover.Trigger {...POPOVER_SETTINGS} class="text-start">
+								<p class="text-2xl font-bold">{data.player.name}</p>
+							</Popover.Trigger>
+							<Popover.Content class="w-fit px-2 py-1 outline outline-border">
+								<p class="text-sm">{data.player.previous_usernames?.join(", ")}</p>
+							</Popover.Content>
+						</Popover.Root>
+					{:else}
+						<p class="text-2xl font-bold">{data.player.name}</p>
+					{/if}
 				</div>
 			</div>
 		</div>
 	</section>
 	<section class="section">
 		<div class="flex w-full items-center justify-between">
-			<SearchSorted
-				placeholder="Search skins by name..."
-				sortOptions={SKIN_SORT_OPTIONS}
-				bind:sortBy
-				bind:orderBy
-				bind:inputValue
-			/>
-			<p class="text-xs">Loaded {data.skins.length} {data.skins.length === 1 ? "skin" : "skins"}</p>
+			<SearchSorted list={skins} placeholder="Search skins by name..." />
+			<p class="text-xs">
+				Loaded {data.player.skins.length}
+				{data.player.skins.length === 1 ? "skin" : "skins"}
+			</p>
 		</div>
 		<div class="common-grid">
-			{#each sorted.results as skin (skin._id)}
+			{#each skins.results as skin (skin._id)}
 				<SkinCard {skin} />
 			{/each}
 		</div>

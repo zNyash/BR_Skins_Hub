@@ -1,70 +1,59 @@
-<script lang="ts" generics="T extends string">
-	import Button from "$comp/ui/button/button.svelte";
+<script lang="ts" generics="T">
 	import Icon from "$comp/icon.svelte";
-	import * as ButtonGroup from "$comp/ui/button-group/index.js";
-	import * as InputGroup from "$comp/ui/input-group/index.js";
-	import * as Select from "$comp/ui/select/index.js";
-	import type { SortOption, OrderBy } from "$lib/constants";
+	import * as ButtonGroup from "$comp/ui/button-group";
+	import Button from "$comp/ui/button/button.svelte";
+	import * as InputGroup from "$comp/ui/input-group";
+	import * as Select from "$comp/ui/select";
+	import type { ListQuery } from "$lib/hooks/list-query.svelte";
 
-	let {
-		placeholder,
-		inputValue = $bindable(""),
-		sortBy = $bindable<T>(),
-		orderBy = $bindable<OrderBy>("asc"),
-		sortOptions
-	}: {
-		placeholder: string;
-		inputValue?: string;
-		sortBy: T;
-		orderBy?: OrderBy;
-		sortOptions: readonly (SortOption & { value: T })[];
-	} = $props();
+	let { list, placeholder }: { list: ListQuery<T>; placeholder: string } = $props();
 
-	const toggleOrderBy = () => (orderBy = orderBy === "asc" ? "desc" : "asc");
-
-	const currentOption = $derived(sortOptions.find((o) => o.value === sortBy));
-	const triggerContent = $derived(currentOption?.label ?? "Sort by");
+	const currentOption = $derived(list.sortOptions.find((o) => o.value === list.sortBy));
 	const sortIcon = $derived(
-		orderBy === "asc"
+		list.orderBy === "asc"
 			? (currentOption?.ascIcon ?? "arrow-down-a-z")
 			: (currentOption?.descIcon ?? "arrow-up-a-z")
 	);
+
+	function toggleOrder() {
+		list.orderBy = list.orderBy === "asc" ? "desc" : "asc";
+	}
 </script>
 
 <ButtonGroup.Root>
 	<InputGroup.Root>
 		<InputGroup.Input
 			{placeholder}
-			bind:value={inputValue}
+			bind:value={list.query}
 			onkeydown={(e) => {
-				if (e.key === "Escape") inputValue = "";
+				if (e.key === "Escape") list.query = "";
 			}}
 		/>
 		<InputGroup.Addon>
 			<Icon name="search" class="size-4" />
 		</InputGroup.Addon>
 		<InputGroup.Addon align="inline-end">
-			{#if inputValue}
+			{#if list.query}
 				<Button
 					size="icon-xs"
 					variant="ghost"
 					class="dark:hover:bg-popover"
-					onclick={() => (inputValue = "")}
+					onclick={() => (list.query = "")}
 				>
 					<Icon name="x" class="size-4" />
 				</Button>
 			{/if}
 		</InputGroup.Addon>
 	</InputGroup.Root>
-	<Select.Root type="single" bind:value={sortBy}>
-		<Select.Trigger>{triggerContent}</Select.Trigger>
+	<Select.Root type="single" bind:value={list.sortBy}>
+		<Select.Trigger>{currentOption?.label ?? "Sort by"}</Select.Trigger>
 		<Select.Content>
-			{#each sortOptions as option (option.value)}
+			{#each list.sortOptions as option (option.value)}
 				<Select.Item value={option.value} label={option.label}>{option.label}</Select.Item>
 			{/each}
 		</Select.Content>
 	</Select.Root>
-	<Button onclick={toggleOrderBy} variant="outline">
+	<Button onclick={toggleOrder} variant="outline">
 		<Icon name={sortIcon} />
 	</Button>
 </ButtonGroup.Root>
