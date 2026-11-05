@@ -2,14 +2,22 @@
 	import PageHeading from "$comp/page-heading.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
+	import Icon from "$comp/icon.svelte";
 	import * as Popover from "$comp/ui/popover";
 	import { POPOVER_SETTINGS } from "$lib/constants";
-	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
+	import { PLAYER_SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import { osuAvatar } from "$lib/osu";
 
 	let { data } = $props();
 
-	const skins = useListQuery(() => data.player.skins, SKIN_LIST);
+	// Skins the player hid only show up (dimmed, in their place) after "Show hidden skins".
+	// Filtering before the list query keeps search from finding them while they're hidden.
+	let showHidden = $state(false);
+	const hiddenCount = $derived(data.player.skins.filter((s) => s.hidden).length);
+	const skins = useListQuery(
+		() => (showHidden ? data.player.skins : data.player.skins.filter((s) => !s.hidden)),
+		PLAYER_SKIN_LIST
+	);
 
 	let isCoverLoaded = $state(true);
 
@@ -72,14 +80,27 @@
 	<section class="section">
 		<div class="flex w-full items-center justify-between">
 			<SearchSorted list={skins} placeholder="Search skins by name..." />
-			<p class="text-xs">
-				Loaded {data.player.skins.length}
-				{data.player.skins.length === 1 ? "skin" : "skins"}
-			</p>
+			<div class="flex flex-col items-end gap-0.5">
+				<p class="text-xs">
+					Loaded {skins.results.length}
+					{skins.results.length === 1 ? "skin" : "skins"}
+				</p>
+				{#if hiddenCount > 0}
+					<button
+						type="button"
+						class="flex items-center gap-1 text-xs text-text-muted hover:text-foreground"
+						aria-pressed={showHidden}
+						onclick={() => (showHidden = !showHidden)}
+					>
+						<Icon name={showHidden ? "eye-off" : "eye"} class="size-3.5" />
+						{showHidden ? "Hide hidden skins" : `Show hidden skins (${hiddenCount})`}
+					</button>
+				{/if}
+			</div>
 		</div>
 		<div class="common-grid">
 			{#each skins.results as skin (skin._id)}
-				<SkinCard {skin} />
+				<SkinCard {skin} hidden={skin.hidden} />
 			{/each}
 		</div>
 	</section>

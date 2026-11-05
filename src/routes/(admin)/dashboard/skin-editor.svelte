@@ -9,12 +9,13 @@
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { request } from "$lib/api";
+	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import { osuAvatar } from "$lib/osu";
 	import type { SkinWithPlayers } from "$lib/types";
 	import { createUploadThing } from "$lib/uploadthing";
 	import { cn, formatDate } from "$lib/utils";
 	import AssignPlayersDialog from "./assign-players-dialog.svelte";
-	import { moveItem, resolveImageUrls, type ImageItem } from "./skin-images";
+	import { resolveImageUrls, type ImageItem } from "./skin-images";
 	import TagInput from "./tag-input.svelte";
 
 	type Props = {
@@ -38,22 +39,20 @@
 			download_url: skin.download_url,
 			tags: skin.tags ?? []
 		},
-		images: skin.preview_images.map((url): ImageItem => ({ kind: "url", url })),
+		images: skin.preview_images.map((url): ImageItem => ({ id: url, kind: "url", url })),
 		playerIds: skin.players.map((p) => p._id)
 	};
 	let draft = $state(structuredClone(initialDraft));
 
 	let isSaving = $state(false);
 
-	// Files can't be JSON-compared, so images are compared by a stable key (url or blob preview).
-	const imageKey = (item: ImageItem) => (item.kind === "url" ? item.url : item.preview);
-
 	const isDirty = $derived.by(() => {
 		const current = $state.snapshot(draft);
 		return (
 			JSON.stringify(current.skin) !== JSON.stringify(initialDraft.skin) ||
-			JSON.stringify(current.images.map(imageKey)) !==
-				JSON.stringify(initialDraft.images.map(imageKey)) ||
+			// Files can't be JSON-compared, so images are compared by id (url or blob preview).
+			JSON.stringify(current.images.map((i) => i.id)) !==
+				JSON.stringify(initialDraft.images.map((i) => i.id)) ||
 			JSON.stringify([...current.playerIds].sort()) !==
 				JSON.stringify([...initialDraft.playerIds].sort())
 		);
@@ -124,14 +123,14 @@
 	}
 
 	let fileInput = $state<HTMLInputElement | null>(null);
-	let dragIndex = $state<number | null>(null);
 	let isFileDragOver = $state(false);
 
 	function addFiles(files: FileList | null | undefined) {
 		if (!files) return;
 		for (const file of files) {
 			if (!file.type.startsWith("image/")) continue;
-			draft.images.push({ kind: "file", file, preview: URL.createObjectURL(file) });
+			const preview = URL.createObjectURL(file);
+			draft.images.push({ id: preview, kind: "file", file, preview });
 		}
 	}
 
@@ -140,20 +139,24 @@
 		draft.images.splice(index, 1);
 	}
 
-	// Live reordering: while dragging, every time the pointer enters another tile the dragged image
-	// moves there, so the grid always shows the result before you let go.
-	function handleTileDragEnter(index: number) {
-		if (dragIndex === null || dragIndex === index) return;
-		draft.images = moveItem(draft.images, dragIndex, index);
-		dragIndex = index;
-	}
+	// Dropping files from the computer anywhere on the page adds them while this editor is open.
+	// Reordering uses pointer events (sortable), not HTML5 drag, so only real file drags get here.
+	const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes("Files") ?? false;
 
-	// Dropping files from the computer anywhere on the images section adds them.
-	// Internal reorders also end in a drop, so only treat it as new files when nothing is being dragged.
-	function handleSectionDrop(event: DragEvent) {
+	function handleWindowDragOver(event: DragEvent) {
+		if (!hasFiles(event)) return;
+		event.preventDefault();
+		isFileDragOver = true;
+	}
+	function handleWindowDragLeave(event: DragEvent) {
+		// relatedTarget is null only when the pointer leaves the window, not when it moves between elements.
+		if (event.relatedTarget === null) isFileDragOver = false;
+	}
+	function handleWindowDrop(event: DragEvent) {
+		if (!hasFiles(event)) return;
 		event.preventDefault();
 		isFileDragOver = false;
-		if (dragIndex === null) addFiles(event.dataTransfer?.files);
+		addFiles(event.dataTransfer?.files);
 	}
 
 	// --- Players ---
@@ -166,6 +169,26 @@
 		draft.playerIds = draft.playerIds.filter((id) => id !== playerId);
 	}
 </script>
+
+<svelte:window
+	ondragenter={handleWindowDragOver}
+	ondragover={handleWindowDragOver}
+	ondragleave={handleWindowDragLeave}
+	ondrop={handleWindowDrop}
+/>
+
+{#if isFileDragOver}
+	<div
+		class="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-background/80 p-8 backdrop-blur-sm"
+	>
+		<div
+			class="flex size-full flex-col items-center justify-center gap-3 rounded-xl text-lg outline-2 outline-primary outline-dashed"
+		>
+			<Icon name="image-up" class="size-10 text-primary" />
+			Drop images to add them to {draft.skin.name || "this skin"}
+		</div>
+	</div>
+{/if}
 
 <div class="flex flex-col gap-2">
 	<span class="flex items-center justify-between">
@@ -231,46 +254,53 @@
 		<section
 			class="mt-2 flex flex-col gap-2 border-t border-border pt-3"
 			aria-label="Preview images"
-			ondragover={(e) => {
-				e.preventDefault();
-				if (dragIndex === null) isFileDragOver = true;
-			}}
-			ondragleave={(e) => {
-				if (!e.currentTarget.contains(e.relatedTarget as Node)) isFileDragOver = false;
-			}}
-			ondrop={handleSectionDrop}
 		>
 			<span class="flex items-center justify-between">
 				<span class="flex items-center gap-2 text-sm font-medium">
 					Preview images
 					<span class="rounded-full bg-primary/20 px-2 text-xs">{draft.images.length}</span>
 				</span>
-				<span class="text-xs text-muted-foreground">
-					Drag to reorder · the first image is the thumbnail
-				</span>
+				<Button type="button" variant="outline" size="sm" onclick={() => fileInput?.click()}>
+					<Icon name="image-up" />
+					Add images
+				</Button>
+				<input
+					bind:this={fileInput}
+					type="file"
+					multiple
+					accept="image/*"
+					class="hidden"
+					onchange={(e) => {
+						addFiles(e.currentTarget.files);
+						e.currentTarget.value = ""; // allow picking the same file again
+					}}
+				/>
 			</span>
+			<p class="text-xs text-muted-foreground">
+				Drag to reorder · first is the thumbnail · drop files anywhere to add
+			</p>
 
-			<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-				{#each draft.images as item, i (imageKey(item))}
+			{#if draft.images.length === 0}
+				<p class="py-4 text-center text-sm text-muted-foreground">No images yet.</p>
+			{/if}
+			<div
+				class="grid grid-cols-2 gap-2 sm:grid-cols-4"
+				use:sortable={{ onMove: (from, to) => (draft.images = moveItem(draft.images, from, to)) }}
+			>
+				{#each draft.images as item, i (item.id)}
 					<div
-						role="listitem"
-						draggable="true"
+						data-sortable-item
 						animate:flip={{ duration: 150 }}
-						ondragstart={(e) => {
-							dragIndex = i;
-							if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
-						}}
-						ondragenter={() => handleTileDragEnter(i)}
-						ondragend={() => (dragIndex = null)}
 						class={cn(
-							"group/img relative aspect-video cursor-grab overflow-hidden rounded-md bg-layer-2 active:cursor-grabbing",
-							dragIndex === i && "opacity-40",
+							"group/img relative aspect-video cursor-grab touch-manipulation overflow-hidden rounded-md bg-layer-2 select-none",
+							SORTABLE_GHOST_CLASS,
 							item.kind === "file" && "outline-2 outline-offset-2 outline-primary outline-dashed"
 						)}
 					>
 						<img
-							src={imageKey(item)}
+							src={item.kind === "url" ? item.url : item.preview}
 							alt="Preview {i + 1}"
+							draggable="false"
 							class="pointer-events-none size-full object-cover"
 						/>
 
@@ -302,29 +332,6 @@
 						</button>
 					</div>
 				{/each}
-
-				<button
-					type="button"
-					class={cn(
-						"flex aspect-video flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border text-xs text-muted-foreground transition hover:text-foreground",
-						isFileDragOver && "border-primary bg-primary/10 text-foreground"
-					)}
-					onclick={() => fileInput?.click()}
-				>
-					<Icon name="image-up" class="size-5" />
-					Drop images or click
-				</button>
-				<input
-					bind:this={fileInput}
-					type="file"
-					multiple
-					accept="image/*"
-					class="hidden"
-					onchange={(e) => {
-						addFiles(e.currentTarget.files);
-						e.currentTarget.value = ""; // allow picking the same file again
-					}}
-				/>
 			</div>
 		</section>
 

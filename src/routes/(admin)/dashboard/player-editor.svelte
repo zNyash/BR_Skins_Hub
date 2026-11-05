@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { flip } from "svelte/animate";
 	import { toast } from "svelte-sonner";
 	import { invalidate } from "$app/navigation";
 	import HoldButton from "$comp/hold-button.svelte";
@@ -8,9 +9,13 @@
 	import * as Select from "$comp/ui/select";
 	import { Textarea } from "$comp/ui/textarea";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
+	import { sortPlayerSkins } from "$convex/lib/order";
 	import { request } from "$lib/api";
+	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import type { SkinWithPlayers } from "$lib/types";
+	import { cn } from "$lib/utils";
 	import AssignSkinsDialog from "./assign-skins-dialog.svelte";
+	import { skinsChanged, type DraftSkin } from "./player-skins";
 	import TagInput from "./tag-input.svelte";
 
 	type Props = {
@@ -42,15 +47,27 @@
 		} satisfies Partial<Doc<"players">>;
 	}
 
+	// Each list item carries its skin doc, so the list renders without looking skins up by id.
+	type SkinItem = DraftSkin & { skin: SkinWithPlayers };
+	const toItem = (skin: SkinWithPlayers, hidden: boolean): SkinItem => ({
+		id: skin._id,
+		hidden,
+		skin
+	});
+
+	// Same order as the profile page: the player's relation on each skin has its position and visibility.
 	// svelte-ignore state_referenced_locally
-	const initialPlayerSkins = allSkins.filter((skin) =>
-		skin.players.some((assignedPlayer) => assignedPlayer._id === player._id)
-	);
+	const initialSkins = sortPlayerSkins(
+		allSkins.flatMap((skin) => {
+			const relation = skin.players.find((p) => p._id === player._id);
+			return relation ? [{ skin, position: relation.position, hidden: relation.hidden }] : [];
+		})
+	).map((e) => toItem(e.skin, e.hidden));
 
 	// svelte-ignore state_referenced_locally
 	const initialDraft = {
 		player: snapshotFromPlayer(player),
-		skinIds: initialPlayerSkins.map((skin) => skin._id)
+		skins: initialSkins
 	};
 	let draft = $state(structuredClone(initialDraft));
 
@@ -61,12 +78,9 @@
 		const current = $state.snapshot(draft);
 		return (
 			JSON.stringify(current.player) !== JSON.stringify(initialDraft.player) ||
-			JSON.stringify([...current.skinIds].sort()) !==
-				JSON.stringify([...initialDraft.skinIds].sort())
+			skinsChanged(current.skins, initialDraft.skins)
 		);
 	});
-
-	const assignedSkins = $derived(allSkins.filter((skin) => draft.skinIds.includes(skin._id)));
 
 	// --- Saving ---
 	async function handleSubmit(event: SubmitEvent) {
@@ -79,7 +93,10 @@
 			// Fields and skin assignments are saved together, in one transaction.
 			await request(`/api/players/${player._id}`, {
 				method: "PATCH",
-				body: { ...draft.player, skin_ids: draft.skinIds }
+				body: {
+					...draft.player,
+					skins: draft.skins.map(({ id, hidden }) => ({ id, hidden }))
+				}
 			});
 			toast.success("Player saved");
 			onSave();
@@ -125,13 +142,14 @@
 	}
 
 	// --- Skins ---
+	// Newly assigned skins go on top, like on the profile page.
 	function addSkins(skinIds: Id<"skins">[]) {
-		for (const id of skinIds) {
-			if (!draft.skinIds.includes(id)) draft.skinIds.push(id);
-		}
+		const assigned = new Set(draft.skins.map((s) => s.id));
+		const added = allSkins.filter((skin) => skinIds.includes(skin._id) && !assigned.has(skin._id));
+		draft.skins = [...added.map((skin) => toItem(skin, false)), ...draft.skins];
 	}
 	function removeSkin(skinId: Id<"skins">) {
-		draft.skinIds = draft.skinIds.filter((id) => id !== skinId);
+		draft.skins = draft.skins.filter((s) => s.id !== skinId);
 	}
 </script>
 
@@ -268,48 +286,72 @@
 				<span class="flex items-center justify-between">
 					<span class="flex items-center gap-2 text-sm font-medium">
 						Skins
-						<span class="rounded-full bg-primary/20 px-2 text-xs">{assignedSkins.length}</span>
+						<span class="rounded-full bg-primary/20 px-2 text-xs">{draft.skins.length}</span>
 					</span>
 					<AssignSkinsDialog
 						{allSkins}
-						assignedIds={draft.skinIds}
+						assignedIds={draft.skins.map((s) => s.id)}
 						playerName={draft.player.name}
 						onAssign={addSkins}
 					/>
 				</span>
 
-				{#if assignedSkins.length === 0}
+				{#if draft.skins.length === 0}
 					<p class="py-4 text-center text-sm text-muted-foreground">No skins assigned yet.</p>
 				{:else}
-					<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-						{#each assignedSkins as skin (skin._id)}
-							<div
-								class="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-md bg-layer-2/50 p-1.5"
-							>
-								<img
-									src={skin.preview_images[0]}
-									alt=""
-									class="aspect-video w-16 rounded object-cover"
-								/>
-								<div class="min-w-0">
-									<p class="truncate text-sm">{skin.name}</p>
-									<p class="truncate text-xs text-muted-foreground">
-										by {skin.author ?? "Unknown"}
-									</p>
-								</div>
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon-sm"
-									aria-label="Remove {skin.name}"
-									onclick={() => removeSkin(skin._id)}
-								>
-									<Icon name="x" />
-								</Button>
-							</div>
-						{/each}
-					</div>
+					<p class="text-xs text-muted-foreground">Drag to reorder · top-left shows first</p>
 				{/if}
+				<div
+					class="grid grid-cols-1 gap-2 sm:grid-cols-2"
+					use:sortable={{ onMove: (from, to) => (draft.skins = moveItem(draft.skins, from, to)) }}
+				>
+					{#each draft.skins as item (item.id)}
+						<div
+							data-sortable-item
+							animate:flip={{ duration: 150 }}
+							class={cn(
+								"grid cursor-grab touch-manipulation grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-md bg-layer-2/50 p-1.5 select-none",
+								SORTABLE_GHOST_CLASS
+							)}
+						>
+							<img
+								src={item.skin.preview_images[0]}
+								alt=""
+								draggable="false"
+								class={cn(
+									"aspect-video w-16 rounded object-cover",
+									item.hidden && "brightness-60 grayscale"
+								)}
+							/>
+							<div class={cn("min-w-0", item.hidden && "opacity-50")}>
+								<p class="truncate text-sm">{item.skin.name}</p>
+								<p class="truncate text-xs text-muted-foreground">
+									by {item.skin.author ?? "Unknown"}{item.hidden ? " · hidden" : ""}
+								</p>
+							</div>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								aria-label="{item.hidden ? 'Show' : 'Hide'} {item.skin.name}"
+								aria-pressed={item.hidden}
+								class={cn(item.hidden && "text-primary")}
+								onclick={() => (item.hidden = !item.hidden)}
+							>
+								<Icon name={item.hidden ? "eye-off" : "eye"} />
+							</Button>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								aria-label="Remove {item.skin.name}"
+								onclick={() => removeSkin(item.id)}
+							>
+								<Icon name="x" />
+							</Button>
+						</div>
+					{/each}
+				</div>
 			</div>
 		</span>
 	</form>

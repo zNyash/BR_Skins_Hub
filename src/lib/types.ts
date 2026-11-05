@@ -13,5 +13,8 @@ export type AuthUser = {
 /** A player with the skins they use (players.get). */
 export type PlayerWithSkins = NonNullable<FunctionReturnType<typeof api.players.get>>;
 
+/** A skin on a player's page: `order` is its place in the custom order, `hidden` if the player hid it. */
+export type PlayerSkin = PlayerWithSkins["skins"][number];
+
 /** A skin with the players using it (skins.listWithPlayers). */
 export type SkinWithPlayers = FunctionReturnType<typeof api.skins.listWithPlayers>[number];

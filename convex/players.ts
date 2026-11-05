@@ -1,8 +1,9 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { query, type QueryCtx } from "./_generated/server";
 import { adminMutation, fail, serverMutation } from "./lib/functions";
 import { deleteRelations, setPlayerSkins } from "./lib/relations";
+import { sortPlayerSkins } from "./lib/order";
 import { mergeUsernames } from "./lib/usernames";
 import { playerFields, playerLink } from "./validators";
 
@@ -22,7 +23,7 @@ export const list = query({
 	handler: (ctx) => ctx.db.query("players").collect()
 });
 
-/** The player with the skins they use, or null. */
+/** The player with the skins they use (custom order, with hidden flags), or null. */
 export const get = query({
 	args: { osu_id: v.number() },
 	handler: async (ctx, { osu_id }) => {
@@ -33,9 +34,22 @@ export const get = query({
 			.query("playerSkins")
 			.withIndex("by_player", (q) => q.eq("player_id", player._id))
 			.collect();
-		const skins = await Promise.all(relations.map((r) => ctx.db.get(r.skin_id)));
+		const entries = await Promise.all(
+			relations.map(async (r) => ({
+				skin: await ctx.db.get(r.skin_id),
+				position: r.position,
+				hidden: r.hidden ?? false
+			}))
+		);
+		const existing = entries.filter((e): e is typeof e & { skin: Doc<"skins"> } => e.skin !== null);
 
-		return { ...player, skins: skins.filter((s) => s !== null) };
+		// Already in display order; `order` lets the page's "Custom" sort (and its reverse) use it.
+		const skins = sortPlayerSkins(existing).map((e, order) => ({
+			...e.skin,
+			hidden: e.hidden,
+			order
+		}));
+		return { ...player, skins };
 	}
 });
 
@@ -81,10 +95,14 @@ export const syncFromOsu = serverMutation({
 	}
 });
 
-/** Admin edit: changes only the fields sent, and sets exactly which skins the player uses. */
+/** Admin edit: changes only the fields sent, and sets exactly which skins the player uses, in order. */
 export const update = adminMutation({
-	args: { id: v.string(), ...playerFields, skin_ids: v.array(v.id("skins")) },
-	handler: async (ctx, { id, skin_ids, hue, ...fields }) => {
+	args: {
+		id: v.string(),
+		...playerFields,
+		skins: v.array(v.object({ id: v.id("skins"), hidden: v.boolean() }))
+	},
+	handler: async (ctx, { id, skins, hue, ...fields }) => {
 		const playerId = normalizePlayerId(ctx, id);
 		if (!(await ctx.db.get(playerId))) fail(404, "Player not found");
 
@@ -93,7 +111,7 @@ export const update = adminMutation({
 			...(hue !== undefined && { hue: hue ?? undefined }),
 			updated_at: Date.now()
 		});
-		await setPlayerSkins(ctx.db, playerId, skin_ids);
+		await setPlayerSkins(ctx.db, playerId, skins);
 	}
 });
 

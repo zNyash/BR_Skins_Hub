@@ -8,18 +8,31 @@
 	import type { Doc } from "$convex/_generated/dataModel";
 	import { POPOVER_SETTINGS } from "$lib/constants";
 	import { useCopyLink } from "$lib/hooks/copy-link.svelte";
+	import { cn } from "$lib/utils";
 
-	let { skin }: { skin: Doc<"skins"> } = $props();
+	/** `hidden`: the player hid this skin from their page; shown dimmed when revealed. */
+	let { skin, hidden = false }: { skin: Doc<"skins">; hidden?: boolean } = $props();
 
 	const clipboard = useCopyLink();
 </script>
 
 <div
-	class="flex flex-col items-center justify-center overflow-clip rounded-lg bg-card outline outline-transparent hover:outline-primary"
+	class="relative flex flex-col items-center justify-center overflow-clip rounded-lg bg-card outline outline-transparent hover:outline-primary"
 >
-	<ImageCarousel {skin} />
+	<div class={cn("w-full", hidden && "brightness-60 grayscale")}>
+		<ImageCarousel {skin} />
+	</div>
 
-	<div class="flex w-full flex-col p-1 px-2 pb-1">
+	{#if hidden}
+		<span
+			title="Hidden by the player"
+			class="pointer-events-none absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full bg-black/60 text-white"
+		>
+			<Icon name="eye-off" class="size-3.5" />
+		</span>
+	{/if}
+
+	<div class={cn("flex w-full flex-col p-1 px-2 pb-1", hidden && "opacity-60")}>
 		<!-- Skin Name -->
 		<Popover.Root>
 			<Popover.Trigger {...POPOVER_SETTINGS} class="w-fit max-w-full text-start">
