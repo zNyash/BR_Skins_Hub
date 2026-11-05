@@ -1,6 +1,6 @@
 import Fuse, { type IFuseOptions } from "fuse.js";
 import type { Doc } from "$convex/_generated/dataModel";
-import type { SkinWithPlayers } from "$lib/types";
+import type { PlayerSkin, SkinWithPlayers } from "$lib/types";
 
 // --- Types ---
 
@@ -122,6 +122,22 @@ export const SKIN_LIST: ListConfig<Doc<"skins">> = {
 	sortOptions: [byName, byDate, byUpdated, byDownloads],
 	defaultSort: "date",
 	defaultOrder: "desc"
+};
+
+/** A player's page: the player's own order first ("Custom"; the server sends each skin's place). */
+const byCustom = {
+	value: "custom",
+	label: "Custom",
+	ascIcon: "arrow-down-1-0",
+	descIcon: "arrow-up-1-0",
+	compare: (a: PlayerSkin, b: PlayerSkin) => a.order - b.order
+};
+
+export const PLAYER_SKIN_LIST: ListConfig<PlayerSkin> = {
+	...SKIN_LIST,
+	sortOptions: [byCustom, ...SKIN_LIST.sortOptions],
+	defaultSort: "custom",
+	defaultOrder: "asc"
 };
 
 /** The dashboard also finds skins by author and by the players using them. */
