@@ -26,8 +26,12 @@ function checkSecret(secret: string) {
 	if (!expected || secret !== expected) fail(401, "Invalid server secret");
 }
 
+export function isAdmin(osuId: number): boolean {
+	return parseAdminIds(process.env.ADMIN_OSU_IDS).has(osuId);
+}
+
 function checkAdmin(actorOsuId: number) {
-	if (!parseAdminIds(process.env.ADMIN_OSU_IDS).has(actorOsuId)) {
+	if (!isAdmin(actorOsuId)) {
 		fail(403, "Only admins can do this");
 	}
 }

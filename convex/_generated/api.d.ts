@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as lib_functions from "../lib/functions.js";
 import type * as lib_order from "../lib/order.js";
 import type * as lib_relations from "../lib/relations.js";
+import type * as lib_setup from "../lib/setup.js";
 import type * as lib_usernames from "../lib/usernames.js";
 import type * as players from "../players.js";
 import type * as skins from "../skins.js";
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   "lib/functions": typeof lib_functions;
   "lib/order": typeof lib_order;
   "lib/relations": typeof lib_relations;
+  "lib/setup": typeof lib_setup;
   "lib/usernames": typeof lib_usernames;
   players: typeof players;
   skins: typeof skins;

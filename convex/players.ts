@@ -1,11 +1,12 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query, type QueryCtx } from "./_generated/server";
-import { adminMutation, fail, serverMutation } from "./lib/functions";
+import { adminMutation, fail, isAdmin, serverMutation } from "./lib/functions";
 import { deleteRelations, setPlayerSkins } from "./lib/relations";
 import { sortPlayerSkins } from "./lib/order";
+import { applySetupPatch } from "./lib/setup";
 import { mergeUsernames } from "./lib/usernames";
-import { playerFields, playerLink, profileTab } from "./validators";
+import { playerFields, playerLink, profileTab, setupPatchFields } from "./validators";
 
 function findByOsuId(ctx: QueryCtx, osuId: number) {
 	return ctx.db
@@ -139,6 +140,32 @@ export const updateOwnProfile = serverMutation({
 			...(tab_order !== undefined && { tab_order }),
 			...(hue !== undefined && { hue: hue ?? undefined }),
 			...(links !== undefined && { links: links.filter((link) => link.value.trim() !== "") }),
+			updated_at: Date.now()
+		});
+	}
+});
+
+/**
+ * The Setup tab's cards, edited by the player themself or an admin. Only the cards sent change,
+ * merged here inside the transaction, so two people editing different cards don't clash.
+ */
+export const updateSetup = serverMutation({
+	args: { actor_osu_id: v.number(), id: v.string(), ...setupPatchFields },
+	handler: async (ctx, { actor_osu_id, id, ...patch }) => {
+		const playerId = normalizePlayerId(ctx, id);
+		const player = await ctx.db.get(playerId);
+		if (!player) fail(404, "Player not found");
+
+		if (!isAdmin(actor_osu_id)) {
+			const authUser = await ctx.db
+				.query("authUsers")
+				.withIndex("by_osu_id", (q) => q.eq("osu_id", actor_osu_id))
+				.unique();
+			if (authUser?.player_id !== playerId) fail(403, "You can only edit your own setup");
+		}
+
+		await ctx.db.patch(playerId, {
+			setup: applySetupPatch(player.setup, patch),
 			updated_at: Date.now()
 		});
 	}
