@@ -1,6 +1,7 @@
 <script lang="ts">
 	import PageHeading from "$comp/page-heading.svelte";
 	import { osuAvatar } from "$lib/osu";
+	import EditProfileDialog from "./edit-profile-dialog.svelte";
 	import { openTab } from "./open-tab";
 	import ProfileSidebar from "./profile-sidebar.svelte";
 	import ProfileTabs from "./profile-tabs.svelte";
@@ -49,3 +50,7 @@
 		<ProfileTabs player={data.player} {isOwner} onEdit={edit} />
 	</div>
 </main>
+
+{#if isOwner}
+	<EditProfileDialog player={data.player} bind:open={editing} />
+{/if}

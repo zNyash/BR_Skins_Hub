@@ -10,7 +10,8 @@ import type { Action } from "svelte/action";
  * While dragging, a full-color copy of the item follows the pointer (tilted, with a shadow) and the
  * item itself stays in the list as the "ghost", faded, always sitting where it will land.
  * `onMove(from, to)` is called every time the ghost should move; the caller reorders its array
- * (e.g. with `moveItem`). Escape cancels and moves it back.
+ * (e.g. with `moveItem`). Escape cancels and moves it back. `onDrop(from, to)` fires once on release,
+ * when the item ended up somewhere new: the place to save the order.
  *
  * Which item is under the pointer is decided against the slot positions measured when the drag
  * starts, not against the items' live positions. During a drag the number of items doesn't change,
@@ -26,6 +27,8 @@ export type Rect = { left: number; top: number; width: number; height: number };
 
 export type SortableOptions = {
 	onMove: (from: number, to: number) => void;
+	/** Called once when the item is released somewhere other than where it started (not on cancel). */
+	onDrop?: (from: number, to: number) => void;
 	disabled?: boolean;
 };
 
@@ -135,7 +138,9 @@ export const sortable: Action<HTMLElement, SortableOptions> = (node, initialOpti
 		if (event.pointerId !== pointerId) return;
 		if (dragging) {
 			swallowNextClick();
+			const [from, to] = [origin, current];
 			drop();
+			if (from !== to) options.onDrop?.(from, to);
 		} else {
 			reset();
 		}

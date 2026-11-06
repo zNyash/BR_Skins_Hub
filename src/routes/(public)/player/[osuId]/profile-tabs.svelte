@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { flip } from "svelte/animate";
+	import { toast } from "svelte-sonner";
 	import { page } from "$app/state";
 	import Icon from "$comp/icon.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
+	import { request } from "$lib/api";
 	import { PLAYER_SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import {
 		hasDescription,
@@ -11,7 +14,9 @@
 		visibleTabs,
 		type ProfileTab
 	} from "$lib/profile-tabs";
+	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import type { PlayerWithSkins } from "$lib/types";
+	import { cn } from "$lib/utils";
 	import { openTab } from "./open-tab";
 
 	let {
@@ -22,7 +27,13 @@
 
 	const LABELS: Record<ProfileTab, string> = { skins: "Skins", about: "About", setup: "Setup" };
 
-	const order = $derived(resolveTabs(player.tab_order));
+	// A local copy so dragging can reorder the bar right away; it follows the saved order whenever
+	// that changes (after a save or a reload).
+	// svelte-ignore state_referenced_locally
+	let order = $state(resolveTabs(player.tab_order));
+	$effect(() => {
+		order = resolveTabs(player.tab_order);
+	});
 	// Setup isn't built yet (part 3 of the redesign), so it never shows.
 	const visible = $derived(
 		visibleTabs(
@@ -32,6 +43,21 @@
 		).filter((tab) => tab !== "setup")
 	);
 	const active = $derived(pickTab(page.url.searchParams.get("tab"), visible));
+
+	// The bar shows only the visible tabs, but the stored order has all of them,
+	// so drag indexes (into `visible`) are translated to indexes into `order`.
+	function moveTab(from: number, to: number) {
+		order = moveItem(order, order.indexOf(visible[from]), order.indexOf(visible[to]));
+	}
+
+	async function saveOrder() {
+		try {
+			await request("/api/me/profile", { method: "PATCH", body: { tab_order: order } });
+		} catch (err) {
+			order = resolveTabs(player.tab_order);
+			toast.error(err instanceof Error ? err.message : "Couldn't save the tab order");
+		}
+	}
 
 	// Skins the player hid only show up (dimmed, in their place) after "Show hidden skins".
 	// Filtering before the list query keeps search from finding them while they're hidden.
@@ -48,22 +74,37 @@
 		role="tablist"
 		aria-label="Profile sections"
 		class="flex flex-wrap gap-1 border-b border-layer-2"
+		use:sortable={{ onMove: moveTab, onDrop: saveOrder, disabled: !isOwner }}
 	>
 		{#each visible as tab (tab)}
-			<button
-				type="button"
-				role="tab"
-				aria-selected={tab === active}
-				class="min-h-11 px-4 font-semibold transition-colors {tab === active
-					? 'text-foreground shadow-[inset_0_-2px_0_var(--accent-color)]'
-					: 'text-text-muted hover:text-foreground'}"
-				onclick={() => openTab(tab)}
+			<div
+				data-sortable-item
+				animate:flip={{ duration: 150 }}
+				class={cn("group flex items-center", SORTABLE_GHOST_CLASS)}
 			>
-				{LABELS[tab]}
-				{#if tab === "skins"}
-					<span class="font-medium text-text-muted">{player.skins.length - hiddenCount}</span>
+				{#if isOwner}
+					<span
+						class="-mr-3 cursor-grab touch-manipulation pl-1 text-text-muted opacity-0 transition-opacity group-hover:opacity-100"
+						title="Drag to reorder"
+					>
+						<Icon name="grip-vertical" class="size-4" />
+					</span>
 				{/if}
-			</button>
+				<button
+					type="button"
+					role="tab"
+					aria-selected={tab === active}
+					class="min-h-11 px-4 font-semibold transition-colors {tab === active
+						? 'text-foreground shadow-[inset_0_-2px_0_var(--accent-color)]'
+						: 'text-text-muted hover:text-foreground'}"
+					onclick={() => openTab(tab)}
+				>
+					{LABELS[tab]}
+					{#if tab === "skins"}
+						<span class="font-medium text-text-muted">{player.skins.length - hiddenCount}</span>
+					{/if}
+				</button>
+			</div>
 		{/each}
 	</div>
 
