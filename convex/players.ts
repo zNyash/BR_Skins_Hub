@@ -122,9 +122,11 @@ export const updateOwnProfile = serverMutation({
 		description: v.optional(v.string()),
 		bio: v.optional(v.string()),
 		links: v.optional(v.array(playerLink)),
-		tab_order: v.optional(v.array(profileTab))
+		tab_order: v.optional(v.array(profileTab)),
+		/** null clears it (JSON drops undefined, so null is how "remove" reaches Convex). */
+		hue: v.optional(v.union(v.number(), v.null()))
 	},
-	handler: async (ctx, { actor_osu_id, description, bio, links, tab_order }) => {
+	handler: async (ctx, { actor_osu_id, description, bio, links, tab_order, hue }) => {
 		const authUser = await ctx.db
 			.query("authUsers")
 			.withIndex("by_osu_id", (q) => q.eq("osu_id", actor_osu_id))
@@ -135,6 +137,7 @@ export const updateOwnProfile = serverMutation({
 			...(description !== undefined && { description }),
 			...(bio !== undefined && { bio }),
 			...(tab_order !== undefined && { tab_order }),
+			...(hue !== undefined && { hue: hue ?? undefined }),
 			...(links !== undefined && { links: links.filter((link) => link.value.trim() !== "") }),
 			updated_at: Date.now()
 		});

@@ -8,9 +8,23 @@ export function clampHue(value: unknown): number | null {
 }
 
 /**
- * The page's hue: the viewed player's color on a profile page, otherwise the viewer's own color
- * when they keep "Use my color across the site" on, otherwise null (the site default).
+ * The page's hue: a live preview while the owner picks a color; otherwise the viewed player's
+ * color on a profile page; otherwise the viewer's own color when they keep "My color everywhere"
+ * on; otherwise null (the site default).
  */
-export function pickHue(pageHue: unknown, userHue: unknown, useMyColor: boolean): number | null {
-	return clampHue(pageHue) ?? (useMyColor ? clampHue(userHue) : null);
+export function pickHue(
+	pageHue: unknown,
+	userHue: unknown,
+	useMyColor: boolean,
+	preview: unknown = null
+): number | null {
+	return clampHue(preview) ?? clampHue(pageHue) ?? (useMyColor ? clampHue(userHue) : null);
+}
+
+/** A typed-in hue: blank or non-numeric gives null (ignore it), anything else is rounded and clamped. */
+export function parseHue(input: string): number | null {
+	const text = input.trim();
+	if (text === "") return null;
+	const value = Number(text);
+	return Number.isFinite(value) ? clampHue(Math.round(value)) : null;
 }

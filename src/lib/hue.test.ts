@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampHue, pickHue } from "./hue";
+import { clampHue, parseHue, pickHue } from "./hue";
 
 describe("clampHue", () => {
 	it.each([
@@ -41,5 +41,29 @@ describe("pickHue", () => {
 	it("never passes through a bad value", () => {
 		expect(pickHue(NaN, 150, true)).toBe(150);
 		expect(pickHue(null, 720, true)).toBe(360);
+	});
+});
+
+describe("pickHue with a live preview", () => {
+	it("shows the preview over everything", () => {
+		expect(pickHue(200, 150, true, 40)).toBe(40);
+	});
+
+	it("ignores a missing or bad preview", () => {
+		expect(pickHue(200, 150, true, null)).toBe(200);
+		expect(pickHue(null, null, false, NaN)).toBeNull();
+	});
+});
+
+describe("parseHue", () => {
+	it.each([
+		["", null],
+		["abc", null],
+		[" 120 ", 120],
+		["-20", 0],
+		["999", 360],
+		["12.6", 13]
+	])("parseHue(%j) → %j", (input, expected) => {
+		expect(parseHue(input)).toBe(expected);
 	});
 });

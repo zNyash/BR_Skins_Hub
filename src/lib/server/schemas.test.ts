@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
-import { bio, playerSkins, tabOrder } from "./schemas";
+import { bio, hue, playerSkins, tabOrder } from "./schemas";
 
 describe("playerSkins", () => {
 	it("accepts ordered skins with hidden flags", () => {
@@ -54,5 +54,15 @@ describe("tabOrder", () => {
 	it("uses the spec's message for a duplicate", () => {
 		const result = v.safeParse(tabOrder, ["skins", "skins", "about"]);
 		expect(result.issues?.[0].message).toBe("must list each tab exactly once");
+	});
+});
+
+describe("hue", () => {
+	it.each([0, 360, null])("accepts %j", (value) => {
+		expect(v.safeParse(hue, value).success).toBe(true);
+	});
+
+	it.each([361, 1.5])("rejects %j", (value) => {
+		expect(v.safeParse(hue, value).success).toBe(false);
 	});
 });
