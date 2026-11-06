@@ -10,22 +10,26 @@ import type { Action } from "svelte/action";
  * While dragging, a full-color copy of the item follows the pointer (tilted, with a shadow) and the
  * item itself stays in the list as the "ghost", faded, always sitting where it will land.
  * `onMove(from, to)` is called every time the ghost should move; the caller reorders its array
- * (e.g. with `moveItem`). Escape cancels and moves it back.
+ * (e.g. with `moveItem`). Escape cancels and moves it back. `onDrop(from, to)` fires once on release,
+ * when the item ended up somewhere new: the place to save the order.
  *
  * Which item is under the pointer is decided against the slot positions measured when the drag
  * starts, not against the items' live positions. During a drag the number of items doesn't change,
  * so the slots (grid cells) stay put, and animations can't make the target flip back and forth.
  * This assumes items of the same size, like grid cells.
  *
- * Presses on buttons, links, inputs or `[data-no-drag]` never start a drag, and a drag only starts
- * after the pointer moves a few pixels (mouse) or after a short hold (touch), so clicks stay clicks
- * and swiping still scrolls.
+ * Presses on buttons, links, inputs or `[data-no-drag]` never start a drag, unless the pressed control
+ * is marked `[data-sortable-handle]` (for items that are themselves buttons, like tabs). A drag only
+ * starts after the pointer moves a few pixels (mouse) or after a short hold (touch), so clicks stay
+ * clicks and swiping still scrolls.
  */
 
 export type Rect = { left: number; top: number; width: number; height: number };
 
 export type SortableOptions = {
 	onMove: (from: number, to: number) => void;
+	/** Called once when the item is released somewhere other than where it started (not on cancel). */
+	onDrop?: (from: number, to: number) => void;
 	disabled?: boolean;
 };
 
@@ -35,6 +39,7 @@ export const SORTABLE_GHOST_CLASS = "data-dragging:opacity-40 data-dragging:gray
 const ITEM_ATTR = "data-sortable-item";
 const DRAGGING_ATTR = "data-dragging";
 const IGNORE = "button, a, input, textarea, select, [data-no-drag]";
+const HANDLE = "[data-sortable-handle]";
 
 const MOUSE_THRESHOLD_PX = 4;
 const TOUCH_HOLD_MS = 200;
@@ -92,7 +97,8 @@ export const sortable: Action<HTMLElement, SortableOptions> = (node, initialOpti
 		if (options.disabled || pressed || event.button !== 0) return;
 
 		const target = event.target as Element;
-		if (target.closest(IGNORE)) return;
+		const ignored = target.closest(IGNORE);
+		if (ignored && !ignored.matches(HANDLE)) return;
 		const item = target.closest<HTMLElement>(`[${ITEM_ATTR}]`);
 		if (!item || item.parentElement !== node) return;
 
@@ -135,7 +141,9 @@ export const sortable: Action<HTMLElement, SortableOptions> = (node, initialOpti
 		if (event.pointerId !== pointerId) return;
 		if (dragging) {
 			swallowNextClick();
+			const [from, to] = [origin, current];
 			drop();
+			if (from !== to) options.onDrop?.(from, to);
 		} else {
 			reset();
 		}

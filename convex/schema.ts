@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { playerLink } from "./validators";
+import { playerLink, profileTab } from "./validators";
 
 export default defineSchema({
 	/* ------- */
@@ -13,6 +13,10 @@ export default defineSchema({
 		hue: v.optional(v.number()),
 		previous_usernames: v.optional(v.array(v.string())),
 		description: v.optional(v.string()),
+		/** Plain text, at most 200 characters. Shown in the profile sidebar. */
+		bio: v.optional(v.string()),
+		/** The owner's tab order. Missing or partial = default order (see resolveTabs). */
+		tab_order: v.optional(v.array(profileTab)),
 		links: v.optional(v.array(playerLink)),
 		views: v.optional(v.number()),
 		tags: v.optional(v.array(v.string())),
@@ -57,6 +61,8 @@ export default defineSchema({
 	authUsers: defineTable({
 		osu_id: v.number(),
 		username: v.string(),
-		player_id: v.optional(v.id("players"))
+		player_id: v.optional(v.id("players")),
+		/** "Use my color across the site" turned off. Missing = on (the default). */
+		site_hue_off: v.optional(v.boolean())
 	}).index("by_osu_id", ["osu_id"])
 });

@@ -4,3 +4,6 @@ export const POPOVER_SETTINGS = {
 	openDelay: 0,
 	closeDelay: 0
 };
+
+/** The site's creator, credited in the footer (their profile page has all their links). */
+export const CREATOR = { name: "NYASH", osuId: 12976255 };

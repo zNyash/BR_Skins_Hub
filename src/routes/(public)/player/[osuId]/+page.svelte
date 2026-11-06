@@ -1,107 +1,76 @@
 <script lang="ts">
 	import PageHeading from "$comp/page-heading.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
-	import SkinCard from "$comp/skin-card.svelte";
-	import Icon from "$comp/icon.svelte";
 	import * as Popover from "$comp/ui/popover";
 	import { POPOVER_SETTINGS } from "$lib/constants";
-	import { PLAYER_SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import { osuAvatar } from "$lib/osu";
+	import { openTab } from "./open-tab";
+	import ProfileSidebar from "./profile-sidebar.svelte";
+	import ProfileTabs from "./profile-tabs.svelte";
 
 	let { data } = $props();
 
-	// Skins the player hid only show up (dimmed, in their place) after "Show hidden skins".
-	// Filtering before the list query keeps search from finding them while they're hidden.
-	let showHidden = $state(false);
-	const hiddenCount = $derived(data.player.skins.filter((s) => s.hidden).length);
-	const skins = useListQuery(
-		() => (showHidden ? data.player.skins : data.player.skins.filter((s) => !s.hidden)),
-		PLAYER_SKIN_LIST
-	);
+	const player = $derived(data.player);
+	const isOwner = $derived(data.user?.player_id === player._id);
 
-	let isCoverLoaded = $state(true);
-
-	function handleImageError(e: Event) {
-		(e.currentTarget as HTMLImageElement).style.opacity = "0";
-		isCoverLoaded = false;
-	}
+	// Remembers which cover failed, not just "a cover failed": moving to another player's page
+	// (same component, new data) must not hide their banner too.
+	let failedCover = $state<string | null>(null);
+	const showCover = $derived(Boolean(player.cover_url) && player.cover_url !== failedCover);
 </script>
 
 <PageHeading
-	title="{data.player.name} · player info"
-	description="All skins {data.player.name} uses!"
-	image={osuAvatar(data.player.osu_id)}
+	title="{player.name} · player info"
+	description="All skins {player.name} uses!"
+	image={osuAvatar(player.osu_id)}
 />
 <main class="main">
-	<section class="section">
-		<div class="relative">
-			<div class="relative">
-				<div
-					class="absolute inset-0 flex items-center justify-center {isCoverLoaded
-						? 'to-75 bg-linear-to-t from-background from-0% to-transparent'
-						: 'rounded-lg bg-card'}"
-				>
-					{#if !isCoverLoaded}
-						<p>The player needs to login again to update their banner.</p>
-					{/if}
-				</div>
+	<header class="w-full max-w-6xl px-2">
+		<!-- osu! profile covers are 2400×640, so the banner keeps that shape and only scales. -->
+		<div class="relative aspect-[2400/640] w-full overflow-hidden rounded-lg">
+			{#if showCover}
 				<img
-					src={data.player.cover_url}
+					src={player.cover_url}
 					alt=""
-					class="h-62 w-full rounded-lg object-cover"
-					onerror={handleImageError}
+					class="size-full object-cover"
+					onerror={() => (failedCover = player.cover_url ?? null)}
 				/>
-			</div>
-			<div class="-mt-14 flex w-full items-center justify-between px-12">
-				<div class="flex items-end gap-2">
-					<a href={`https://osu.ppy.sh/users/${data.player.osu_id}`} target="_blank">
-						<img
-							src={osuAvatar(data.player.osu_id)}
-							alt="{data.player.name} Profile Picture"
-							class="size-28 shape-squircle rounded-3xl object-cover drop-shadow-lg"
-						/>
-					</a>
-					{#if data.player.previous_usernames && data.player.previous_usernames.length > 0}
-						<Popover.Root>
-							<Popover.Trigger {...POPOVER_SETTINGS} class="text-start">
-								<p class="text-2xl font-bold">{data.player.name}</p>
-							</Popover.Trigger>
-							<Popover.Content class="w-fit px-2 py-1 outline outline-border">
-								<p class="text-sm">{data.player.previous_usernames?.join(", ")}</p>
-							</Popover.Content>
-						</Popover.Root>
-					{:else}
-						<p class="text-2xl font-bold">{data.player.name}</p>
+			{:else}
+				<div class="flex size-full items-center justify-center bg-primary/25">
+					{#if isOwner}
+						<p class="text-sm">Log in again to update your banner.</p>
 					{/if}
 				</div>
-			</div>
+			{/if}
+			<div
+				class="pointer-events-none absolute inset-0 bg-linear-to-t from-background to-transparent to-60%"
+			></div>
 		</div>
-	</section>
-	<section class="section">
-		<div class="flex w-full items-center justify-between">
-			<SearchSorted list={skins} placeholder="Search skins by name..." />
-			<div class="flex flex-col items-end gap-0.5">
-				<p class="text-xs">
-					Loaded {skins.results.length}
-					{skins.results.length === 1 ? "skin" : "skins"}
-				</p>
-				{#if hiddenCount > 0}
-					<button
-						type="button"
-						class="flex items-center gap-1 text-xs text-text-muted hover:text-foreground"
-						aria-pressed={showHidden}
-						onclick={() => (showHidden = !showHidden)}
-					>
-						<Icon name={showHidden ? "eye-off" : "eye"} class="size-3.5" />
-						{showHidden ? "Hide hidden skins" : `Show hidden skins (${hiddenCount})`}
-					</button>
-				{/if}
-			</div>
+
+		<div class="relative -mt-10 flex items-end gap-3 px-4 sm:-mt-16 sm:gap-4 sm:px-10">
+			<a href={`https://osu.ppy.sh/users/${player.osu_id}`} target="_blank" class="shrink-0">
+				<img
+					src={osuAvatar(player.osu_id)}
+					alt="{player.name} Profile Picture"
+					class="size-20 shape-squircle rounded-3xl border-2 border-layer-3 object-cover drop-shadow-lg sm:size-28"
+				/>
+			</a>
+			{#if player.previous_usernames && player.previous_usernames.length > 0}
+				<Popover.Root>
+					<Popover.Trigger {...POPOVER_SETTINGS} class="pb-1 text-start">
+						<h1 class="text-xl font-bold sm:text-2xl">{player.name}</h1>
+					</Popover.Trigger>
+					<Popover.Content class="w-fit px-2 py-1 outline outline-border">
+						<p class="text-sm">{player.previous_usernames.join(", ")}</p>
+					</Popover.Content>
+				</Popover.Root>
+			{:else}
+				<h1 class="pb-1 text-xl font-bold sm:text-2xl">{player.name}</h1>
+			{/if}
 		</div>
-		<div class="common-grid">
-			{#each skins.results as skin (skin._id)}
-				<SkinCard {skin} hidden={skin.hidden} />
-			{/each}
-		</div>
-	</section>
+	</header>
+
+	<div class="mt-4 flex w-full max-w-6xl flex-wrap items-start gap-7 px-2">
+		<ProfileSidebar {player} {isOwner} onReadMore={() => openTab("about")} />
+		<ProfileTabs {player} {isOwner} />
+	</div>
 </main>

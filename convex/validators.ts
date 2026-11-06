@@ -12,6 +12,9 @@ export const playerLink = v.object({
 	value: v.string()
 });
 
+/** The tabs of a player's profile page. */
+export const profileTab = v.union(v.literal("skins"), v.literal("about"), v.literal("setup"));
+
 /** Player fields an admin can edit. All optional: only the ones sent are changed. */
 export const playerFields = {
 	name: v.optional(v.string()),
@@ -19,6 +22,7 @@ export const playerFields = {
 	/** null clears it (JSON drops undefined, so null is how "remove" reaches Convex). */
 	hue: v.optional(v.union(v.number(), v.null())),
 	description: v.optional(v.string()),
+	bio: v.optional(v.string()),
 	previous_usernames: v.optional(v.array(v.string())),
 	links: v.optional(v.array(playerLink)),
 	tags: v.optional(v.array(v.string()))
