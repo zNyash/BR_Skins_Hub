@@ -16,7 +16,8 @@ export async function load({ locals }) {
 			username: authUser?.username ?? null,
 			player_id: authUser?.player_id ?? null,
 			avatar_url: osuAvatar(locals.user.osu_id),
-			hue: authUser?.hue ?? null
+			hue: authUser?.hue ?? null,
+			useMyColor: !authUser?.site_hue_off
 		} satisfies AuthUser
 	};
 }

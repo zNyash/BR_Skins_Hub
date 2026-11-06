@@ -10,6 +10,8 @@ export type AuthUser = {
 	avatar_url: string;
 	/** The user's player color, used for the site theme outside profile pages. */
 	hue: number | null;
+	/** "Use my color across the site" (on unless the user turned it off). */
+	useMyColor: boolean;
 };
 
 /** A player with the skins they use (players.get). */

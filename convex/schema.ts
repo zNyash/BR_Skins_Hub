@@ -61,6 +61,8 @@ export default defineSchema({
 	authUsers: defineTable({
 		osu_id: v.number(),
 		username: v.string(),
-		player_id: v.optional(v.id("players"))
+		player_id: v.optional(v.id("players")),
+		/** "Use my color across the site" turned off. Missing = on (the default). */
+		site_hue_off: v.optional(v.boolean())
 	}).index("by_osu_id", ["osu_id"])
 });
