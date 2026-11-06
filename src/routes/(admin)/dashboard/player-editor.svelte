@@ -41,6 +41,7 @@
 			cover_url: p.cover_url,
 			hue: p.hue,
 			description: p.description,
+			bio: p.bio ?? "",
 			previous_usernames: p.previous_usernames ?? [],
 			links: p.links ?? [],
 			tags: p.tags ?? []
@@ -223,6 +224,16 @@
 			<div class="flex flex-col">
 				<label for="description" class="text-sm">Description</label>
 				<Textarea id="description" bind:value={draft.player.description} />
+			</div>
+
+			<div class="flex flex-col">
+				<span class="flex items-end justify-between">
+					<label for="bio" class="text-sm">Bio</label>
+					<span class="text-xs {draft.player.bio.length > 200 ? 'text-destructive' : 'text-text-muted'}">
+						{draft.player.bio.length}/200
+					</span>
+				</span>
+				<Textarea id="bio" rows={2} bind:value={draft.player.bio} />
 			</div>
 
 			<TagInput id="player-tags" bind:tags={draft.player.tags} suggestions={tagSuggestions} />

@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { playerLink } from "./validators";
+import { playerLink, profileTab } from "./validators";
 
 export default defineSchema({
 	/* ------- */
@@ -13,6 +13,10 @@ export default defineSchema({
 		hue: v.optional(v.number()),
 		previous_usernames: v.optional(v.array(v.string())),
 		description: v.optional(v.string()),
+		/** Plain text, at most 200 characters. Shown in the profile sidebar. */
+		bio: v.optional(v.string()),
+		/** The owner's tab order. Missing or partial = default order (see resolveTabs). */
+		tab_order: v.optional(v.array(profileTab)),
 		links: v.optional(v.array(playerLink)),
 		views: v.optional(v.number()),
 		tags: v.optional(v.array(v.string())),

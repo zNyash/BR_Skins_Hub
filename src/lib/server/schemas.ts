@@ -46,3 +46,17 @@ export const playerSkins = v.pipe(
 		"must not contain the same skin twice"
 	)
 );
+
+/** The short plain-text bio shown in the profile sidebar. */
+export const bio = v.pipe(v.string(), v.trim(), v.maxLength(200, "must be at most 200 characters"));
+
+const PROFILE_TABS = ["skins", "about", "setup"] as const;
+
+/** The owner's profile tab order: every tab exactly once. */
+export const tabOrder = v.pipe(
+	v.array(v.picklist(PROFILE_TABS, "must list each tab exactly once")),
+	v.check(
+		(tabs) => tabs.length === PROFILE_TABS.length && new Set(tabs).size === PROFILE_TABS.length,
+		"must list each tab exactly once"
+	)
+);

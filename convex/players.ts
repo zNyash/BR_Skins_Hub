@@ -5,7 +5,7 @@ import { adminMutation, fail, serverMutation } from "./lib/functions";
 import { deleteRelations, setPlayerSkins } from "./lib/relations";
 import { sortPlayerSkins } from "./lib/order";
 import { mergeUsernames } from "./lib/usernames";
-import { playerFields, playerLink } from "./validators";
+import { playerFields, playerLink, profileTab } from "./validators";
 
 function findByOsuId(ctx: QueryCtx, osuId: number) {
 	return ctx.db
@@ -120,9 +120,11 @@ export const updateOwnProfile = serverMutation({
 	args: {
 		actor_osu_id: v.number(),
 		description: v.optional(v.string()),
-		links: v.optional(v.array(playerLink))
+		bio: v.optional(v.string()),
+		links: v.optional(v.array(playerLink)),
+		tab_order: v.optional(v.array(profileTab))
 	},
-	handler: async (ctx, { actor_osu_id, description, links }) => {
+	handler: async (ctx, { actor_osu_id, description, bio, links, tab_order }) => {
 		const authUser = await ctx.db
 			.query("authUsers")
 			.withIndex("by_osu_id", (q) => q.eq("osu_id", actor_osu_id))
@@ -131,6 +133,8 @@ export const updateOwnProfile = serverMutation({
 
 		await ctx.db.patch(authUser.player_id, {
 			...(description !== undefined && { description }),
+			...(bio !== undefined && { bio }),
+			...(tab_order !== undefined && { tab_order }),
 			...(links !== undefined && { links: links.filter((link) => link.value.trim() !== "") }),
 			updated_at: Date.now()
 		});

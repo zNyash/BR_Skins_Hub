@@ -3,7 +3,7 @@ import { api } from "$convex/_generated/api";
 import type { Id } from "$convex/_generated/dataModel";
 import { requireAdmin } from "$lib/server/auth";
 import { mutate } from "$lib/server/convex";
-import { hue, links, playerSkins, tags, trimmedString } from "$lib/server/schemas";
+import { bio, hue, links, playerSkins, tags, trimmedString } from "$lib/server/schemas";
 import { parseBody } from "$lib/server/validation";
 import type { RequestHandler } from "./$types";
 
@@ -12,6 +12,7 @@ const PlayerBody = v.object({
 	cover_url: v.optional(v.pipe(v.string(), v.trim())),
 	hue,
 	description: v.optional(v.string()),
+	bio: v.optional(bio),
 	// Blank rows from the editor are dropped rather than rejected.
 	previous_usernames: v.optional(
 		v.pipe(
