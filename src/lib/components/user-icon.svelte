@@ -72,9 +72,11 @@
 							checked={user.useMyColor}
 							closeOnSelect={false}
 							onCheckedChange={setUseMyColor}
+							title="Show your profile color on every page except other players' profiles"
+							class="whitespace-nowrap"
 						>
 							<Icon name="palette" class="size-4" />
-							Use my color across the site
+							My color everywhere
 						</DropdownMenu.CheckboxItem>
 						<DropdownMenu.Separator />
 					{/if}
