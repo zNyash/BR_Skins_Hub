@@ -19,7 +19,7 @@
 		<div
 			role="img"
 			aria-label="Active area of {tablet.area_w} by {tablet.area_h} mm. {caption}"
-			class="relative w-full self-center rounded-md border border-layer-5 bg-card"
+			class="relative w-full max-w-60 self-center rounded-md border border-layer-5 bg-card"
 			style:aspect-ratio="{tablet.full_w} / {tablet.full_h}"
 		>
 			<div
