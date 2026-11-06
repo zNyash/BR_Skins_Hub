@@ -229,7 +229,9 @@
 			<div class="flex flex-col">
 				<span class="flex items-end justify-between">
 					<label for="bio" class="text-sm">Bio</label>
-					<span class="text-xs {draft.player.bio.length > 200 ? 'text-destructive' : 'text-text-muted'}">
+					<span
+						class="text-xs {draft.player.bio.length > 200 ? 'text-destructive' : 'text-text-muted'}"
+					>
 						{draft.player.bio.length}/200
 					</span>
 				</span>
