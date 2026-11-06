@@ -22,9 +22,15 @@
 	import AboutPanel from "./about-panel.svelte";
 	import { openTab } from "./open-tab";
 	import { saveProfile } from "./save-profile";
+	import { hasSetup } from "$lib/setup";
 	import SettingsTab from "./settings-tab.svelte";
+	import SetupPanel from "./setup-panel.svelte";
 
-	let { player, isOwner }: { player: PlayerWithSkins; isOwner: boolean } = $props();
+	let {
+		player,
+		isOwner,
+		canEdit
+	}: { player: PlayerWithSkins; isOwner: boolean; canEdit: boolean } = $props();
 
 	const LABELS: Record<ProfileTab, string> = { skins: "Skins", about: "About", setup: "Setup" };
 
@@ -35,14 +41,19 @@
 	$effect(() => {
 		order = resolveTabs(player.tab_order);
 	});
-	// Setup isn't built yet (part 3 of the redesign), so it never shows.
+	// Editors (owner or admin) always see Setup, so they can fill it in.
 	const visible = $derived(
 		visibleTabs(
 			order,
-			{ skins: true, about: hasDescription(player.description), setup: false },
+			{
+				skins: true,
+				about: hasDescription(player.description),
+				setup: canEdit || hasSetup(player.setup)
+			},
 			isOwner
-		).filter((tab) => tab !== "setup")
+		)
 	);
+
 	const active = $derived(
 		pickTab(page.url.searchParams.get("tab"), withSettings(visible, isOwner))
 	);
@@ -160,6 +171,8 @@
 		</div>
 	{:else if active === "about"}
 		<AboutPanel {player} {isOwner} />
+	{:else if active === "setup"}
+		<SetupPanel {player} {canEdit} onEdit={() => {}} />
 	{:else if active === "settings"}
 		<SettingsTab {player} {order} {visible} onReorder={reorder} />
 	{/if}
