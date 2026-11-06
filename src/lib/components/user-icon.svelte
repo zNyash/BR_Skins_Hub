@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { toast } from "svelte-sonner";
-	import { invalidateAll } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import Icon from "$comp/icon.svelte";
@@ -8,21 +6,10 @@
 	import * as Avatar from "$comp/ui/avatar";
 	import Button from "$comp/ui/button/button.svelte";
 	import * as DropdownMenu from "$comp/ui/dropdown-menu";
-	import { request } from "$lib/api";
 	import { osuAvatar } from "$lib/osu";
 
 	const user = $derived(page.data.user);
 	const initials = $derived(user?.username?.slice(0, 2) ?? "");
-
-	// Saved on the account, then the page data reloads so the site color switches right away.
-	async function setUseMyColor(use_my_color: boolean) {
-		try {
-			await request("/api/me/preferences", { method: "PATCH", body: { use_my_color } });
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : "Couldn't save that setting");
-		}
-		await invalidateAll();
-	}
 
 	async function logout() {
 		await fetch("/auth/logout", { method: "POST" });
@@ -67,19 +54,6 @@
 						</DropdownMenu.Item>
 					</a>
 					<DropdownMenu.Separator />
-					{#if user.player_id}
-						<DropdownMenu.CheckboxItem
-							checked={user.useMyColor}
-							closeOnSelect={false}
-							onCheckedChange={setUseMyColor}
-							title="Show your profile color on every page except other players' profiles"
-							class="whitespace-nowrap"
-						>
-							<Icon name="palette" class="size-4" />
-							My color everywhere
-						</DropdownMenu.CheckboxItem>
-						<DropdownMenu.Separator />
-					{/if}
 					<DropdownMenu.Item onSelect={logout}>
 						<Icon name="log-out" class="size-4" />
 						Logout

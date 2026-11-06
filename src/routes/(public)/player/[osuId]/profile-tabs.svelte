@@ -9,16 +9,20 @@
 	import { PLAYER_SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import {
 		hasDescription,
+		moveVisibleTab,
 		pickTab,
 		resolveTabs,
 		visibleTabs,
-		type ProfileTab
+		withSettings,
+		type ProfileTab,
+		type TabId
 	} from "$lib/profile-tabs";
-	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
+	import { SORTABLE_GHOST_CLASS, sortable } from "$lib/sortable";
 	import type { PlayerWithSkins } from "$lib/types";
 	import { cn } from "$lib/utils";
 	import AboutPanel from "./about-panel.svelte";
 	import { openTab } from "./open-tab";
+	import SettingsTab from "./settings-tab.svelte";
 
 	let { player, isOwner }: { player: PlayerWithSkins; isOwner: boolean } = $props();
 
@@ -39,13 +43,28 @@
 			isOwner
 		).filter((tab) => tab !== "setup")
 	);
-	const active = $derived(pickTab(page.url.searchParams.get("tab"), visible));
+	const active = $derived(
+		pickTab(page.url.searchParams.get("tab"), withSettings(visible, isOwner))
+	);
 
-	// The bar shows only the visible tabs, but the stored order has all of them,
-	// so drag indexes (into `visible`) are translated to indexes into `order`.
+	// The bar shows only the visible tabs, but the stored order has all of them.
 	function moveTab(from: number, to: number) {
-		order = moveItem(order, order.indexOf(visible[from]), order.indexOf(visible[to]));
+		order = moveVisibleTab(order, visible, from, to);
 	}
+
+	/** The Settings tab's ↑/↓ list: apply its new order and save it. */
+	function reorder(next: ProfileTab[]) {
+		order = next;
+		saveOrder();
+	}
+
+	const tabClass = (tab: TabId) =>
+		cn(
+			"flex min-h-11 items-center gap-1.5 px-4 font-semibold transition-colors",
+			tab === active
+				? "text-foreground shadow-[inset_0_-2px_0_var(--accent-color)]"
+				: "text-text-muted hover:text-foreground"
+		);
 
 	async function saveOrder() {
 		try {
@@ -67,38 +86,47 @@
 </script>
 
 <section aria-label="Profile content" class="flex min-w-0 flex-[999_1_560px] flex-col gap-5 pt-4">
-	<div
-		role="tablist"
-		aria-label="Profile sections"
-		class="flex flex-wrap gap-1 border-b border-layer-2"
-		use:sortable={{ onMove: moveTab, onDrop: saveOrder, disabled: !isOwner }}
-	>
-		{#each visible as tab (tab)}
-			<div
-				data-sortable-item
-				animate:flip={{ duration: 150 }}
-				class={cn("flex items-center", SORTABLE_GHOST_CLASS)}
-			>
-				<button
-					type="button"
-					role="tab"
-					aria-selected={tab === active}
-					data-sortable-handle={isOwner || undefined}
-					title={isOwner ? "Drag to reorder" : undefined}
-					class="min-h-11 px-4 font-semibold transition-colors {isOwner
-						? 'cursor-grab touch-manipulation'
-						: ''} {tab === active
-						? 'text-foreground shadow-[inset_0_-2px_0_var(--accent-color)]'
-						: 'text-text-muted hover:text-foreground'}"
-					onclick={() => openTab(tab)}
+	<div role="tablist" aria-label="Profile sections" class="flex items-end border-b border-layer-2">
+		<div
+			class="flex flex-wrap gap-1"
+			use:sortable={{ onMove: moveTab, onDrop: saveOrder, disabled: !isOwner }}
+		>
+			{#each visible as tab (tab)}
+				<div
+					data-sortable-item
+					animate:flip={{ duration: 150 }}
+					class={cn("flex items-center", SORTABLE_GHOST_CLASS)}
 				>
-					{LABELS[tab]}
-					{#if tab === "skins"}
-						<span class="font-medium text-text-muted">{player.skins.length - hiddenCount}</span>
-					{/if}
-				</button>
-			</div>
-		{/each}
+					<button
+						type="button"
+						role="tab"
+						aria-selected={tab === active}
+						data-sortable-handle={isOwner || undefined}
+						title={isOwner ? "Drag to reorder" : undefined}
+						class={cn(tabClass(tab), isOwner && "cursor-grab touch-manipulation")}
+						onclick={() => openTab(tab)}
+					>
+						{LABELS[tab]}
+						{#if tab === "skins"}
+							<span class="font-medium text-text-muted">{player.skins.length - hiddenCount}</span>
+						{/if}
+					</button>
+				</div>
+			{/each}
+		</div>
+		{#if isOwner}
+			<button
+				type="button"
+				role="tab"
+				aria-selected={active === "settings"}
+				title="Only you can see this tab"
+				class={cn(tabClass("settings"), "ml-auto")}
+				onclick={() => openTab("settings")}
+			>
+				<Icon name="settings" class="size-4" />
+				Settings
+			</button>
+		{/if}
 	</div>
 
 	{#if active === "skins"}
@@ -131,5 +159,7 @@
 		</div>
 	{:else if active === "about"}
 		<AboutPanel {player} {isOwner} />
+	{:else if active === "settings"}
+		<SettingsTab {player} {order} {visible} onReorder={reorder} />
 	{/if}
 </section>
