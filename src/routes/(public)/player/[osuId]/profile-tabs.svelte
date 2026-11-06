@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import Icon from "$comp/icon.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
@@ -13,6 +12,7 @@
 		type ProfileTab
 	} from "$lib/profile-tabs";
 	import type { PlayerWithSkins } from "$lib/types";
+	import { openTab } from "./open-tab";
 
 	let {
 		player,
@@ -32,12 +32,6 @@
 		).filter((tab) => tab !== "setup")
 	);
 	const active = $derived(pickTab(page.url.searchParams.get("tab"), visible));
-
-	function select(tab: ProfileTab) {
-		const url = new URL(page.url);
-		url.searchParams.set("tab", tab);
-		goto(url, { replaceState: true, noScroll: true, keepFocus: true });
-	}
 
 	// Skins the player hid only show up (dimmed, in their place) after "Show hidden skins".
 	// Filtering before the list query keeps search from finding them while they're hidden.
@@ -63,7 +57,7 @@
 				class="min-h-11 px-4 font-semibold transition-colors {tab === active
 					? 'text-foreground shadow-[inset_0_-2px_0_var(--accent-color)]'
 					: 'text-text-muted hover:text-foreground'}"
-				onclick={() => select(tab)}
+				onclick={() => openTab(tab)}
 			>
 				{LABELS[tab]}
 				{#if tab === "skins"}

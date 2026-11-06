@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
 	import PageHeading from "$comp/page-heading.svelte";
 	import { osuAvatar } from "$lib/osu";
+	import { openTab } from "./open-tab";
 	import ProfileSidebar from "./profile-sidebar.svelte";
 	import ProfileTabs from "./profile-tabs.svelte";
 
@@ -12,12 +11,6 @@
 
 	let editing = $state(false);
 	const edit = () => (editing = true);
-
-	function readMore() {
-		const url = new URL(page.url);
-		url.searchParams.set("tab", "about");
-		goto(url, { replaceState: true, noScroll: true, keepFocus: true });
-	}
 
 	let isCoverLoaded = $state(true);
 </script>
@@ -47,7 +40,12 @@
 	</div>
 
 	<div class="flex flex-wrap items-start gap-7 px-2">
-		<ProfileSidebar player={data.player} {isOwner} onEdit={edit} onReadMore={readMore} />
+		<ProfileSidebar
+			player={data.player}
+			{isOwner}
+			onEdit={edit}
+			onReadMore={() => openTab("about")}
+		/>
 		<ProfileTabs player={data.player} {isOwner} onEdit={edit} />
 	</div>
 </main>

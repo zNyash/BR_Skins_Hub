@@ -27,6 +27,8 @@
 		{@render content()}
 	</button>
 {:else if target.href}
+	<!-- External profile link; resolve() is only for routes in this app. -->
+	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 	<a href={target.href} target="_blank" rel="noopener noreferrer" class={classes}>
 		{@render content()}
 	</a>
