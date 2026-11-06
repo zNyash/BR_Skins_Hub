@@ -30,6 +30,17 @@
 		}
 	}
 
+	// The slider fires `change` on every arrow-key step, so its save waits until the value has
+	// settled. The preview (set on `input`) still follows every step.
+	const SLIDER_SAVE_DELAY_MS = 500;
+	let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function saveSoon(hue: number) {
+		clearTimeout(saveTimer);
+		huePreview.value = hue;
+		saveTimer = setTimeout(() => save(hue), SLIDER_SAVE_DELAY_MS);
+	}
+
 	function fromSlider(event: Event) {
 		huePreview.value = Number((event.currentTarget as HTMLInputElement).value);
 	}
@@ -72,7 +83,7 @@
 			class="h-3 min-w-0 flex-1 cursor-pointer appearance-none rounded-full accent-foreground"
 			style:background={TRACK}
 			oninput={fromSlider}
-			onchange={(e) => save(Number(e.currentTarget.value))}
+			onchange={(e) => saveSoon(Number(e.currentTarget.value))}
 		/>
 		<Input
 			type="number"
