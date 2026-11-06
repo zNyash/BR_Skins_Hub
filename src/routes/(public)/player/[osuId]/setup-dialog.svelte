@@ -7,7 +7,13 @@
 	import { Input } from "$comp/ui/input";
 	import * as Select from "$comp/ui/select";
 	import { askConfirm } from "$lib/confirm.svelte";
-	import { mainInputPatch, STORAGE_LABELS, type CardId, type Setup } from "$lib/setup";
+	import {
+		keyboardBody,
+		mainInputPatch,
+		STORAGE_LABELS,
+		type CardId,
+		type Setup
+	} from "$lib/setup";
 	import type { PlayerWithSkins } from "$lib/types";
 	import { saveSetup } from "./save-setup";
 	import { errorMessage } from "./save-profile";
@@ -130,15 +136,7 @@
 	}
 
 	function cardBody(id: CardId): Draft {
-		if (id === "keyboard") {
-			return {
-				...draft,
-				rapid_trigger: (rt || null) as Draft["rapid_trigger"],
-				rt_release: rt === "enabled" && splitRelease ? draft.rt_release : null,
-				// A disabled RT keeps its press value, so turning it back on doesn't lose it.
-				rt_press: rt ? draft.rt_press : null
-			};
-		}
+		if (id === "keyboard") return keyboardBody(draft, rt, splitRelease);
 		if (id === "in_game")
 			return { ...draft, raw_input: rawInput === "" ? null : rawInput === "on" };
 		return draft;

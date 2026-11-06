@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { hasSetup, mainInputPatch, rtMode, setupLayout, tabletDiagram, type CardId } from "./setup";
+import {
+	hasSetup,
+	keyboardBody,
+	mainInputPatch,
+	rtMode,
+	setupLayout,
+	tabletDiagram,
+	type CardId
+} from "./setup";
 
 const shapes = (...ids: CardId[]) => setupLayout(new Set(ids)).map((c) => `${c.id}:${c.shape}`);
 
@@ -135,5 +143,28 @@ describe("mainInputPatch", () => {
 
 	it("sends nothing when nothing changes", () => {
 		expect(mainInputPatch("mouse", "mouse", true)).toEqual({});
+	});
+});
+
+describe("keyboardBody", () => {
+	const draft = { model: "Wooting", rt_press: 0.1, rt_release: 0.2 };
+
+	it("keeps press and release when rapid trigger is turned off", () => {
+		expect(keyboardBody(draft, "disabled", true)).toMatchObject({
+			rapid_trigger: "disabled",
+			rt_press: 0.1,
+			rt_release: 0.2
+		});
+	});
+
+	it("clears the release only when the different-release box is unchecked", () => {
+		expect(keyboardBody(draft, "enabled", false)).toMatchObject({
+			rt_press: 0.1,
+			rt_release: null
+		});
+	});
+
+	it("sends null for an unset rapid trigger state", () => {
+		expect(keyboardBody(draft, "", true).rapid_trigger).toBeNull();
 	});
 });

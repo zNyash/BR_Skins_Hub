@@ -98,3 +98,24 @@ export function mainInputPatch(
 	if (on) return current === card ? {} : { main_input: card };
 	return current === card ? { main_input: null } : {};
 }
+
+type KeyboardDraft = {
+	[K in keyof NonNullable<Setup["keyboard"]>]?: NonNullable<Setup["keyboard"]>[K] | null;
+};
+
+/**
+ * The keyboard card as the dialog saves it. Press and release are kept whatever the RT state, so
+ * turning rapid trigger off and on again doesn't lose them; the release is only cleared when the
+ * "Different release value" box is unchecked.
+ */
+export function keyboardBody(
+	draft: KeyboardDraft,
+	rt: string,
+	splitRelease: boolean
+): KeyboardDraft {
+	return {
+		...draft,
+		rapid_trigger: (rt || null) as KeyboardDraft["rapid_trigger"],
+		rt_release: splitRelease ? draft.rt_release : null
+	};
+}
