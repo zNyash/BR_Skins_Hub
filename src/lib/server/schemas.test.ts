@@ -133,3 +133,30 @@ describe("setupPatch", () => {
 		expect(parse({ keyboard: { model: "a".repeat(101) } }).success).toBe(false);
 	});
 });
+
+describe("setupPatch tablet filters", () => {
+	const parse = (tablet: unknown) => v.safeParse(setupPatch, { tablet });
+	const filter = {
+		path: "VoiDPlugins.Filter.RadialFollowSmoothing",
+		settings: [{ property: "OuterRadius", value: "1.5" }]
+	};
+
+	it("accepts rotation and filters", () => {
+		expect(parse({ rotation: 90, filters: [filter] }).output).toEqual({
+			tablet: { rotation: 90, filters: [filter] }
+		});
+	});
+
+	it("rejects a rotation outside -360 to 360", () => {
+		expect(parse({ rotation: 400 }).success).toBe(false);
+	});
+
+	it("rejects more than 20 filters", () => {
+		expect(parse({ filters: Array.from({ length: 21 }, () => filter) }).success).toBe(false);
+	});
+
+	it("rejects more than 50 settings on a filter", () => {
+		const settings = Array.from({ length: 51 }, (_, i) => ({ property: `P${i}`, value: "1" }));
+		expect(parse({ filters: [{ ...filter, settings }] }).success).toBe(false);
+	});
+});

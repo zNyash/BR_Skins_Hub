@@ -161,3 +161,12 @@ Below the `md` breakpoint the grid is one column in the same order; the shapes c
 ## Not in this part
 
 Device catalog, photos and the request queue (part 4); description rendering (part 2); settings leftovers (part 5); the fullscreen image viewer.
+
+## Addendum: OpenTabletDriver import (2026-11-06)
+
+- **Tablet card data** gains `rotation?: number` (degrees, −360–360) and `filters?: { path: string, settings: { property: string, value: string }[] }[]` (at most 20 filters, 50 settings each, strings ≤ 200 characters). `path` is the plugin type; names are shown humanized ("RadialFollowSmoothing", "follow_radius" → "Radial Follow Smoothing", "Follow Radius"); `"true"`/`"false"` values show as On/Off.
+- **Import** lives in the Tablet dialog under the main-input toggle: a drop zone / file picker for `settings.json`, read in the browser (`src/lib/otd.ts`), never uploaded. It keeps only filters with `Enable: true`, fills area width/height, centre X/Y and rotation from the profile's absolute-mode tablet area, and sets the model to OTD's tablet name when the model is empty. A file with several tablet profiles asks which one. Everything stays editable; imported filters can be removed one by one.
+- **Path hint:** the dialog shows where OTD keeps the file for the visitor's OS, with a Copy button: Windows `%localappdata%\OpenTabletDriver\settings.json`, Linux `~/.config/OpenTabletDriver/settings.json`, macOS `~/Library/Application Support/OpenTabletDriver/settings.json`, plus how to paste a path into the file picker. Browsers can't open the picker at an arbitrary folder.
+- **Full tablet size** isn't in `settings.json` (it lives in OTD's per-tablet configs), so it stays manual until the part 4 catalog.
+- **Dialog layout:** the model takes both columns; the other fields sit in left/right pairs (area width | height, centre X | Y, full width | height).
+- **Display:** a Rotation tile next to Area when it isn't 0, the diagram's area drawn rotated, and an "OpenTabletDriver filters" list under the diagram with each filter's settings.

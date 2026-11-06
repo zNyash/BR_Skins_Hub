@@ -62,7 +62,18 @@ export const tabletCard = v.object({
 	center_x: v.optional(v.number()),
 	center_y: v.optional(v.number()),
 	full_w: v.optional(v.number()),
-	full_h: v.optional(v.number())
+	full_h: v.optional(v.number()),
+	/** Degrees, as OpenTabletDriver stores it. */
+	rotation: v.optional(v.number()),
+	/** The enabled OpenTabletDriver filters, imported from settings.json. `path` is the plugin type. */
+	filters: v.optional(
+		v.array(
+			v.object({
+				path: v.string(),
+				settings: v.array(v.object({ property: v.string(), value: v.string() }))
+			})
+		)
+	)
 });
 
 export const mouseCard = v.object({

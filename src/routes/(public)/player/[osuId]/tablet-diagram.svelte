@@ -28,6 +28,7 @@
 				style:top="{box.top}%"
 				style:width="{box.width}%"
 				style:height="{box.height}%"
+				style:rotate={tablet.rotation ? `${tablet.rotation}deg` : undefined}
 			></div>
 		</div>
 		<span class="text-xs text-text-muted">{caption}</span>

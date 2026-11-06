@@ -114,7 +114,35 @@ export const setupPatch = v.strictObject({
 			center_x: setupNumber(0, 500),
 			center_y: setupNumber(0, 500),
 			full_w: tabletMm,
-			full_h: tabletMm
+			full_h: tabletMm,
+			rotation: setupNumber(-360, 360),
+			filters: v.optional(
+				v.pipe(
+					v.array(
+						v.object({
+							path: v.pipe(
+								v.string(),
+								v.trim(),
+								v.minLength(1, "is required"),
+								v.maxLength(200, "must be at most 200 characters")
+							),
+							settings: v.pipe(
+								v.array(
+									v.object({
+										property: v.pipe(
+											v.string(),
+											v.maxLength(200, "must be at most 200 characters")
+										),
+										value: v.pipe(v.string(), v.maxLength(200, "must be at most 200 characters"))
+									})
+								),
+								v.maxLength(50, "must have at most 50 settings")
+							)
+						})
+					),
+					v.maxLength(20, "must have at most 20 filters")
+				)
+			)
 		})
 	),
 	mouse: v.nullish(

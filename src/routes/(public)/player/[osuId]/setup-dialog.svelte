@@ -14,7 +14,9 @@
 		type CardId,
 		type Setup
 	} from "$lib/setup";
+	import { humanize, otdSettingsHint, parseOtdSettings, type OtdProfile } from "$lib/otd";
 	import type { PlayerWithSkins } from "$lib/types";
+	import { cn } from "$lib/utils";
 	import { saveSetup } from "./save-setup";
 	import { errorMessage } from "./save-profile";
 	import { CARD_INFO } from "./setup-panel.svelte";
@@ -41,9 +43,11 @@
 		unit?: string;
 		number?: boolean;
 		whole?: boolean;
+		/** Takes both columns; other fields sit in left/right pairs. */
+		wide?: boolean;
 	};
 
-	const MODEL: Field = { key: "model", label: "Model" };
+	const MODEL: Field = { key: "model", label: "Model", wide: true };
 	const FIELDS: Record<Exclude<CardId, "pc">, Field[]> = {
 		keyboard: [
 			MODEL,
@@ -57,7 +61,8 @@
 			{ key: "center_x", label: "Centre X", unit: "mm", number: true },
 			{ key: "center_y", label: "Centre Y", unit: "mm", number: true },
 			{ key: "full_w", label: "Full area width", unit: "mm", number: true },
-			{ key: "full_h", label: "Full area height", unit: "mm", number: true }
+			{ key: "full_h", label: "Full area height", unit: "mm", number: true },
+			{ key: "rotation", label: "Rotation", unit: "°", number: true }
 		],
 		mouse: [
 			MODEL,
@@ -101,6 +106,42 @@
 	let initial = "";
 	let saving = $state(false);
 
+	// --- OpenTabletDriver import (read here in the browser; nothing is uploaded) ---
+	let dragging = $state(false);
+	let profiles = $state<OtdProfile[]>([]);
+	const hint = $derived(
+		otdSettingsHint(typeof navigator === "undefined" ? "" : navigator.userAgent)
+	);
+
+	async function importFile(file: File | undefined) {
+		if (!file) return;
+		try {
+			const found = parseOtdSettings(await file.text());
+			// One tablet fills the card right away; several wait for the user to pick theirs.
+			if (found.length === 1) applyProfile(found[0]);
+			else profiles = found;
+		} catch (err) {
+			toast.error(errorMessage(err, "Couldn't read that file"));
+		}
+	}
+
+	function applyProfile(profile: OtdProfile) {
+		draft = {
+			...draft,
+			...profile.area,
+			model: draft.model || profile.tablet,
+			filters: profile.filters
+		};
+		profiles = [];
+		const count = profile.filters.length;
+		toast.success(`Imported ${profile.tablet} with ${count} ${count === 1 ? "filter" : "filters"}`);
+	}
+
+	async function copyPath() {
+		await navigator.clipboard.writeText(hint.path);
+		toast.success("Path copied");
+	}
+
 	const snapshot = () => JSON.stringify({ draft, rt, rawInput, splitRelease, mainInput });
 	const dirty = () => snapshot() !== initial;
 
@@ -110,7 +151,12 @@
 		untrack(() => {
 			if (!id) return;
 			const saved = (setup[id] ?? {}) as Draft;
-			draft = { ...saved, storage: saved.storage?.map((drive) => ({ ...drive })) ?? [] };
+			draft = {
+				...saved,
+				storage: saved.storage?.map((drive) => ({ ...drive })) ?? [],
+				filters: saved.filters?.map((filter) => ({ ...filter, settings: [...filter.settings] }))
+			};
+			profiles = [];
 			rt = setup.keyboard?.rapid_trigger ?? "";
 			rawInput =
 				setup.in_game?.raw_input === undefined ? "" : setup.in_game.raw_input ? "on" : "off";
@@ -176,7 +222,7 @@
 
 {#snippet field(f: Field)}
 	{@const inputId = `setup-${f.key}`}
-	<div class="flex flex-col gap-1.5">
+	<div class={cn("flex flex-col gap-1.5", f.wide && "sm:col-span-2")}>
 		<label for={inputId} class="text-sm">
 			{f.label}
 			{#if f.unit}<span class="text-text-muted">({f.unit})</span>{/if}
@@ -324,6 +370,86 @@
 						<input type="checkbox" class="size-4 accent-primary" bind:checked={mainInput} />
 						This is my main input
 					</label>
+				{/if}
+
+				{#if card === "tablet"}
+					<section class="flex flex-col gap-2 sm:col-span-2" aria-label="OpenTabletDriver">
+						<span class="text-sm font-medium">Import from OpenTabletDriver</span>
+						<label
+							class={cn(
+								"flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed border-layer-4 px-4 py-5 text-center text-sm text-text-muted hover:border-primary hover:text-foreground",
+								dragging && "border-primary text-foreground"
+							)}
+							ondragover={(e) => {
+								e.preventDefault();
+								dragging = true;
+							}}
+							ondragleave={() => (dragging = false)}
+							ondrop={(e) => {
+								e.preventDefault();
+								dragging = false;
+								importFile(e.dataTransfer?.files[0]);
+							}}
+						>
+							<Icon name="file-json" class="size-6" />
+							Drop your settings.json here, or click to choose it
+							<input
+								type="file"
+								accept=".json,application/json"
+								class="hidden"
+								onchange={(e) => {
+									importFile(e.currentTarget.files?.[0]);
+									e.currentTarget.value = ""; // allow picking the same file again
+								}}
+							/>
+						</label>
+						<div class="flex items-center gap-2 rounded-md bg-layer-2 px-3 py-2">
+							<code class="min-w-0 flex-1 text-xs break-all">{hint.path}</code>
+							<Button variant="ghost" size="sm" onclick={copyPath}>
+								<Icon name="copy" class="size-4" />
+								Copy
+							</Button>
+						</div>
+						<p class="text-xs text-text-muted">
+							Copy the path, then {hint.howTo.charAt(0).toLowerCase() + hint.howTo.slice(1)} Only filters
+							that are turned on are imported.
+						</p>
+
+						{#if profiles.length > 1}
+							<div class="flex flex-col gap-1.5">
+								<span class="text-sm">This file has several tablets. Which one is yours?</span>
+								<div class="flex flex-wrap gap-2">
+									{#each profiles as profile, i (i)}
+										<Button variant="secondary" size="sm" onclick={() => applyProfile(profile)}>
+											{profile.tablet}
+										</Button>
+									{/each}
+								</div>
+							</div>
+						{/if}
+
+						{#if draft.filters?.length}
+							<ul class="flex flex-col gap-1.5">
+								{#each draft.filters as filter, i (i)}
+									<li class="flex items-center gap-2 rounded-md bg-layer-2 py-1 pr-1 pl-3 text-sm">
+										<span class="min-w-0 flex-1 font-medium">{humanize(filter.path)}</span>
+										<span class="text-xs text-text-muted">
+											{filter.settings.length}
+											{filter.settings.length === 1 ? "setting" : "settings"}
+										</span>
+										<Button
+											variant="ghost"
+											size="icon-sm"
+											aria-label="Remove {humanize(filter.path)}"
+											onclick={() => (draft.filters = draft.filters?.filter((_, j) => j !== i))}
+										>
+											<Icon name="x" class="size-4" />
+										</Button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</section>
 				{/if}
 			</form>
 

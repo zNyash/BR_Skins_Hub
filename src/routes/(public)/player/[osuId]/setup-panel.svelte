@@ -22,6 +22,7 @@
 		type CardId,
 		type Shape
 	} from "$lib/setup";
+	import { humanize } from "$lib/otd";
 	import type { PlayerWithSkins } from "$lib/types";
 	import { cn } from "$lib/utils";
 	import SetupCard from "./setup-card.svelte";
@@ -47,6 +48,8 @@
 		value === undefined || value === "" ? "–" : String(value);
 	const pair = (a?: number, b?: number) =>
 		a !== undefined && b !== undefined ? `${a} × ${b}` : undefined;
+	const settingText = (value: string) =>
+		value === "true" ? "On" : value === "false" ? "Off" : value;
 	const onOff = (on?: boolean) => (on === undefined ? undefined : on ? "On" : "Off");
 
 	const RT_BADGE = {
@@ -169,9 +172,34 @@
 				<div class="flex flex-1 flex-col gap-2.5 @xl:flex-row">
 					<div class="flex flex-wrap content-start gap-2.5 @xl:w-56 @xl:shrink-0">
 						{@render tile("Area", pair(t.area_w, t.area_h), "mm")}
+						{#if t.rotation}
+							{@render tile("Rotation", t.rotation, "°")}
+						{/if}
 					</div>
 					<div class="flex-[2_1_auto]"><TabletDiagram tablet={t} /></div>
 				</div>
+				{#if t.filters?.length}
+					<div class="flex flex-col gap-2 rounded-lg bg-layer-2 px-3.5 py-3">
+						<span class="text-xs text-text-muted">OpenTabletDriver filters</span>
+						{#each t.filters as filter, i (i)}
+							<div class="flex flex-col gap-1.5">
+								<span class="font-semibold">{humanize(filter.path)}</span>
+								{#if filter.settings.length}
+									<dl class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-x-4 gap-y-1.5">
+										{#each filter.settings as setting (setting.property)}
+											<div class="flex min-w-0 flex-col">
+												<dt class="truncate text-xs text-text-muted">
+													{humanize(setting.property)}
+												</dt>
+												<dd class="font-medium break-words">{settingText(setting.value)}</dd>
+											</div>
+										{/each}
+									</dl>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
 			{:else if id === "mouse" && setup.mouse}
 				{@const m = setup.mouse}
 				{@render model(id, m.model)}
