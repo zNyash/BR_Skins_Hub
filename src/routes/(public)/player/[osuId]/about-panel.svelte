@@ -31,7 +31,10 @@
 		}
 	}
 
-	guardUnsaved(() => editing && draft !== (player.description ?? ""));
+	guardUnsaved(
+		() => editing && draft !== (player.description ?? ""),
+		() => (editing = false)
+	);
 </script>
 
 <div role="tabpanel">

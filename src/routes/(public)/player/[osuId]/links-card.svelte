@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
@@ -17,11 +18,14 @@
 	const copyOf = (links: PlayerWithSkins["links"]) => (links ?? []).map((link) => ({ ...link }));
 	const saved = $derived(JSON.stringify(player.links ?? []));
 
-	// The editor works on a copy; it's refreshed whenever the saved links change.
+	// The editor works on a copy, refreshed only when the saved links themselves change. Other saves
+	// on the page (color, bio) reload the player too, and must not wipe links being typed.
+	// `saved` is a string, so the effect reruns only when its content differs.
 	// svelte-ignore state_referenced_locally
 	let draft = $state(copyOf(player.links));
 	$effect(() => {
-		draft = copyOf(player.links);
+		void saved;
+		untrack(() => (draft = copyOf(player.links)));
 	});
 
 	let saving = $state(false);
@@ -39,7 +43,10 @@
 		}
 	}
 
-	guardUnsaved(() => dirty);
+	guardUnsaved(
+		() => dirty,
+		() => (draft = copyOf(player.links))
+	);
 </script>
 
 <SettingsCard title="Links">

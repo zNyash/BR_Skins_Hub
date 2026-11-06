@@ -37,8 +37,9 @@
 	function fromNumber(event: Event) {
 		const input = event.currentTarget as HTMLInputElement;
 		const hue = parseHue(input.value);
-		if (hue === null) input.value = String(shown);
-		else save(hue);
+		// Show what's actually used (999 → 360), even when it equals the current color.
+		input.value = String(hue ?? shown);
+		if (hue !== null && hue !== shown) save(hue);
 	}
 </script>
 

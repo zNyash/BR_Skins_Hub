@@ -5,7 +5,6 @@
 	import Icon from "$comp/icon.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
-	import { request } from "$lib/api";
 	import { PLAYER_SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import {
 		hasDescription,
@@ -22,6 +21,7 @@
 	import { cn } from "$lib/utils";
 	import AboutPanel from "./about-panel.svelte";
 	import { openTab } from "./open-tab";
+	import { saveProfile } from "./save-profile";
 	import SettingsTab from "./settings-tab.svelte";
 
 	let { player, isOwner }: { player: PlayerWithSkins; isOwner: boolean } = $props();
@@ -68,7 +68,8 @@
 
 	async function saveOrder() {
 		try {
-			await request("/api/me/profile", { method: "PATCH", body: { tab_order: order } });
+			// Reloading keeps `player.tab_order` current, so a later failed save reverts to what's stored.
+			await saveProfile(player.osu_id, { tab_order: order });
 		} catch (err) {
 			order = resolveTabs(player.tab_order);
 			toast.error(err instanceof Error ? err.message : "Couldn't save the tab order");

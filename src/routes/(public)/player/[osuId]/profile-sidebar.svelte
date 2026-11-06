@@ -41,7 +41,10 @@
 		}
 	}
 
-	guardUnsaved(() => editing && draft !== (player.bio ?? ""));
+	guardUnsaved(
+		() => editing && draft !== (player.bio ?? ""),
+		() => (editing = false)
+	);
 </script>
 
 <aside aria-label="Player" class="flex max-w-80 shrink-0 grow basis-64 flex-col gap-4 pt-4">
