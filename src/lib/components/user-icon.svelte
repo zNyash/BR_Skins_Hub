@@ -47,6 +47,19 @@
 							Skin Page
 						</DropdownMenu.Item>
 					</a>
+					{#if user.player_id}
+						<a
+							href="{resolve('/(public)/player/[osuId]', {
+								osuId: String(user.osu_id)
+							})}?tab=settings"
+							class="contents"
+						>
+							<DropdownMenu.Item>
+								<Icon name="settings" class="size-4" />
+								Settings
+							</DropdownMenu.Item>
+						</a>
+					{/if}
 					<a href="https://osu.ppy.sh/users/{user.osu_id}" target="_blank" class="contents">
 						<DropdownMenu.Item>
 							<IOsuStandard class="size-4" />
