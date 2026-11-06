@@ -15,7 +15,8 @@ export async function load({ locals }) {
 			isAdmin: isAdmin(locals.user.osu_id),
 			username: authUser?.username ?? null,
 			player_id: authUser?.player_id ?? null,
-			avatar_url: osuAvatar(locals.user.osu_id)
+			avatar_url: osuAvatar(locals.user.osu_id),
+			hue: authUser?.hue ?? null
 		} satisfies AuthUser
 	};
 }

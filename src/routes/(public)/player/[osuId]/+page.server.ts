@@ -8,5 +8,5 @@ export async function load({ params, depends }) {
 	const player = await convex.query(api.players.get, { osu_id: Number(params.osuId) });
 	if (!player) error(404, "Player not found");
 
-	return { player };
+	return { player, pageHue: player.hue ?? null };
 }
