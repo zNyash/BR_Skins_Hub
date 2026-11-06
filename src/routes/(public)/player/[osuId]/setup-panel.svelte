@@ -88,13 +88,13 @@
 	<div
 		class={cn(
 			"flex items-center gap-3 rounded-lg bg-layer-2 p-2",
-			large && "@lg:flex-col @lg:items-start"
+			large && "h-full @lg:flex-col @lg:items-stretch"
 		)}
 	>
 		<span
 			class={cn(
 				"flex shrink-0 items-center justify-center rounded-md bg-layer-3 text-text-muted",
-				large ? "h-16 w-24 @lg:h-28 @lg:w-full" : "h-14 w-20"
+				large ? "h-16 w-24 @lg:min-h-28 @lg:w-full @lg:flex-1" : "h-14 w-20"
 			)}
 			aria-hidden="true"
 		>
@@ -143,7 +143,9 @@
 				{@const k = setup.keyboard}
 				{@const mode = rtMode(k)}
 				<div class="flex flex-col gap-3 @2xl:flex-row">
-					<div class="@2xl:w-80 @2xl:shrink-0">{@render model(id, k.model, true)}</div>
+					<div class="flex flex-col @2xl:w-80 @2xl:shrink-0">
+						{@render model(id, k.model, true)}
+					</div>
 					<div class="flex flex-1 flex-col gap-2.5">
 						<div class="flex flex-1 flex-wrap gap-2.5">
 							{@render tile("Switch", k.switch, "", { small: true })}
@@ -165,7 +167,7 @@
 				{@const t = setup.tablet}
 				{@render model(id, t.model)}
 				<div class="flex flex-1 flex-col gap-2.5 @xl:flex-row">
-					<div class="flex flex-col gap-2.5 @xl:w-56 @xl:shrink-0">
+					<div class="flex flex-wrap content-start gap-2.5 @xl:w-56 @xl:shrink-0">
 						{@render tile("Area", pair(t.area_w, t.area_h), "mm")}
 					</div>
 					<div class="flex-[2_1_auto]"><TabletDiagram tablet={t} /></div>

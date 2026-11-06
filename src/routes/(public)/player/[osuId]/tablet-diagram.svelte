@@ -14,7 +14,7 @@
 </script>
 
 {#if box}
-	<div class="flex flex-col justify-center gap-2 rounded-lg bg-layer-2 px-3.5 py-3">
+	<div class="flex h-full flex-col justify-center gap-2 rounded-lg bg-layer-2 px-3.5 py-3">
 		<span class="text-xs text-text-muted">Position on the tablet</span>
 		<div
 			role="img"
