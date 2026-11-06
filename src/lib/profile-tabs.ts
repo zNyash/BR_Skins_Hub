@@ -1,4 +1,9 @@
+import { moveItem } from "$lib/sortable";
+
 export type ProfileTab = "skins" | "about" | "setup";
+
+/** The tabs the bar can show: the stored ones plus the owner-only Settings tab. */
+export type TabId = ProfileTab | "settings";
 
 export const DEFAULT_TABS: readonly ProfileTab[] = ["skins", "about", "setup"];
 
@@ -32,8 +37,37 @@ export function hasDescription(description?: string | null): boolean {
 }
 
 /** The tab to open: the requested one when it's visible, otherwise the first visible tab. */
-export function pickTab(requested: string | null, visible: readonly ProfileTab[]): ProfileTab {
+export function pickTab(requested: string | null, visible: readonly TabId[]): TabId {
 	return requested !== null && (visible as string[]).includes(requested)
-		? (requested as ProfileTab)
+		? (requested as TabId)
 		: visible[0];
+}
+
+/** Settings is the owner's own tab: always last, never part of the stored order. */
+export function withSettings(visible: readonly ProfileTab[], isOwner: boolean): TabId[] {
+	return isOwner ? [...visible, "settings"] : [...visible];
+}
+
+/**
+ * Moves a tab the owner can see (`from`/`to` index `visible`) and returns the new full order.
+ * Only the slots the visible tabs occupy are reordered, so a hidden tab never moves.
+ */
+export function moveVisibleTab(
+	order: readonly ProfileTab[],
+	visible: readonly ProfileTab[],
+	from: number,
+	to: number
+): ProfileTab[] {
+	const inRange = (i: number) => i >= 0 && i < visible.length;
+	if (!inRange(from) || !inRange(to)) return [...order];
+
+	const slots = order.flatMap((tab, i) => (visible.includes(tab) ? [i] : []));
+	const moved = moveItem(
+		order.filter((tab) => visible.includes(tab)),
+		from,
+		to
+	);
+	const next = [...order];
+	slots.forEach((slot, i) => (next[slot] = moved[i]));
+	return next;
 }

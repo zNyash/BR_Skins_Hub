@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { hasDescription, pickTab, resolveTabs, visibleTabs } from "./profile-tabs";
+import {
+	hasDescription,
+	moveVisibleTab,
+	pickTab,
+	resolveTabs,
+	visibleTabs,
+	withSettings
+} from "./profile-tabs";
 
 describe("resolveTabs", () => {
 	it("defaults when nothing is stored", () => {
@@ -50,5 +57,41 @@ describe("pickTab", () => {
 	it("falls back to the first visible tab", () => {
 		expect(pickTab("about", ["skins"])).toBe("skins");
 		expect(pickTab(null, ["about", "skins"])).toBe("about");
+	});
+});
+
+describe("withSettings", () => {
+	it("appends settings for the owner only", () => {
+		expect(withSettings(["skins", "about"], true)).toEqual(["skins", "about", "settings"]);
+		expect(withSettings(["skins", "about"], false)).toEqual(["skins", "about"]);
+	});
+
+	it("lets a visitor's ?tab=settings fall back", () => {
+		expect(pickTab("settings", withSettings(["skins"], false))).toBe("skins");
+		expect(pickTab("settings", withSettings(["skins"], true))).toBe("settings");
+	});
+});
+
+describe("moveVisibleTab", () => {
+	it("moves within the full order when nothing is hidden", () => {
+		const all = ["skins", "about", "setup"] as const;
+		expect(moveVisibleTab(all, all, 0, 2)).toEqual(["about", "setup", "skins"]);
+	});
+
+	it("keeps a hidden tab in place", () => {
+		// setup is hidden from the bar, sitting between the two visible tabs
+		expect(moveVisibleTab(["skins", "setup", "about"], ["skins", "about"], 1, 0)).toEqual([
+			"about",
+			"setup",
+			"skins"
+		]);
+	});
+
+	it("ignores out-of-range moves", () => {
+		expect(moveVisibleTab(["skins", "about", "setup"], ["skins", "about"], 1, 2)).toEqual([
+			"skins",
+			"about",
+			"setup"
+		]);
 	});
 });
