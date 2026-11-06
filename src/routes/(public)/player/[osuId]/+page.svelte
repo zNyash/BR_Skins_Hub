@@ -3,7 +3,6 @@
 	import * as Popover from "$comp/ui/popover";
 	import { POPOVER_SETTINGS } from "$lib/constants";
 	import { osuAvatar } from "$lib/osu";
-	import EditProfileDialog from "./edit-profile-dialog.svelte";
 	import { openTab } from "./open-tab";
 	import ProfileSidebar from "./profile-sidebar.svelte";
 	import ProfileTabs from "./profile-tabs.svelte";
@@ -12,9 +11,6 @@
 
 	const player = $derived(data.player);
 	const isOwner = $derived(data.user?.player_id === player._id);
-
-	let editing = $state(false);
-	const edit = () => (editing = true);
 
 	// Remembers which cover failed, not just "a cover failed": moving to another player's page
 	// (same component, new data) must not hide their banner too.
@@ -74,11 +70,7 @@
 	</header>
 
 	<div class="mt-4 flex w-full max-w-6xl flex-wrap items-start gap-7 px-2">
-		<ProfileSidebar {player} {isOwner} onEdit={edit} onReadMore={() => openTab("about")} />
-		<ProfileTabs {player} {isOwner} onEdit={edit} />
+		<ProfileSidebar {player} {isOwner} onReadMore={() => openTab("about")} />
+		<ProfileTabs {player} {isOwner} />
 	</div>
 </main>
-
-{#if isOwner}
-	<EditProfileDialog {player} bind:open={editing} />
-{/if}

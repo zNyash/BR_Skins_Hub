@@ -17,13 +17,10 @@
 	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import type { PlayerWithSkins } from "$lib/types";
 	import { cn } from "$lib/utils";
+	import AboutPanel from "./about-panel.svelte";
 	import { openTab } from "./open-tab";
 
-	let {
-		player,
-		isOwner,
-		onEdit
-	}: { player: PlayerWithSkins; isOwner: boolean; onEdit: () => void } = $props();
+	let { player, isOwner }: { player: PlayerWithSkins; isOwner: boolean } = $props();
 
 	const LABELS: Record<ProfileTab, string> = { skins: "Skins", about: "About", setup: "Setup" };
 
@@ -133,14 +130,6 @@
 			</div>
 		</div>
 	{:else if active === "about"}
-		<div role="tabpanel" class="max-w-3xl rounded-xl bg-card px-7 py-6">
-			{#if hasDescription(player.description)}
-				<p class="leading-relaxed whitespace-pre-wrap">{player.description}</p>
-			{:else}
-				<button type="button" class="text-text-muted hover:text-foreground" onclick={onEdit}>
-					Add a description
-				</button>
-			{/if}
-		</div>
+		<AboutPanel {player} {isOwner} />
 	{/if}
 </section>
