@@ -58,14 +58,14 @@ In `src/lib/profile-tabs.ts`. Returns all three tabs in display order:
 
 In `src/lib/links.ts`. Accepts either a full URL or a bare username, because existing data has both.
 
-| type    | `href`                                    | `label`               |
-| ------- | ----------------------------------------- | --------------------- |
-| twitter | `https://x.com/<user>`                    | `@<user>`             |
-| twitch  | `https://twitch.tv/<user>`                | `<user>`              |
-| youtube | `https://youtube.com/@<user>`             | `@<user>`             |
-| github  | `https://github.com/<user>`               | `<user>`              |
-| discord | `null` (the button copies the username)   | `<user>`              |
-| custom  | the URL, only if its scheme is http/https | host without `www.`   |
+| type    | `href`                                    | `label`             |
+| ------- | ----------------------------------------- | ------------------- |
+| twitter | `https://x.com/<user>`                    | `@<user>`           |
+| twitch  | `https://twitch.tv/<user>`                | `<user>`            |
+| youtube | `https://youtube.com/@<user>`             | `@<user>`           |
+| github  | `https://github.com/<user>`               | `<user>`            |
+| discord | `null` (the button copies the username)   | `<user>`            |
+| custom  | the URL, only if its scheme is http/https | host without `www.` |
 
 - A URL for a platform is accepted from that platform's hosts only (for twitter: `x.com` and `twitter.com`); the username is the first path segment (`@` stripped for YouTube).
 - Anything that can't be parsed falls back to `{ href: null, label: value }`, so a bad value never becomes a clickable link. `javascript:` and other schemes never produce an `href`.
@@ -90,7 +90,9 @@ The body gains `bio` with the same rule. The dashboard player editor gets a bio 
 The root layout (`src/routes/+layout.svelte`) renders, in `<svelte:head>`:
 
 ```svelte
-<style>:root { --hue: {hue}; }</style>
+<style>
+:root { --hue: {hue}; }
+</style>
 ```
 
 - `hue = page.data.pageHue ?? data.user?.hue ?? null`. When it is `null`, no style is rendered and `layout.css` decides.

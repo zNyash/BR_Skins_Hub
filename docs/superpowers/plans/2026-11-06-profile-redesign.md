@@ -37,6 +37,7 @@
 ### Task 1: Data fields, validation and endpoints
 
 **Files:**
+
 - Modify: `convex/validators.ts` (add `profileTab`, add `bio` to `playerFields`)
 - Modify: `convex/schema.ts` (`players`: `bio`, `tab_order`)
 - Modify: `convex/players.ts` (`updateOwnProfile` args and patch)
@@ -47,6 +48,7 @@
 - Test: `src/lib/server/schemas.test.ts`
 
 **Interfaces:**
+
 - Produces: `profileTab` Convex validator (`v.union(v.literal("skins"), v.literal("about"), v.literal("setup"))`); `players.bio?: string`, `players.tab_order?: ("skins"|"about"|"setup")[]`; valibot `bio` and `tabOrder` exported from `$lib/server/schemas`; `PATCH /api/me/profile` accepts `{ bio?, links?, description?, tab_order? }`.
 
 - [ ] **Step 1: Write failing tests** in `schemas.test.ts`:
@@ -68,13 +70,15 @@ describe("tabOrder", () => {
 	it("accepts a permutation", () => {
 		expect(v.safeParse(tabOrder, ["about", "setup", "skins"]).success).toBe(true);
 	});
-	it.each([[["skins", "skins", "about"]], [["skins", "about"]], [["skins", "about", "setup", "x"]], [["skins", "about", "nope"]]])(
-		"rejects %j",
-		(value) => {
-			const r = v.safeParse(tabOrder, value);
-			expect(r.success).toBe(false);
-		}
-	);
+	it.each([
+		[["skins", "skins", "about"]],
+		[["skins", "about"]],
+		[["skins", "about", "setup", "x"]],
+		[["skins", "about", "nope"]]
+	])("rejects %j", (value) => {
+		const r = v.safeParse(tabOrder, value);
+		expect(r.success).toBe(false);
+	});
 	it("uses the spec's message for a duplicate", () => {
 		const r = v.safeParse(tabOrder, ["skins", "skins", "about"]);
 		expect(r.issues?.[0].message).toBe("must list each tab exactly once");
@@ -98,10 +102,12 @@ git commit -m "feat(players): bio and tab order fields with validation"
 ### Task 2: Tab helpers
 
 **Files:**
+
 - Create: `src/lib/profile-tabs.ts`
 - Test: `src/lib/profile-tabs.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `type ProfileTab = "skins" | "about" | "setup"`
   - `const DEFAULT_TABS: readonly ProfileTab[] = ["skins", "about", "setup"]`
@@ -132,12 +138,21 @@ describe("visibleTabs", () => {
 		expect(visibleTabs(["about", "skins", "setup"], content, false)).toEqual(["skins"]);
 	});
 	it("shows every tab to the owner", () => {
-		expect(visibleTabs(["about", "skins", "setup"], content, true)).toEqual(["about", "skins", "setup"]);
+		expect(visibleTabs(["about", "skins", "setup"], content, true)).toEqual([
+			"about",
+			"skins",
+			"setup"
+		]);
 	});
 });
 
 describe("hasDescription", () => {
-	it.each([[undefined, false], ["", false], ["  \n ", false], ["hi", true]])("%j → %s", (d, expected) => {
+	it.each([
+		[undefined, false],
+		["", false],
+		["  \n ", false],
+		["hi", true]
+	])("%j → %s", (d, expected) => {
 		expect(hasDescription(d)).toBe(expected);
 	});
 });
@@ -161,10 +176,12 @@ describe("pickTab", () => {
 ### Task 3: Link targets
 
 **Files:**
+
 - Create: `src/lib/links.ts`
 - Test: `src/lib/links.test.ts`
 
 **Interfaces:**
+
 - Consumes: the link type union from `Doc<"players">["links"]` (`"twitch" | "twitter" | "youtube" | "github" | "discord" | "custom"`).
 - Produces: `type LinkType`; `linkTarget(type: LinkType, value: string): { href: string | null; label: string }`; `LINK_ICONS: Record<LinkType, string>` with the icon names from Global Constraints (`custom` → `"link"`).
 
@@ -198,6 +215,7 @@ it.each([
 ### Task 4: Page color
 
 **Files:**
+
 - Create: `src/lib/hue.ts`
 - Test: `src/lib/hue.test.ts`
 - Modify: `convex/auth.ts` (`getUser` also returns the linked player's `hue`)
@@ -207,14 +225,24 @@ it.each([
 - Modify: `src/routes/+layout.svelte` (head style)
 
 **Interfaces:**
+
 - Produces: `clampHue(value: unknown): number | null`; `AuthUser.hue`; page data `pageHue: number | null` on player pages.
 
 - [ ] **Step 1: Write failing tests:**
 
 ```ts
 it.each([
-	[120, 120], [0, 0], [360, 360], [-5, 0], [720, 360], [12.5, 12.5],
-	[NaN, null], [Infinity, null], ["120", null], [null, null], [undefined, null]
+	[120, 120],
+	[0, 0],
+	[360, 360],
+	[-5, 0],
+	[720, 360],
+	[12.5, 12.5],
+	[NaN, null],
+	[Infinity, null],
+	["120", null],
+	[null, null],
+	[undefined, null]
 ])("clampHue(%j) → %j", (input, expected) => {
 	expect(clampHue(input)).toBe(expected);
 });
@@ -233,12 +261,14 @@ git commit -m "feat(theme): profile pages use the player's color, other pages th
 ### Task 5: Sidebar and tabs layout
 
 **Files:**
+
 - Create: `src/routes/(public)/player/[osuId]/link-button.svelte`
 - Create: `src/routes/(public)/player/[osuId]/profile-sidebar.svelte`
 - Create: `src/routes/(public)/player/[osuId]/profile-tabs.svelte`
 - Modify: `src/routes/(public)/player/[osuId]/+page.svelte`
 
 **Interfaces:**
+
 - Consumes: `resolveTabs`, `visibleTabs`, `hasDescription`, `pickTab`, `ProfileTab` (Task 2); `linkTarget`, `LINK_ICONS` (Task 3); `PlayerWithSkins` / `AuthUser` from `$lib/types`.
 - Produces: `profile-sidebar.svelte` props `{ player: PlayerWithSkins; isOwner: boolean; onEdit: () => void; onReadMore: () => void }`; `profile-tabs.svelte` props `{ player: PlayerWithSkins; isOwner: boolean; onEdit: () => void }`, rendering the bar and the active panel; `link-button.svelte` props `{ type: LinkType; value: string }`.
 
@@ -257,11 +287,13 @@ git commit -m "feat(profile): sidebar with bio and link buttons, tabbed content"
 ### Task 6: Owner editing
 
 **Files:**
+
 - Create: `src/routes/(public)/player/[osuId]/edit-profile-dialog.svelte`
 - Modify: `src/routes/(public)/player/[osuId]/profile-tabs.svelte` (drag reorder)
 - Modify: `src/routes/(public)/player/[osuId]/+page.svelte` (open the dialog)
 
 **Interfaces:**
+
 - Consumes: `request` from `$lib/api`; `toast` from `svelte-sonner`; `sortable`, `moveItem` from `$lib/sortable`; `PATCH /api/me/profile` (Task 1).
 - Produces: `edit-profile-dialog.svelte` props `{ player: PlayerWithSkins; open: boolean (bindable) }`.
 
