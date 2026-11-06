@@ -26,11 +26,15 @@ describe("pickHue", () => {
 	});
 
 	it("uses the viewer's color elsewhere when they keep it on", () => {
-		expect(pickHue(null, 150, true)).toBe(150);
+		expect(pickHue(undefined, 150, true)).toBe(150);
+	});
+
+	it("uses the site default on a profile with no color, not the viewer's", () => {
+		expect(pickHue(null, 150, true)).toBeNull();
 	});
 
 	it("falls back to the site default when the viewer turned it off", () => {
-		expect(pickHue(null, 150, false)).toBeNull();
+		expect(pickHue(undefined, 150, false)).toBeNull();
 	});
 
 	it("falls back to the site default with no color anywhere", () => {
@@ -39,8 +43,8 @@ describe("pickHue", () => {
 	});
 
 	it("never passes through a bad value", () => {
-		expect(pickHue(NaN, 150, true)).toBe(150);
-		expect(pickHue(null, 720, true)).toBe(360);
+		expect(pickHue(NaN, 150, true)).toBeNull();
+		expect(pickHue(undefined, 720, true)).toBe(360);
 	});
 });
 

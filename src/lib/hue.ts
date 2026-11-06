@@ -8,9 +8,10 @@ export function clampHue(value: unknown): number | null {
 }
 
 /**
- * The page's hue: a live preview while the owner picks a color; otherwise the viewed player's
- * color on a profile page; otherwise the viewer's own color when they keep "My color everywhere"
- * on; otherwise null (the site default).
+ * The page's hue: a live preview while the owner picks a color; otherwise, on a profile page, that
+ * player's color (or the site default if they have none); elsewhere the viewer's own color when
+ * they keep "My color everywhere" on; otherwise null (the site default).
+ * `pageHue` is undefined on pages that aren't profiles.
  */
 export function pickHue(
 	pageHue: unknown,
@@ -18,7 +19,12 @@ export function pickHue(
 	useMyColor: boolean,
 	preview: unknown = null
 ): number | null {
-	return clampHue(preview) ?? clampHue(pageHue) ?? (useMyColor ? clampHue(userHue) : null);
+	const previewed = clampHue(preview);
+	if (previewed !== null) return previewed;
+	// On a profile page (pageHue is set, even to null) only that player's color counts:
+	// a player without one gets the site default, never the visitor's color.
+	if (pageHue !== undefined) return clampHue(pageHue);
+	return useMyColor ? clampHue(userHue) : null;
 }
 
 /** A typed-in hue: blank or non-numeric gives null (ignore it), anything else is rounded and clamped. */
