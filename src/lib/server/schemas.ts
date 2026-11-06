@@ -60,3 +60,143 @@ export const tabOrder = v.pipe(
 		"must list each tab exactly once"
 	)
 );
+
+/* ------------ */
+/* Player setup */
+/* ------------ */
+
+// Empty inputs arrive as "" or null and become undefined, so they're dropped instead of stored.
+
+const setupText = v.pipe(
+	v.nullish(v.pipe(v.string(), v.trim(), v.maxLength(100, "must be at most 100 characters"))),
+	v.transform((text) => text || undefined)
+);
+
+function setupNumber(min: number, max: number, integer = false) {
+	const range = `must be between ${min} and ${max}`;
+	return v.pipe(
+		v.nullish(
+			v.pipe(
+				v.number(range),
+				integer ? v.integer("must be a whole number") : v.finite(range),
+				v.minValue(min, range),
+				v.maxValue(max, range)
+			)
+		),
+		v.transform((n) => n ?? undefined)
+	);
+}
+
+const mm = setupNumber(0.01, 4);
+const tabletMm = setupNumber(0.01, 500);
+
+/** A Setup tab change: each card sent replaces the stored one, null removes it. */
+export const setupPatch = v.strictObject({
+	main_input: v.nullish(v.picklist(["tablet", "mouse"])),
+	keyboard: v.nullish(
+		v.object({
+			model: setupText,
+			switch: setupText,
+			actuation: mm,
+			rapid_trigger: v.pipe(
+				v.nullish(v.picklist(["enabled", "disabled", "unsupported"])),
+				v.transform((rt) => rt ?? undefined)
+			),
+			rt_press: mm,
+			rt_release: mm
+		})
+	),
+	tablet: v.nullish(
+		v.object({
+			model: setupText,
+			area_w: tabletMm,
+			area_h: tabletMm,
+			center_x: setupNumber(0, 500),
+			center_y: setupNumber(0, 500),
+			full_w: tabletMm,
+			full_h: tabletMm,
+			rotation: setupNumber(-360, 360),
+			filters: v.optional(
+				v.pipe(
+					v.array(
+						v.object({
+							path: v.pipe(
+								v.string(),
+								v.trim(),
+								v.minLength(1, "is required"),
+								v.maxLength(200, "must be at most 200 characters")
+							),
+							settings: v.pipe(
+								v.array(
+									v.object({
+										property: v.pipe(
+											v.string(),
+											v.maxLength(200, "must be at most 200 characters")
+										),
+										value: v.pipe(v.string(), v.maxLength(200, "must be at most 200 characters"))
+									})
+								),
+								v.maxLength(50, "must have at most 50 settings")
+							)
+						})
+					),
+					v.maxLength(20, "must have at most 20 filters")
+				)
+			)
+		})
+	),
+	mouse: v.nullish(
+		v.object({
+			model: setupText,
+			dpi: setupNumber(1, 100000, true),
+			polling_hz: setupNumber(1, 10000, true)
+		})
+	),
+	monitor: v.nullish(
+		v.object({
+			model: setupText,
+			refresh_hz: setupNumber(1, 1000),
+			res_w: setupNumber(1, 10000, true),
+			res_h: setupNumber(1, 10000, true),
+			size_in: setupNumber(1, 100)
+		})
+	),
+	in_game: v.nullish(
+		v.object({
+			sensitivity: setupNumber(0.01, 10),
+			raw_input: v.pipe(
+				v.nullish(v.boolean()),
+				v.transform((on) => on ?? undefined)
+			),
+			cursor_size: setupNumber(0.01, 10),
+			frame_limiter: setupText,
+			audio_offset_ms: setupNumber(-1000, 1000, true)
+		})
+	),
+	pc: v.nullish(
+		v.object({
+			cpu: setupText,
+			gpu: setupText,
+			motherboard: setupText,
+			ram: setupText,
+			cooler: setupText,
+			storage: v.pipe(
+				v.nullish(
+					v.pipe(
+						v.array(
+							v.object({
+								kind: v.picklist(["nvme", "sata_ssd", "hdd"], "must be NVMe SSD, SATA SSD or HDD"),
+								name: setupText
+							})
+						),
+						v.maxLength(8, "must have at most 8 drives")
+					)
+				),
+				// Rows without a name are dropped rather than rejected, like blank links.
+				v.transform((rows) =>
+					rows?.flatMap((row) => (row.name ? [{ kind: row.kind, name: row.name }] : []))
+				)
+			)
+		})
+	)
+});

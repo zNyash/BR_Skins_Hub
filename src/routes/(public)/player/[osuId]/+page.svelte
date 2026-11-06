@@ -11,6 +11,8 @@
 
 	const player = $derived(data.player);
 	const isOwner = $derived(data.user?.player_id === player._id);
+	// Admins can fill in anyone's Setup tab, e.g. for players who never log in.
+	const canEdit = $derived(isOwner || Boolean(data.user?.isAdmin));
 
 	// Remembers which cover failed, not just "a cover failed": moving to another player's page
 	// (same component, new data) must not hide their banner too.
@@ -71,6 +73,6 @@
 
 	<div class="mt-4 flex w-full max-w-6xl flex-wrap items-start gap-7 px-2">
 		<ProfileSidebar {player} {isOwner} onReadMore={() => openTab("about")} />
-		<ProfileTabs {player} {isOwner} />
+		<ProfileTabs {player} {isOwner} {canEdit} />
 	</div>
 </main>

@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
-import { bio, hue, playerSkins, tabOrder } from "./schemas";
+import { bio, hue, playerSkins, setupPatch, tabOrder } from "./schemas";
 
 describe("playerSkins", () => {
 	it("accepts ordered skins with hidden flags", () => {
@@ -64,5 +64,99 @@ describe("hue", () => {
 
 	it.each([361, 1.5])("rejects %j", (value) => {
 		expect(v.safeParse(hue, value).success).toBe(false);
+	});
+});
+
+describe("setupPatch", () => {
+	const parse = (body: unknown) => v.safeParse(setupPatch, body);
+
+	it("trims text and drops empty strings", () => {
+		const result = parse({ mouse: { model: "  G Pro  ", dpi: 800 }, pc: { cpu: "  " } });
+		expect(result.output).toEqual({ mouse: { model: "G Pro", dpi: 800 }, pc: {} });
+	});
+
+	it("drops null numbers instead of storing zero", () => {
+		expect(parse({ mouse: { dpi: null, polling_hz: 1000 } }).output).toEqual({
+			mouse: { polling_hz: 1000 }
+		});
+	});
+
+	it("keeps a null card so it can be removed", () => {
+		expect(parse({ tablet: null }).output).toEqual({ tablet: null });
+	});
+
+	it("accepts tablet, mouse and null as main_input", () => {
+		for (const main_input of ["tablet", "mouse", null]) {
+			expect(parse({ main_input }).success).toBe(true);
+		}
+		expect(parse({ main_input: "keyboard" }).success).toBe(false);
+	});
+
+	it("rejects out-of-range values", () => {
+		for (const body of [
+			{ keyboard: { actuation: 0 } },
+			{ keyboard: { actuation: 4.5 } },
+			{ mouse: { dpi: 1.5 } },
+			{ in_game: { audio_offset_ms: 1001 } }
+		]) {
+			const result = parse(body);
+			expect(result.success).toBe(false);
+			expect(result.issues?.[0].message).toContain("must be");
+		}
+	});
+
+	it("accepts a negative audio offset", () => {
+		expect(parse({ in_game: { audio_offset_ms: -12 } }).success).toBe(true);
+	});
+
+	it("drops storage rows with an empty name", () => {
+		const storage = [
+			{ kind: "nvme", name: " " },
+			{ kind: "hdd", name: "WD Blue" }
+		];
+		expect(parse({ pc: { storage } }).output).toEqual({
+			pc: { storage: [{ kind: "hdd", name: "WD Blue" }] }
+		});
+	});
+
+	it("rejects 9 storage rows and unknown storage kinds", () => {
+		const rows = Array.from({ length: 9 }, () => ({ kind: "hdd", name: "x" }));
+		expect(parse({ pc: { storage: rows } }).success).toBe(false);
+		expect(parse({ pc: { storage: [{ kind: "m2", name: "x" }] } }).success).toBe(false);
+	});
+
+	it("rejects unknown cards", () => {
+		expect(parse({ speakers: {} }).success).toBe(false);
+	});
+
+	it("rejects text over 100 characters", () => {
+		expect(parse({ keyboard: { model: "a".repeat(101) } }).success).toBe(false);
+	});
+});
+
+describe("setupPatch tablet filters", () => {
+	const parse = (tablet: unknown) => v.safeParse(setupPatch, { tablet });
+	const filter = {
+		path: "VoiDPlugins.Filter.RadialFollowSmoothing",
+		settings: [{ property: "OuterRadius", value: "1.5" }]
+	};
+
+	it("accepts rotation and filters", () => {
+		expect(parse({ rotation: 90, filters: [filter] }).output).toEqual({
+			tablet: { rotation: 90, filters: [filter] }
+		});
+	});
+
+	it("rejects a rotation outside -360 to 360", () => {
+		expect(parse({ rotation: 400 }).success).toBe(false);
+	});
+
+	it("rejects more than 20 filters", () => {
+		expect(parse({ filters: Array.from({ length: 21 }, () => filter) }).success).toBe(false);
+	});
+
+	it("rejects more than 50 settings on a filter", () => {
+		const settings = Array.from({ length: 51 }, (_, i) => ({ property: `P${i}`, value: "1" }));
+		expect(parse({ filters: [{ ...filter, settings }] }).success).toBe(false);
 	});
 });
