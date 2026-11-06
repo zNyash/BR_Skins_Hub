@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { afterNavigate } from "$app/navigation";
 	import { page } from "$app/state";
+	import ConfirmDialog from "$comp/confirm-dialog.svelte";
 	import { Toaster } from "$comp/ui/sonner";
 	import favicon from "$lib/assets/favicon.svg";
 	import { pickHue } from "$lib/hue";
@@ -31,4 +32,5 @@
 	{/if}
 </svelte:head>
 <Toaster />
+<ConfirmDialog />
 {@render children()}

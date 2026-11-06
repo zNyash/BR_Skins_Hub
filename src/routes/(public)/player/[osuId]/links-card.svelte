@@ -30,6 +30,9 @@
 
 	let saving = $state(false);
 	const dirty = $derived(JSON.stringify(draft) !== saved);
+	// An empty row would be dropped silently on save, so it has to be filled in or removed first.
+	const isBlank = (value: string) => value.trim() === "";
+	const hasBlank = $derived(draft.some((link) => isBlank(link.value)));
 
 	async function save() {
 		saving = true;
@@ -60,7 +63,12 @@
 					{/each}
 				</Select.Content>
 			</Select.Root>
-			<Input aria-label="Link" bind:value={link.value} placeholder="URL or username" />
+			<Input
+				aria-label="Link"
+				aria-invalid={isBlank(link.value) || undefined}
+				bind:value={link.value}
+				placeholder="URL or username"
+			/>
 			<Button
 				variant="secondary"
 				size="icon"
@@ -73,12 +81,15 @@
 	{:else}
 		<p class="text-sm text-text-muted">No links yet.</p>
 	{/each}
+	{#if hasBlank}
+		<p class="text-xs text-destructive">Fill in or remove the empty link before saving.</p>
+	{/if}
 	<div class="mt-auto flex items-center justify-between gap-2 pt-1">
 		<Button variant="secondary" onclick={() => draft.push({ type: "custom", value: "" })}>
 			<Icon name="plus" />
 			Add link
 		</Button>
-		<Button disabled={!dirty || saving} onclick={save}>
+		<Button disabled={!dirty || hasBlank || saving} onclick={save}>
 			{#if saving}<Icon name="loader-circle" class="animate-spin" />{/if}
 			Save
 		</Button>
