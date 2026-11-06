@@ -13,7 +13,9 @@
 	let editing = $state(false);
 	const edit = () => (editing = true);
 
-	let isCoverLoaded = $state(true);
+	// Remembers which cover failed, not just "a cover failed": moving to another player's page
+	// (same component, new data) must not hide their banner too.
+	let failedCover = $state<string | null>(null);
 </script>
 
 <PageHeading
@@ -23,12 +25,12 @@
 />
 <main class="main">
 	<div class="relative h-52 overflow-hidden rounded-lg">
-		{#if isCoverLoaded && data.player.cover_url}
+		{#if data.player.cover_url && data.player.cover_url !== failedCover}
 			<img
 				src={data.player.cover_url}
 				alt=""
 				class="size-full object-cover"
-				onerror={() => (isCoverLoaded = false)}
+				onerror={() => (failedCover = data.player.cover_url ?? null)}
 			/>
 			<div class="absolute inset-0 bg-linear-to-t from-background to-transparent to-60%"></div>
 		{:else}

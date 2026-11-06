@@ -59,11 +59,25 @@ export function linkTarget(type: LinkType, value: string): { href: string | null
 	}
 
 	const platform = PLATFORMS[type];
-	let user = USERNAME.exec(value)?.[1];
-	if (!user) {
-		const url = parseHttpUrl(value);
-		if (!url || !platform.hosts.includes(bareHost(url))) return plain;
-		user = url.pathname.split("/").filter(Boolean)[0]?.replace(/^@/, "");
+	const profile = (user: string) => ({ href: platform.url(user), label: platform.label(user) });
+
+	const bare = USERNAME.exec(value)?.[1];
+	if (bare) return profile(bare);
+
+	const url = parseHttpUrl(value);
+	if (!url || !platform.hosts.includes(bareHost(url))) return plain;
+
+	// Only a single path segment is a profile (`x.com/foo`, `youtube.com/@foo`). Longer paths
+	// (`youtube.com/channel/UC…`, `twitch.tv/videos/123`) point at something else, so they keep
+	// their own URL instead of being rewritten into a profile link for the wrong account.
+	const segments = url.pathname.split("/").filter(Boolean);
+	if (segments.length === 0) return plain;
+	if (type === "youtube") {
+		if (segments.length === 1 && segments[0].startsWith("@")) return profile(segments[0].slice(1));
+		const legacy = ["channel", "c", "user"].includes(segments[0]) && segments[1];
+		return { href: url.href, label: legacy ? segments[1] : bareHost(url) };
 	}
-	return user ? { href: platform.url(user), label: platform.label(user) } : plain;
+	return segments.length === 1
+		? profile(segments[0].replace(/^@/, ""))
+		: { href: url.href, label: bareHost(url) };
 }

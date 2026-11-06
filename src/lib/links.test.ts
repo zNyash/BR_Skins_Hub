@@ -17,7 +17,22 @@ describe("linkTarget", () => {
 		["custom", "not a url", null, "not a url"],
 		["twitter", "https://evil.com/foo", null, "https://evil.com/foo"],
 		["twitter", "javascript:alert(1)", null, "javascript:alert(1)"],
-		["github", "", null, ""]
+		["github", "", null, ""],
+		[
+			"youtube",
+			"https://www.youtube.com/channel/UCabc123",
+			"https://www.youtube.com/channel/UCabc123",
+			"UCabc123"
+		],
+		["youtube", "https://youtube.com/c/Name", "https://youtube.com/c/Name", "Name"],
+		["youtube", "https://youtube.com/user/Name", "https://youtube.com/user/Name", "Name"],
+		[
+			"youtube",
+			"https://youtube.com/watch?v=abc",
+			"https://youtube.com/watch?v=abc",
+			"youtube.com"
+		],
+		["twitch", "https://twitch.tv/videos/123", "https://twitch.tv/videos/123", "twitch.tv"]
 	])("%s %j", (type, value, href, label) => {
 		expect(linkTarget(type as LinkType, value)).toEqual({ href, label });
 	});
