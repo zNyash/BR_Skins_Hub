@@ -22,8 +22,9 @@
 	import AboutPanel from "./about-panel.svelte";
 	import { openTab } from "./open-tab";
 	import { saveProfile } from "./save-profile";
-	import { hasSetup } from "$lib/setup";
+	import { hasSetup, type CardId } from "$lib/setup";
 	import SettingsTab from "./settings-tab.svelte";
+	import SetupDialog from "./setup-dialog.svelte";
 	import SetupPanel from "./setup-panel.svelte";
 
 	let {
@@ -53,6 +54,8 @@
 			isOwner
 		)
 	);
+
+	let editingCard = $state<CardId | null>(null);
 
 	const active = $derived(
 		pickTab(page.url.searchParams.get("tab"), withSettings(visible, isOwner))
@@ -172,7 +175,8 @@
 	{:else if active === "about"}
 		<AboutPanel {player} {isOwner} />
 	{:else if active === "setup"}
-		<SetupPanel {player} {canEdit} onEdit={() => {}} />
+		<SetupPanel {player} {canEdit} onEdit={(card) => (editingCard = card)} />
+		<SetupDialog {player} card={editingCard} onClose={() => (editingCard = null)} />
 	{:else if active === "settings"}
 		<SettingsTab {player} {order} {visible} onReorder={reorder} />
 	{/if}
