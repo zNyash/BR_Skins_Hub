@@ -80,21 +80,17 @@
 			<div
 				data-sortable-item
 				animate:flip={{ duration: 150 }}
-				class={cn("group flex items-center", SORTABLE_GHOST_CLASS)}
+				class={cn("flex items-center", SORTABLE_GHOST_CLASS)}
 			>
-				{#if isOwner}
-					<span
-						class="-mr-3 cursor-grab touch-manipulation pl-1 text-text-muted opacity-0 transition-opacity group-hover:opacity-100"
-						title="Drag to reorder"
-					>
-						<Icon name="grip-vertical" class="size-4" />
-					</span>
-				{/if}
 				<button
 					type="button"
 					role="tab"
 					aria-selected={tab === active}
-					class="min-h-11 px-4 font-semibold transition-colors {tab === active
+					data-sortable-handle={isOwner || undefined}
+					title={isOwner ? "Drag to reorder" : undefined}
+					class="min-h-11 px-4 font-semibold transition-colors {isOwner
+						? 'cursor-grab touch-manipulation'
+						: ''} {tab === active
 						? 'text-foreground shadow-[inset_0_-2px_0_var(--accent-color)]'
 						: 'text-text-muted hover:text-foreground'}"
 					onclick={() => openTab(tab)}

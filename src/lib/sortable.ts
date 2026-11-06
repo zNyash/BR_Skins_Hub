@@ -18,9 +18,10 @@ import type { Action } from "svelte/action";
  * so the slots (grid cells) stay put, and animations can't make the target flip back and forth.
  * This assumes items of the same size, like grid cells.
  *
- * Presses on buttons, links, inputs or `[data-no-drag]` never start a drag, and a drag only starts
- * after the pointer moves a few pixels (mouse) or after a short hold (touch), so clicks stay clicks
- * and swiping still scrolls.
+ * Presses on buttons, links, inputs or `[data-no-drag]` never start a drag, unless the pressed control
+ * is marked `[data-sortable-handle]` (for items that are themselves buttons, like tabs). A drag only
+ * starts after the pointer moves a few pixels (mouse) or after a short hold (touch), so clicks stay
+ * clicks and swiping still scrolls.
  */
 
 export type Rect = { left: number; top: number; width: number; height: number };
@@ -38,6 +39,7 @@ export const SORTABLE_GHOST_CLASS = "data-dragging:opacity-40 data-dragging:gray
 const ITEM_ATTR = "data-sortable-item";
 const DRAGGING_ATTR = "data-dragging";
 const IGNORE = "button, a, input, textarea, select, [data-no-drag]";
+const HANDLE = "[data-sortable-handle]";
 
 const MOUSE_THRESHOLD_PX = 4;
 const TOUCH_HOLD_MS = 200;
@@ -95,7 +97,8 @@ export const sortable: Action<HTMLElement, SortableOptions> = (node, initialOpti
 		if (options.disabled || pressed || event.button !== 0) return;
 
 		const target = event.target as Element;
-		if (target.closest(IGNORE)) return;
+		const ignored = target.closest(IGNORE);
+		if (ignored && !ignored.matches(HANDLE)) return;
 		const item = target.closest<HTMLElement>(`[${ITEM_ATTR}]`);
 		if (!item || item.parentElement !== node) return;
 

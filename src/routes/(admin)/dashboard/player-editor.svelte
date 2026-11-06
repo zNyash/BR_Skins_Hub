@@ -230,9 +230,11 @@
 				<span class="flex items-end justify-between">
 					<label for="bio" class="text-sm">Bio</label>
 					<span
-						class="text-xs {draft.player.bio.length > 200 ? 'text-destructive' : 'text-text-muted'}"
+						class="text-xs {draft.player.bio.trim().length > 200
+							? 'text-destructive'
+							: 'text-text-muted'}"
 					>
-						{draft.player.bio.length}/200
+						{draft.player.bio.trim().length}/200
 					</span>
 				</span>
 				<Textarea id="bio" rows={2} bind:value={draft.player.bio} />

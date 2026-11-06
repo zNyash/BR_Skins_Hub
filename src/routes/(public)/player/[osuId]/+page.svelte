@@ -1,5 +1,7 @@
 <script lang="ts">
 	import PageHeading from "$comp/page-heading.svelte";
+	import * as Popover from "$comp/ui/popover";
+	import { POPOVER_SETTINGS } from "$lib/constants";
 	import { osuAvatar } from "$lib/osu";
 	import EditProfileDialog from "./edit-profile-dialog.svelte";
 	import { openTab } from "./open-tab";
@@ -8,7 +10,8 @@
 
 	let { data } = $props();
 
-	const isOwner = $derived(data.user?.player_id === data.player._id);
+	const player = $derived(data.player);
+	const isOwner = $derived(data.user?.player_id === player._id);
 
 	let editing = $state(false);
 	const edit = () => (editing = true);
@@ -16,43 +19,66 @@
 	// Remembers which cover failed, not just "a cover failed": moving to another player's page
 	// (same component, new data) must not hide their banner too.
 	let failedCover = $state<string | null>(null);
+	const showCover = $derived(Boolean(player.cover_url) && player.cover_url !== failedCover);
 </script>
 
 <PageHeading
-	title="{data.player.name} · player info"
-	description="All skins {data.player.name} uses!"
-	image={osuAvatar(data.player.osu_id)}
+	title="{player.name} · player info"
+	description="All skins {player.name} uses!"
+	image={osuAvatar(player.osu_id)}
 />
 <main class="main">
-	<div class="relative h-52 overflow-hidden rounded-lg">
-		{#if data.player.cover_url && data.player.cover_url !== failedCover}
-			<img
-				src={data.player.cover_url}
-				alt=""
-				class="size-full object-cover"
-				onerror={() => (failedCover = data.player.cover_url ?? null)}
-			/>
-			<div class="absolute inset-0 bg-linear-to-t from-background to-transparent to-60%"></div>
-		{:else}
-			<div class="flex size-full items-center justify-center bg-primary/25">
-				{#if isOwner}
-					<p class="text-sm">Log in again to update your banner.</p>
-				{/if}
-			</div>
-		{/if}
-	</div>
+	<header class="w-full max-w-6xl px-2">
+		<!-- osu! profile covers are 2400×640, so the banner keeps that shape and only scales. -->
+		<div class="relative aspect-[2400/640] w-full overflow-hidden rounded-lg">
+			{#if showCover}
+				<img
+					src={player.cover_url}
+					alt=""
+					class="size-full object-cover"
+					onerror={() => (failedCover = player.cover_url ?? null)}
+				/>
+			{:else}
+				<div class="flex size-full items-center justify-center bg-primary/25">
+					{#if isOwner}
+						<p class="text-sm">Log in again to update your banner.</p>
+					{/if}
+				</div>
+			{/if}
+			<div
+				class="pointer-events-none absolute inset-0 bg-linear-to-t from-background to-transparent to-60%"
+			></div>
+		</div>
 
-	<div class="flex flex-wrap items-start gap-7 px-2">
-		<ProfileSidebar
-			player={data.player}
-			{isOwner}
-			onEdit={edit}
-			onReadMore={() => openTab("about")}
-		/>
-		<ProfileTabs player={data.player} {isOwner} onEdit={edit} />
+		<div class="relative -mt-10 flex items-end gap-3 px-4 sm:-mt-16 sm:gap-4 sm:px-10">
+			<a href={`https://osu.ppy.sh/users/${player.osu_id}`} target="_blank" class="shrink-0">
+				<img
+					src={osuAvatar(player.osu_id)}
+					alt="{player.name} Profile Picture"
+					class="size-20 shape-squircle rounded-3xl border-2 border-layer-3 object-cover drop-shadow-lg sm:size-28"
+				/>
+			</a>
+			{#if player.previous_usernames && player.previous_usernames.length > 0}
+				<Popover.Root>
+					<Popover.Trigger {...POPOVER_SETTINGS} class="pb-1 text-start">
+						<h1 class="text-xl font-bold sm:text-2xl">{player.name}</h1>
+					</Popover.Trigger>
+					<Popover.Content class="w-fit px-2 py-1 outline outline-border">
+						<p class="text-sm">{player.previous_usernames.join(", ")}</p>
+					</Popover.Content>
+				</Popover.Root>
+			{:else}
+				<h1 class="pb-1 text-xl font-bold sm:text-2xl">{player.name}</h1>
+			{/if}
+		</div>
+	</header>
+
+	<div class="mt-4 flex w-full max-w-6xl flex-wrap items-start gap-7 px-2">
+		<ProfileSidebar {player} {isOwner} onEdit={edit} onReadMore={() => openTab("about")} />
+		<ProfileTabs {player} {isOwner} onEdit={edit} />
 	</div>
 </main>
 
 {#if isOwner}
-	<EditProfileDialog player={data.player} bind:open={editing} />
+	<EditProfileDialog {player} bind:open={editing} />
 {/if}

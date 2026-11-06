@@ -18,6 +18,7 @@ export const PATCH: RequestHandler = async (event) => {
 	const user = requireUser(event);
 	const body = await parseBody(event.request, ProfileBody);
 
-	await mutate(api.players.updateOwnProfile, { actor_osu_id: user.osu_id, ...body });
+	// The session's id goes last so nothing in the body could ever override it.
+	await mutate(api.players.updateOwnProfile, { ...body, actor_osu_id: user.osu_id });
 	return new Response(null, { status: 204 });
 };
