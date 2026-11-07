@@ -161,6 +161,17 @@
 	@apply flex w-full max-w-5xl flex-col gap-2 p-2;
 }
 
+/* Line box cut down to the letters, so the visible gap around text equals the spacing value. */
+@utility trim {
+	line-height: 1;
+	text-box: trim-both cap alphabetic;
+}
+
+/* Fades one-line text out at its right edge (used when it overflows). */
+@utility fade {
+	mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
+}
+
 @utility common-grid {
 	@apply grid w-full max-w-5xl grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3;
 }

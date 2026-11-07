@@ -12,6 +12,7 @@
 </script>
 
 <script lang="ts">
+	import FadeText from "$comp/fade-text.svelte";
 	import Icon from "$comp/icon.svelte";
 	import Popover from "$comp/popover.svelte";
 	import {
@@ -67,46 +68,36 @@
 	label: string,
 	value: string | number | undefined,
 	unit = "",
-	opts: { small?: boolean; hot?: boolean } = {}
+	opts: { small?: boolean; hot?: boolean; class?: string } = {}
 )}
 	<div
-		class="flex min-w-0 flex-[1_1_8rem] flex-col justify-between gap-1.5 rounded-lg bg-layer-2 px-3.5 py-3"
+		class={cn("flex h-18 min-w-0 flex-col justify-between rounded-lg bg-layer-2 p-3", opts.class)}
 	>
-		<span class="text-xs text-text-muted">{label}</span>
-		<span
+		<span class="text-xs trim text-text-muted">{label}</span>
+		<FadeText
+			text={show(value)}
 			class={cn(
-				"font-bold break-words",
+				"trim font-bold",
 				opts.small ? "text-base" : "text-2xl",
 				opts.hot && value !== undefined && "text-primary"
 			)}
 		>
-			{show(value)}
 			{#if unit && value !== undefined}
-				<span class="text-sm font-medium text-text-muted">{unit}</span>
+				<span class="text-sm font-medium text-text-muted">&nbsp;{unit}</span>
 			{/if}
-		</span>
+		</FadeText>
 	</div>
 {/snippet}
 
-{#snippet model(id: CardId, name: string | undefined, large = false)}
-	<div
-		class={cn(
-			"flex items-center gap-3 rounded-lg bg-layer-2 p-2",
-			large && "h-full @lg:flex-col @lg:items-stretch"
-		)}
-	>
+{#snippet model(id: CardId, name: string | undefined)}
+	<div class="flex min-w-0 items-center gap-3 rounded-lg bg-layer-2 p-2">
 		<span
-			class={cn(
-				"flex shrink-0 items-center justify-center rounded-md bg-layer-3 text-text-muted",
-				large ? "h-16 w-24 @lg:min-h-28 @lg:w-full @lg:flex-1" : "h-14 w-20"
-			)}
+			class="flex h-14 w-20 shrink-0 items-center justify-center rounded-md bg-layer-3 text-text-muted"
 			aria-hidden="true"
 		>
-			<Icon name={CARD_INFO[id].icon} class={large ? "size-8" : "size-6"} />
+			<Icon name={CARD_INFO[id].icon} class="size-6" />
 		</span>
-		<span class={cn("min-w-0 font-semibold break-words", large && "px-1 text-lg font-bold")}>
-			{name || "Unknown"}
-		</span>
+		<FadeText text={name || "Unknown"} class="flex-1 trim font-semibold" />
 	</div>
 {/snippet}
 
@@ -146,32 +137,35 @@
 			{:else if id === "keyboard" && setup.keyboard}
 				{@const k = setup.keyboard}
 				{@const mode = rtMode(k)}
-				<div class="flex flex-col gap-3 @2xl:flex-row">
-					<div class="flex flex-col @2xl:w-80 @2xl:shrink-0">
-						{@render model(id, k.model, true)}
+				<div class="flex flex-col gap-3 @2xl:grid @2xl:grid-cols-[17.5rem_1fr]">
+					<div class="flex min-w-0 flex-col gap-3 rounded-lg bg-layer-2 p-3">
+						<span
+							class="flex min-h-30 flex-1 items-center justify-center rounded-md bg-layer-3 text-text-muted @2xl:min-h-0"
+							aria-hidden="true"
+						>
+							<Icon name={CARD_INFO.keyboard.icon} class="size-8" />
+						</span>
+						<FadeText text={k.model || "Unknown"} class="text-lg trim font-bold" />
 					</div>
-					<div class="flex flex-1 flex-col gap-2.5">
-						<div class="flex flex-1 flex-wrap gap-2.5">
-							{@render tile("Switch", k.switch, "", { small: true })}
-							{@render tile("Actuation point", k.actuation, "mm")}
-						</div>
-						{#if mode !== "none"}
-							<div class="flex flex-1 flex-wrap gap-2.5">
-								{#if mode === "single"}
-									{@render tile("Rapid trigger", k.rt_press, "mm", { hot: true })}
-								{:else}
-									{@render tile("Rapid trigger · press", k.rt_press, "mm", { hot: true })}
-									{@render tile("Rapid trigger · release", k.rt_release, "mm", { hot: true })}
-								{/if}
-							</div>
+					<!-- Always two rows, so the model block next to it keeps the same height. -->
+					<div
+						class={cn("grid content-start gap-3", mode === "none" ? "grid-cols-1" : "grid-cols-2")}
+					>
+						{@render tile("Switch", k.switch, "", { small: true })}
+						{@render tile("Actuation point", k.actuation, "mm")}
+						{#if mode === "single"}
+							{@render tile("Rapid trigger", k.rt_press, "mm", { hot: true, class: "col-span-2" })}
+						{:else if mode === "split"}
+							{@render tile("Rapid trigger · press", k.rt_press, "mm", { hot: true })}
+							{@render tile("Rapid trigger · release", k.rt_release, "mm", { hot: true })}
 						{/if}
 					</div>
 				</div>
 			{:else if id === "tablet" && setup.tablet}
 				{@const t = setup.tablet}
 				{@render model(id, t.model)}
-				<div class="flex flex-1 flex-col gap-2.5 @xl:flex-row">
-					<div class="flex flex-wrap content-start gap-2.5 @xl:w-56 @xl:shrink-0">
+				<div class="flex flex-1 flex-col gap-3 @xl:flex-row">
+					<div class="grid content-start gap-3 @xl:w-56 @xl:shrink-0">
 						{@render tile("Area", pair(t.area_w, t.area_h), "mm")}
 						{#if t.rotation}
 							{@render tile("Rotation", t.rotation, "°")}
@@ -219,45 +213,43 @@
 			{:else if id === "mouse" && setup.mouse}
 				{@const m = setup.mouse}
 				{@render model(id, m.model)}
-				<div class="flex flex-1 flex-wrap gap-2.5">
+				<div class="grid grid-cols-2 gap-3">
 					{@render tile("DPI", m.dpi)}
 					{@render tile("Polling rate", m.polling_hz, "Hz")}
 				</div>
 			{:else if id === "monitor" && setup.monitor}
 				{@const m = setup.monitor}
 				{@render model(id, m.model)}
-				<div class="flex flex-1 flex-col gap-2.5">
-					<div class="flex flex-1 flex-wrap gap-2.5">
-						{@render tile("Refresh rate", m.refresh_hz, "Hz")}
-						{@render tile("Size", m.size_in, "in")}
-					</div>
-					<div class="flex flex-1 flex-wrap gap-2.5">
-						{@render tile("Resolution", pair(m.res_w, m.res_h), "", { small: true })}
-					</div>
+				<div class="grid grid-cols-[1fr_1fr_1.4fr] gap-3 @max-sm:grid-cols-2">
+					{@render tile("Refresh rate", m.refresh_hz, "Hz")}
+					{@render tile("Size", m.size_in, "in")}
+					{@render tile("Resolution", pair(m.res_w, m.res_h), "", {
+						small: true,
+						class: "@max-sm:col-span-2"
+					})}
 				</div>
 			{:else if id === "in_game" && setup.in_game}
 				{@const g = setup.in_game}
-				<div class="flex flex-1 flex-col gap-2.5">
-					<div class="flex flex-1 flex-wrap gap-2.5">
-						{@render tile("Sensitivity", g.sensitivity, "×")}
-						{@render tile("Raw input", onOff(g.raw_input))}
-						{@render tile("Cursor size", g.cursor_size, "×")}
-					</div>
-					<div class="flex flex-1 flex-wrap gap-2.5">
-						{@render tile("Frame limiter", g.frame_limiter, "", { small: true })}
-						{@render tile("Audio offset", g.audio_offset_ms, "ms")}
-					</div>
+				{@const three = "col-span-2 @min-[40rem]:col-span-1"}
+				{@const two = "col-span-3 @min-[40rem]:col-span-1"}
+				<!-- 3 + 2 on six columns; one row of five once the card is wide enough. -->
+				<div class="grid grid-cols-6 gap-3 @min-[40rem]:grid-cols-5">
+					{@render tile("Sensitivity", g.sensitivity, "×", { class: three })}
+					{@render tile("Raw input", onOff(g.raw_input), "", { class: three })}
+					{@render tile("Cursor size", g.cursor_size, "×", { class: three })}
+					{@render tile("Frame limiter", g.frame_limiter, "", { small: true, class: two })}
+					{@render tile("Audio offset", g.audio_offset_ms, "ms", { class: two })}
 				</div>
 			{:else if id === "pc" && setup.pc}
 				{@const pc = setup.pc}
-				<dl class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-x-5 gap-y-3.5">
+				<dl class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-x-6 gap-y-4">
 					{#each [["CPU", pc.cpu], ["GPU", pc.gpu], ["Motherboard", pc.motherboard], ["RAM", pc.ram], ["Cooler", pc.cooler]] as [label, value] (label)}
-						<div class="flex flex-col gap-0.5">
+						<div class="flex flex-col gap-1">
 							<dt class="text-xs text-text-muted">{label}</dt>
 							<dd class="font-medium break-words">{show(value)}</dd>
 						</div>
 					{/each}
-					<div class="flex flex-col gap-0.5">
+					<div class="flex flex-col gap-1">
 						<dt class="text-xs text-text-muted">Storage</dt>
 						{#each pc.storage ?? [] as drive, i (i)}
 							<dd class="font-medium break-words">{STORAGE_LABELS[drive.kind]} · {drive.name}</dd>
