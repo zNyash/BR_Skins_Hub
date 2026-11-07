@@ -13,7 +13,7 @@
 
 <script lang="ts">
 	import Icon from "$comp/icon.svelte";
-	import * as Popover from "$comp/ui/popover";
+	import Popover from "$comp/popover.svelte";
 	import {
 		CARD_IDS,
 		STORAGE_LABELS,
@@ -185,32 +185,33 @@
 						<!-- Names only, so the card stays short; each one opens its settings. -->
 						<div class="flex flex-wrap gap-1.5">
 							{#each t.filters as filter, i (i)}
-								<Popover.Root>
-									<Popover.Trigger
-										class="flex max-w-full items-center gap-1 rounded-full bg-layer-3 px-3 py-1 text-sm font-medium hover:bg-layer-4"
-										title={humanize(filter.path)}
-									>
-										<span class="truncate">{humanize(filter.path)}</span>
-										{#if filter.settings.length}
-											<Icon name="chevron-down" class="size-3.5 shrink-0 text-text-muted" />
-										{/if}
-									</Popover.Trigger>
+								<Popover class="w-72 p-3">
+									{#snippet trigger(props)}
+										<button
+											{...props}
+											type="button"
+											class="flex max-w-full items-center gap-1 rounded-full bg-layer-3 px-3 py-1 text-sm font-medium hover:bg-layer-4"
+										>
+											<span class="truncate">{humanize(filter.path)}</span>
+											{#if filter.settings.length}
+												<Icon name="chevron-down" class="size-3.5 shrink-0 text-text-muted" />
+											{/if}
+										</button>
+									{/snippet}
 									{#if filter.settings.length}
-										<Popover.Content class="w-72 bg-layer-1 p-3 outline outline-border">
-											<p class="mb-2 font-semibold">{humanize(filter.path)}</p>
-											<dl class="grid grid-cols-2 gap-x-4 gap-y-1.5">
-												{#each filter.settings as setting (setting.property)}
-													<div class="flex min-w-0 flex-col">
-														<dt class="truncate text-xs text-text-muted">
-															{humanize(setting.property)}
-														</dt>
-														<dd class="font-medium break-words">{settingText(setting.value)}</dd>
-													</div>
-												{/each}
-											</dl>
-										</Popover.Content>
+										<p class="mb-2 font-semibold">{humanize(filter.path)}</p>
+										<dl class="grid grid-cols-2 gap-x-4 gap-y-1.5">
+											{#each filter.settings as setting (setting.property)}
+												<div class="flex min-w-0 flex-col">
+													<dt class="truncate text-xs text-text-muted">
+														{humanize(setting.property)}
+													</dt>
+													<dd class="font-medium break-words">{settingText(setting.value)}</dd>
+												</div>
+											{/each}
+										</dl>
 									{/if}
-								</Popover.Root>
+								</Popover>
 							{/each}
 						</div>
 					</div>
