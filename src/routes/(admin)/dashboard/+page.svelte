@@ -8,8 +8,8 @@
 	import SearchSorted from "$comp/search-sorted.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import * as ContextMenu from "$comp/ui/context-menu";
-	import * as Popover from "$comp/ui/popover";
 	import * as Tabs from "$comp/ui/tabs";
+	import Popover from "$comp/popover.svelte";
 	import { request } from "$lib/api";
 	import { DASHBOARD_SKIN_LIST, PLAYER_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import { osuAvatar } from "$lib/osu";
@@ -167,18 +167,18 @@
 								class="flex items-center gap-2 rounded-md bg-card p-1 ring-primary select-none hover:ring"
 							>
 								<span class="size-9">
-									<Popover.Root>
-										<Popover.Trigger class="flex aspect-square size-9">
-											<img
-												src={skin.preview_images[0]}
-												alt={skin.name}
-												class="size-full rounded-lg object-cover"
-											/>
-										</Popover.Trigger>
-										<Popover.Content class="w-2xl rounded-xl p-1">
-											<ImageCarousel {skin} linked={false} radius="full" />
-										</Popover.Content>
-									</Popover.Root>
+									<Popover hover={false} class="w-2xl max-w-[calc(100vw-1rem)] rounded-xl p-1">
+										{#snippet trigger(props)}
+											<button {...props} type="button" class="flex aspect-square size-9">
+												<img
+													src={skin.preview_images[0]}
+													alt={skin.name}
+													class="size-full rounded-lg object-cover"
+												/>
+											</button>
+										{/snippet}
+										<ImageCarousel {skin} linked={false} radius="full" />
+									</Popover>
 								</span>
 								<button
 									class="min-w-0 flex-1 self-stretch truncate text-left"

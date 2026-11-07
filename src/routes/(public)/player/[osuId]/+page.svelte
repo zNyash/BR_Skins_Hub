@@ -1,7 +1,6 @@
 <script lang="ts">
 	import PageHeading from "$comp/page-heading.svelte";
-	import * as Popover from "$comp/ui/popover";
-	import { POPOVER_SETTINGS } from "$lib/constants";
+	import Popover from "$comp/popover.svelte";
 	import { osuAvatar } from "$lib/osu";
 	import { openTab } from "./open-tab";
 	import ProfileSidebar from "./profile-sidebar.svelte";
@@ -57,14 +56,14 @@
 				/>
 			</a>
 			{#if player.previous_usernames && player.previous_usernames.length > 0}
-				<Popover.Root>
-					<Popover.Trigger {...POPOVER_SETTINGS} class="pb-1 text-start">
-						<h1 class="text-xl font-bold sm:text-2xl">{player.name}</h1>
-					</Popover.Trigger>
-					<Popover.Content class="w-fit px-2 py-1 outline outline-border">
-						<p class="text-sm">{player.previous_usernames.join(", ")}</p>
-					</Popover.Content>
-				</Popover.Root>
+				<Popover class="px-2 py-1">
+					{#snippet trigger(props)}
+						<button {...props} type="button" class="pb-1 text-start">
+							<h1 class="text-xl font-bold sm:text-2xl">{player.name}</h1>
+						</button>
+					{/snippet}
+					<p class="text-sm">{player.previous_usernames.join(", ")}</p>
+				</Popover>
 			{:else}
 				<h1 class="pb-1 text-xl font-bold sm:text-2xl">{player.name}</h1>
 			{/if}

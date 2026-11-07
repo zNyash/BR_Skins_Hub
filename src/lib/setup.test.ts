@@ -6,6 +6,8 @@ import {
 	rtMode,
 	setupLayout,
 	tabletDiagram,
+	visibleChips,
+	diagramRatio,
 	type CardId
 } from "./setup";
 
@@ -166,5 +168,41 @@ describe("keyboardBody", () => {
 
 	it("sends null for an unset rapid trigger state", () => {
 		expect(keyboardBody(draft, "", true).rapid_trigger).toBeNull();
+	});
+});
+
+describe("visibleChips", () => {
+	it("shows all when they fit", () => {
+		expect(visibleChips([100, 100], 220, 40, 8)).toBe(2);
+	});
+
+	it("reserves room for the +N chip", () => {
+		expect(visibleChips([100, 100, 100], 250, 40, 8)).toBe(1);
+	});
+
+	it("counts an exact fit", () => {
+		expect(visibleChips([100, 100, 100], 256, 40, 8)).toBe(2);
+	});
+
+	it("shows none when the first chip alone is too wide", () => {
+		expect(visibleChips([400, 100], 300, 40, 8)).toBe(0);
+	});
+
+	it("handles no filters", () => {
+		expect(visibleChips([], 300, 40, 8)).toBe(0);
+	});
+});
+
+describe("diagramRatio", () => {
+	it("uses the full tablet size", () => {
+		expect(diagramRatio({ full_w: 152, full_h: 95, area_w: 76, area_h: 76 })).toBe(1.6);
+	});
+
+	it("falls back to the area without a full size", () => {
+		expect(diagramRatio({ area_w: 80, area_h: 40 })).toBe(2);
+	});
+
+	it("is square with neither", () => {
+		expect(diagramRatio({})).toBe(1);
 	});
 });
