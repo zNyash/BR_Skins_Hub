@@ -18,6 +18,7 @@
 		CARD_IDS,
 		STORAGE_LABELS,
 		presentCards,
+		diagramRatio,
 		rtMode,
 		setupLayout,
 		type CardId,
@@ -160,17 +161,32 @@
 				</div>
 			{:else if id === "tablet" && setup.tablet}
 				{@const t = setup.tablet}
-				{@render model(id, t.model)}
-				<div class="flex flex-1 flex-col gap-3 @xl:flex-row">
-					<div class="grid content-start gap-3 @xl:w-56 @xl:shrink-0">
-						{@render tile("Area", pair(t.area_w, t.area_h), "mm")}
-						{#if t.rotation}
-							{@render tile("Rotation", t.rotation, "°")}
-						{/if}
+				{#snippet tabletInfo()}
+					{@render model(id, t.model)}
+					<div class="grid grid-cols-[1.4fr_1fr] gap-3">
+						{@render tile("Area", pair(t.area_w, t.area_h), "mm", { small: true })}
+						{@render tile("Rotation", t.rotation, "°")}
 					</div>
-					<div class="flex-[2_1_auto]"><TabletDiagram tablet={t} /></div>
-				</div>
-				<FilterChips filters={t.filters ?? []} />
+				{/snippet}
+				{#if shape === "tall"}
+					<!-- Mouse + Monitor set the height; the diagram takes what's left. -->
+					{@render tabletInfo()}
+					<TabletDiagram tablet={t} class="min-h-0 flex-1 basis-0 max-md:h-50 max-md:flex-none" />
+					<FilterChips filters={t.filters ?? []} />
+				{:else}
+					<div class="flex flex-col gap-3 md:grid md:grid-cols-[1fr_auto]">
+						<div class="flex min-w-0 flex-col gap-3">
+							{@render tabletInfo()}
+							<FilterChips filters={t.filters ?? []} />
+						</div>
+						<!-- 196px = the left column (72 + 12 + 72 + 12 + 28); width hugs the drawing (+ p-3). -->
+						<TabletDiagram
+							tablet={t}
+							class="h-50 md:h-49 md:w-(--w)"
+							--w="calc(172px * {diagramRatio(t)} + 24px)"
+						/>
+					</div>
+				{/if}
 			{:else if id === "mouse" && setup.mouse}
 				{@const m = setup.mouse}
 				{@render model(id, m.model)}

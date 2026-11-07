@@ -7,6 +7,7 @@ import {
 	setupLayout,
 	tabletDiagram,
 	visibleChips,
+	diagramRatio,
 	type CardId
 } from "./setup";
 
@@ -189,5 +190,19 @@ describe("visibleChips", () => {
 
 	it("handles no filters", () => {
 		expect(visibleChips([], 300, 40, 8)).toBe(0);
+	});
+});
+
+describe("diagramRatio", () => {
+	it("uses the full tablet size", () => {
+		expect(diagramRatio({ full_w: 152, full_h: 95, area_w: 76, area_h: 76 })).toBe(1.6);
+	});
+
+	it("falls back to the area without a full size", () => {
+		expect(diagramRatio({ area_w: 80, area_h: 40 })).toBe(2);
+	});
+
+	it("is square with neither", () => {
+		expect(diagramRatio({})).toBe(1);
 	});
 });

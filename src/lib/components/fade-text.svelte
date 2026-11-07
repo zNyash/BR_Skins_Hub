@@ -33,7 +33,8 @@
 			{...overflowing ? { role: "button", tabindex: 0 } : {}}
 			{@attach watch}
 			class={cn(
-				"block min-w-0 overflow-hidden whitespace-nowrap",
+				// The padding gives descenders room inside the clip (and the fade mask) without taking up space.
+				"-my-[0.5em] block min-w-0 overflow-hidden py-[0.5em] whitespace-nowrap",
 				overflowing && "cursor-default fade",
 				className
 			)}

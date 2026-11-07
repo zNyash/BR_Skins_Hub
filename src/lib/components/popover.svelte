@@ -57,7 +57,11 @@
 
 	function show(mode: "manual" | "auto") {
 		clearTimeout(hideTimer);
-		if (mode === "auto" && open) popoverEl.hidePopover();
+		// The popover attribute only changes while hidden, so a hover-open popover is closed first.
+		if (mode === "auto" && open) {
+			popoverEl.hidePopover();
+			open = false;
+		}
 		popoverEl.popover = mode;
 		if (!open) {
 			popoverEl.showPopover();

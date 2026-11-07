@@ -142,3 +142,11 @@ export function visibleChips(
 	}
 	return count;
 }
+
+/** Width ÷ height of what the tablet diagram draws: the full tablet, else the area alone, else a square. */
+export function diagramRatio(tablet: Setup["tablet"]): number {
+	const { full_w, full_h, area_w, area_h } = tablet ?? {};
+	if (full_w && full_h) return full_w / full_h;
+	if (area_w && area_h) return area_w / area_h;
+	return 1;
+}
