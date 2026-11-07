@@ -22,6 +22,8 @@
 		const observer = new ResizeObserver(measure);
 		observer.observe(node);
 		measure();
+		// The web font can swap in after the first measurement and change the text's width.
+		document.fonts.ready.then(measure);
 		return () => observer.disconnect();
 	};
 </script>
@@ -31,6 +33,12 @@
 		<span
 			{...props}
 			{...overflowing ? { role: "button", tabindex: 0 } : {}}
+			onkeydown={(event) => {
+				if (overflowing && (event.key === "Enter" || event.key === " ")) {
+					event.preventDefault();
+					event.currentTarget.click();
+				}
+			}}
 			{@attach watch}
 			class={cn(
 				// The padding gives descenders room inside the clip (and the fade mask) without taking up space.

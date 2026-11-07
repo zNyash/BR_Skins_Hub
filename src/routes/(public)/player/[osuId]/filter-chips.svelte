@@ -39,6 +39,9 @@
 		};
 		const observer = new ResizeObserver(measure);
 		observer.observe(row);
+		// The copy changes size when the web font swaps in, even if the row doesn't.
+		const copy = row.querySelector<HTMLElement>("[data-measure]");
+		if (copy) observer.observe(copy);
 		measure();
 		return () => observer.disconnect();
 	};

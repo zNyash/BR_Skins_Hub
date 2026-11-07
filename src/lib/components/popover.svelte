@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from "svelte";
+	import { tick, type Snippet } from "svelte";
 	import { createAttachmentKey } from "svelte/attachments";
 	import type { HTMLAttributes } from "svelte/elements";
 	import { placePopover } from "$lib/popover";
@@ -69,7 +69,8 @@
 			onopen?.();
 		}
 		pinned = mode === "auto";
-		place();
+		// Content only mounts while open (so a closed popover loads nothing), so measure after it renders.
+		tick().then(place);
 	}
 
 	function hoverIn() {
@@ -80,6 +81,13 @@
 		if (!hover || pinned) return;
 		clearTimeout(hideTimer);
 		hideTimer = setTimeout(() => open && popoverEl.hidePopover(), HIDE_DELAY);
+	}
+
+	// Keeps a hover/focus popover open while focus is inside it.
+	function onfocusout(event: FocusEvent) {
+		const next = event.relatedTarget as Node | null;
+		if (next && (popoverEl.contains(next) || triggerEl?.contains(next))) return;
+		hoverOut();
 	}
 
 	function onclick() {
@@ -100,6 +108,14 @@
 	}
 
 	$effect(() => {
+		if (!open || pinned) return;
+		// popover="auto" closes on Escape by itself; a hover/focus popover must too.
+		const onkeydown = (event: KeyboardEvent) => event.key === "Escape" && popoverEl.hidePopover();
+		document.addEventListener("keydown", onkeydown);
+		return () => document.removeEventListener("keydown", onkeydown);
+	});
+
+	$effect(() => {
 		if (!open) return;
 		window.addEventListener("scroll", place, { capture: true, passive: true });
 		window.addEventListener("resize", place);
@@ -116,7 +132,7 @@
 		onpointerenter: hoverIn,
 		onpointerleave: hoverOut,
 		onfocus: hoverIn,
-		onblur: hoverOut,
+		onblur: onfocusout,
 		onclick,
 		"aria-expanded": pin ? pinned : undefined,
 		"aria-describedby": hover ? id : undefined
@@ -136,8 +152,12 @@
 	)}
 	onpointerenter={() => clearTimeout(hideTimer)}
 	onpointerleave={hoverOut}
+	onfocusin={() => clearTimeout(hideTimer)}
+	{onfocusout}
 	{onbeforetoggle}
 	{ontoggle}
 >
-	{@render children()}
+	{#if open}
+		{@render children()}
+	{/if}
 </div>

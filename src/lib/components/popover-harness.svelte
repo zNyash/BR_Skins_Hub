@@ -8,5 +8,6 @@
 		<button {...props}>Open</button>
 	{/snippet}
 	<p>Inside</p>
+	<button>Inner</button>
 </Popover>
 <button style="margin-top: 400px">Outside</button>

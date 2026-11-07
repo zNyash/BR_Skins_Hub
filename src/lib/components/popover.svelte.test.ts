@@ -42,4 +42,21 @@ describe("Popover", () => {
 		await userEvent.keyboard("{Escape}");
 		await expect.element(page.getByText("Inside")).not.toBeVisible();
 	});
+
+	it("doesn't render its content while closed", async () => {
+		render(Harness);
+		await expect.element(page.getByText("Inside")).not.toBeInTheDocument();
+	});
+
+	it("stays open while focus moves into it, and Escape closes it", async () => {
+		render(Harness);
+		await userEvent.tab();
+		await expect.element(page.getByText("Inside")).toBeVisible();
+		await userEvent.tab();
+		await expect.element(page.getByRole("button", { name: "Inner" })).toHaveFocus();
+		await wait(200);
+		await expect.element(page.getByText("Inside")).toBeVisible();
+		await userEvent.keyboard("{Escape}");
+		await expect.element(page.getByText("Inside")).not.toBeVisible();
+	});
 });
