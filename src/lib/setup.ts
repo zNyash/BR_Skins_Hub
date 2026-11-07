@@ -119,3 +119,26 @@ export function keyboardBody(
 		rt_release: splitRelease ? draft.rt_release : null
 	};
 }
+
+/**
+ * How many filter chips (from the start) fit on one row. When they don't all fit, the rest collapse
+ * into a "+N" chip, which needs room too. `gap` is the space between chips.
+ */
+export function visibleChips(
+	widths: number[],
+	available: number,
+	moreWidth: number,
+	gap: number
+): number {
+	const total = widths.reduce((sum, w, i) => sum + w + (i ? gap : 0), 0);
+	if (total <= available) return widths.length;
+
+	let used = moreWidth;
+	let count = 0;
+	for (const width of widths) {
+		used += width + gap;
+		if (used > available) break;
+		count++;
+	}
+	return count;
+}

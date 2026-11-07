@@ -14,7 +14,6 @@
 <script lang="ts">
 	import FadeText from "$comp/fade-text.svelte";
 	import Icon from "$comp/icon.svelte";
-	import Popover from "$comp/popover.svelte";
 	import {
 		CARD_IDS,
 		STORAGE_LABELS,
@@ -24,9 +23,9 @@
 		type CardId,
 		type Shape
 	} from "$lib/setup";
-	import { humanize } from "$lib/otd";
 	import type { PlayerWithSkins } from "$lib/types";
 	import { cn } from "$lib/utils";
+	import FilterChips from "./filter-chips.svelte";
 	import SetupCard from "./setup-card.svelte";
 	import TabletDiagram from "./tablet-diagram.svelte";
 
@@ -50,8 +49,6 @@
 		value === undefined || value === "" ? "–" : String(value);
 	const pair = (a?: number, b?: number) =>
 		a !== undefined && b !== undefined ? `${a} × ${b}` : undefined;
-	const settingText = (value: string) =>
-		value === "true" ? "On" : value === "false" ? "Off" : value;
 	const onOff = (on?: boolean) => (on === undefined ? undefined : on ? "On" : "Off");
 
 	const RT_BADGE = {
@@ -173,43 +170,7 @@
 					</div>
 					<div class="flex-[2_1_auto]"><TabletDiagram tablet={t} /></div>
 				</div>
-				{#if t.filters?.length}
-					<div class="flex flex-col gap-2 rounded-lg bg-layer-2 px-3.5 py-3">
-						<span class="text-xs text-text-muted">OpenTabletDriver filters</span>
-						<!-- Names only, so the card stays short; each one opens its settings. -->
-						<div class="flex flex-wrap gap-1.5">
-							{#each t.filters as filter, i (i)}
-								<Popover class="w-72 p-3">
-									{#snippet trigger(props)}
-										<button
-											{...props}
-											type="button"
-											class="flex max-w-full items-center gap-1 rounded-full bg-layer-3 px-3 py-1 text-sm font-medium hover:bg-layer-4"
-										>
-											<span class="truncate">{humanize(filter.path)}</span>
-											{#if filter.settings.length}
-												<Icon name="chevron-down" class="size-3.5 shrink-0 text-text-muted" />
-											{/if}
-										</button>
-									{/snippet}
-									{#if filter.settings.length}
-										<p class="mb-2 font-semibold">{humanize(filter.path)}</p>
-										<dl class="grid grid-cols-2 gap-x-4 gap-y-1.5">
-											{#each filter.settings as setting (setting.property)}
-												<div class="flex min-w-0 flex-col">
-													<dt class="truncate text-xs text-text-muted">
-														{humanize(setting.property)}
-													</dt>
-													<dd class="font-medium break-words">{settingText(setting.value)}</dd>
-												</div>
-											{/each}
-										</dl>
-									{/if}
-								</Popover>
-							{/each}
-						</div>
-					</div>
-				{/if}
+				<FilterChips filters={t.filters ?? []} />
 			{:else if id === "mouse" && setup.mouse}
 				{@const m = setup.mouse}
 				{@render model(id, m.model)}
