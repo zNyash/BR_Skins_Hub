@@ -13,10 +13,10 @@
 	import { request } from "$lib/api";
 	import { DASHBOARD_SKIN_LIST, PLAYER_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import { osuAvatar } from "$lib/osu";
-	import DeleteDialog from "./delete-dialog.svelte";
-	import PlayerCreatorDialog from "./player-creator-dialog.svelte";
+	import DeleteDialog from "./dialogs/delete-dialog.svelte";
+	import PlayerCreatorDialog from "./dialogs/player-creator-dialog.svelte";
 	import PlayerEditor from "./player-editor.svelte";
-	import SkinCreatorDialog from "./skin-creator-dialog.svelte";
+	import SkinCreatorDialog from "./dialogs/skin-creator-dialog.svelte";
 	import SkinEditor from "./skin-editor.svelte";
 
 	type Item = { type: "player" | "skin"; id: string };

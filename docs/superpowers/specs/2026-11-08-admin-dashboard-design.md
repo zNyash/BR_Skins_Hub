@@ -13,7 +13,7 @@ Mockups: the "Admin Dashboard Redesign" canvas, page "Round 3" (playable desktop
 ## Decisions
 
 - The main jobs are adding and editing players and skins. Everything is designed around those; requests are rare.
-- Desktop and phone share pages and data; only the layout changes at 768px.
+- Desktop and phone share pages and data; only the layout changes at 900px.
 - Lists are still loaded whole and searched client-side with Fuse.js. A real search query language is a later, separate spec.
 - "Needs attention" counts open the existing Players / Skins pages with a filter, not new pages.
 - Resizing uses our own small helper (`use:resizable`), not PaneForge: PaneForge sizes panes in percentages, which can't express "the editor keeps a fixed max width and only shrinks when the list runs out of room".
@@ -55,10 +55,10 @@ Pure functions, tested:
 
 ## Shell
 
-### Desktop (≥ 768px)
+### Desktop (≥ 900px)
 
 - **Rail (default):** 64px wide, icons only: Home, Players, Skins, then the pin button and "Back to site" at the bottom. Hovering expands it to its pinned width **over** the page (shadow, no layout shift); labels and counts fade in.
-- **Pinned:** `Ctrl+B` (or the pin button) pins it open. It then takes real space and pushes the page over, and its right edge is a resize handle (200–320px, default 240). `Ctrl+B` again goes back to the rail. `Ctrl+B` is ignored while typing in an input or textarea.
+- **Pinned:** `Ctrl+B` (or the pin button) pins it open; only shown pinned at ≥ 1200px (narrower, it stays the rail without changing the cookie). It then takes real space and pushes the page over, and its right edge is a resize handle (200–320px, default 240). `Ctrl+B` again goes back to the rail. `Ctrl+B` is ignored while typing in an input or textarea.
 - **List + editor:** the page area is a row: the list (`flex: 1 0 360px`) and the editor (`flex: 0 1 <saved width>`, `min-width: 440px`). A resize handle sits between them (440–960px, default 720). The saved width is the editor's maximum: on a wide screen the list takes the extra room; the editor only shrinks when the list would go under 360px.
 - **Editor content** reflows by the editor's own width with a container query (`container-type: inline-size`): the form is two columns, one column under 560px.
 
@@ -76,7 +76,7 @@ A Svelte action on the handle element, on native pointer events, written like `u
 - One cookie, `dashboard_layout`, JSON `{ pinned: boolean, rail: number, editor: number }`, written on commit and on `Ctrl+B` (`path=/dashboard`, one year, `SameSite=Lax`). Not `httpOnly`: the client writes it.
 - `parseLayout(raw)` returns defaults for a missing or broken cookie and clamps each number to its range. The layout load reads it, so the server renders the saved sizes and there's no jump on load.
 
-### Phone (< 768px)
+### Phone (< 900px)
 
 - No rail. Bottom tab bar: Home, Players, Skins.
 - No resize handles, no `Ctrl+B`.

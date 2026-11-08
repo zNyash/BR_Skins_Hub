@@ -14,9 +14,9 @@
 	import type { SkinWithPlayers } from "$lib/types";
 	import { createUploadThing } from "$lib/uploadthing";
 	import { cn, formatDate } from "$lib/utils";
-	import AssignPlayersDialog from "./assign-players-dialog.svelte";
+	import AssignPlayersDialog from "./dialogs/assign-players-dialog.svelte";
 	import { resolveImageUrls, type ImageItem } from "./skin-images";
-	import TagInput from "./tag-input.svelte";
+	import TagInput from "./dialogs/tag-input.svelte";
 
 	type Props = {
 		skin: SkinWithPlayers;

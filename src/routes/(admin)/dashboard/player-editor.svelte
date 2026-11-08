@@ -14,9 +14,9 @@
 	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import type { SkinWithPlayers } from "$lib/types";
 	import { cn } from "$lib/utils";
-	import AssignSkinsDialog from "./assign-skins-dialog.svelte";
+	import AssignSkinsDialog from "./dialogs/assign-skins-dialog.svelte";
 	import { skinsChanged, type DraftSkin } from "./player-skins";
-	import TagInput from "./tag-input.svelte";
+	import TagInput from "./dialogs/tag-input.svelte";
 
 	type Props = {
 		player: Doc<"players">;

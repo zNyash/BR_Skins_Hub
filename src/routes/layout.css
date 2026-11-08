@@ -151,6 +151,42 @@
 		@apply font-sans;
 		scrollbar-gutter: stable;
 	}
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: color-mix(in oklch, var(--accent-color) 30%, transparent) transparent;
+	}
+}
+
+/* Fallback for browsers without scrollbar-color. */
+@supports not (scrollbar-color: auto) {
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	::-webkit-scrollbar-thumb {
+		border-radius: 9999px;
+		background: color-mix(in oklch, var(--accent-color) 30%, transparent);
+	}
+	::-webkit-scrollbar-button {
+		display: none;
+	}
+}
+
+/* Scrolling list: inner padding so hover and focus rings of the rows aren't clipped. */
+@utility scroll-list {
+	padding: 4px;
+	margin: -4px;
+	overflow-y: auto;
+}
+
+@utility no-scrollbar {
+	scrollbar-width: none;
+	&::-webkit-scrollbar {
+		display: none;
+	}
 }
 
 @utility main {
