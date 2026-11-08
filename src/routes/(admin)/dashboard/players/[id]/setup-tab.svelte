@@ -29,7 +29,7 @@
 	);
 </script>
 
-<div class="flex flex-col gap-3">
+<div class="flex flex-col gap-4">
 	{#if cards.length > 0}
 		<ul class="flex flex-col gap-2">
 			{#each cards as card (card.id)}

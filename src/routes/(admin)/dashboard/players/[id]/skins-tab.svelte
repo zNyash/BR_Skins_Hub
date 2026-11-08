@@ -27,7 +27,7 @@
 		"flex size-11 shrink-0 items-center justify-center rounded-lg min-[900px]:size-8";
 </script>
 
-<div class="flex flex-col gap-3">
+<div class="flex flex-col gap-4">
 	<div class="flex items-center justify-between gap-3">
 		<p class="text-sm text-text-muted">
 			{draft.skins.length === 0 ? "No skins assigned yet." : "Drag to reorder · first shows first"}
@@ -41,7 +41,7 @@
 	</div>
 
 	<div
-		class="skins-grid grid gap-3"
+		class="skins-grid grid gap-4"
 		use:sortable={{ onMove: (from, to) => (draft.skins = moveItem(draft.skins, from, to)) }}
 	>
 		{#each draft.skins as item, i (item.id)}

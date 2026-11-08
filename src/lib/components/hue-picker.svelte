@@ -41,7 +41,7 @@
 			aria-checked={value === hue}
 			aria-label="Hue {hue}"
 			class={cn(
-				"size-8 rounded-full transition-shadow",
+				"size-11 rounded-full transition-shadow min-[900px]:size-8",
 				value === hue && "shadow-[0_0_0_2px_var(--card),0_0_0_4px_var(--text)]"
 			)}
 			style:background="oklch(70% 0.15 {hue})"
@@ -67,7 +67,7 @@
 		min="0"
 		max="360"
 		aria-label="Hue value"
-		class="w-20"
+		class="h-11 w-20 min-[900px]:h-9"
 		{value}
 		onchange={fromNumber}
 	/>

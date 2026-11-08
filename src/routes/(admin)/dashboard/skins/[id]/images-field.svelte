@@ -68,7 +68,7 @@
 	</div>
 {/if}
 
-<section class="flex flex-col gap-3" aria-label="Images">
+<section class="flex flex-col gap-4" aria-label="Images">
 	<div class="flex items-center justify-between gap-3">
 		<div class="flex min-w-0 flex-col gap-1">
 			<span class="text-sm leading-tight">Images · {images.length}</span>
@@ -101,7 +101,7 @@
 		<p class="rounded-xl bg-layer-2 p-4 text-center text-sm text-text-muted">No images yet.</p>
 	{/if}
 	<div
-		class="images-grid grid gap-3"
+		class="images-grid grid gap-4"
 		use:sortable={{ onMove: (from, to) => (images = moveItem(images, from, to)) }}
 	>
 		{#each images as item, i (item.id)}

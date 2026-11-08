@@ -128,7 +128,7 @@
 			<ImagesField bind:images={draft.images} skinName={draft.skin.name} />
 		</div>
 
-		<section class="full flex flex-col gap-3" aria-label="Used by">
+		<section class="full flex flex-col gap-4" aria-label="Used by">
 			<div class="flex items-center justify-between gap-3">
 				<span class="text-sm">Used by · {assigned.length}</span>
 				<!-- Always mounted here (never moved), so it can't unmount while open. -->
@@ -142,7 +142,7 @@
 			</div>
 
 			{#if assigned.length === 0}
-				<div class="flex flex-col gap-3 rounded-xl bg-layer-2 p-4">
+				<div class="flex flex-col gap-4 rounded-xl bg-layer-2 p-4">
 					<p class="text-sm text-text-muted">
 						Nobody uses this skin. Assign it to a player, or delete it to free up space.
 					</p>

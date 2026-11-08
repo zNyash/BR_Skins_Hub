@@ -33,7 +33,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-1">
+<div class="flex flex-col gap-2">
 	<label for={id} class="text-sm">
 		Tags <span class="text-xs text-muted-foreground">(search only, not shown publicly)</span>
 	</label>
@@ -59,7 +59,7 @@
 					<button
 						type="button"
 						aria-label="Remove tag {tag}"
-						class="rounded-full p-0.5 hover:bg-layer-3"
+						class="flex size-11 items-center justify-center rounded-full hover:bg-layer-3 min-[900px]:size-auto min-[900px]:p-0.5"
 						onclick={() => removeTag(tag)}
 					>
 						<Icon name="x" class="size-3" />

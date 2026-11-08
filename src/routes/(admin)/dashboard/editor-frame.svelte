@@ -57,7 +57,7 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <section class="flex h-full flex-col overflow-hidden rounded-2xl bg-layer-1">
-	<header class="relative flex shrink-0 items-center gap-3 p-4">
+	<header class="relative flex shrink-0 items-center gap-4 p-4">
 		{#if cover && cover !== failedCover}
 			<img
 				src={cover}
