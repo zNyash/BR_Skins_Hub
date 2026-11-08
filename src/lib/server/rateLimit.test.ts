@@ -40,4 +40,12 @@ describe("createRateLimiter", () => {
 		limiter.check(fakeEvent("3.3.3.3"));
 		expect(() => limiter.check(fakeEvent("4.4.4.4"))).not.toThrow();
 	});
+
+	it("counts each scope separately for the same ip", () => {
+		const limiter = createRateLimiter({ key: "per-scope", maxRequests: 1, windowMs: 60_000 });
+		const event = fakeEvent("5.5.5.5");
+		limiter.check(event, "a");
+		expect(() => limiter.check(event, "b")).not.toThrow();
+		expect(() => limiter.check(event, "a")).toThrow();
+	});
 });
