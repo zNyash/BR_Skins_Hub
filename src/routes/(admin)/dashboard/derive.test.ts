@@ -8,11 +8,14 @@ import {
 	onlyTabChanged,
 	parseFilter,
 	parseTab,
+	pickParams,
 	recentlyEdited,
+	setParam,
 	setupFilled,
 	skinCountByPlayer,
 	step,
-	stepPosition
+	stepPosition,
+	timeAgo
 } from "./derive";
 
 const NOW = Date.UTC(2026, 10, 8);
@@ -191,5 +194,33 @@ describe("onlyTabChanged", () => {
 		expect(onlyTabChanged(url(base), url("/dashboard/players/1?tab=skins&filter=no-setup"))).toBe(
 			false
 		);
+	});
+});
+
+describe("timeAgo", () => {
+	it("rounds down to the largest unit", () => {
+		expect(timeAgo(NOW - 30 * 1000, NOW)).toBe("just now");
+		expect(timeAgo(NOW - 5 * 60 * 1000, NOW)).toBe("5 min ago");
+		expect(timeAgo(NOW - 3 * 60 * 60 * 1000, NOW)).toBe("3 h ago");
+		expect(timeAgo(NOW - 2 * DAY, NOW)).toBe("2 d ago");
+		expect(timeAgo(NOW - 125 * DAY, NOW)).toBe("4 mo ago");
+		expect(timeAgo(NOW - 400 * DAY, NOW)).toBe("1 y ago");
+	});
+});
+
+describe("pickParams and setParam", () => {
+	const params = new URLSearchParams("filter=no-skins&tab=links&q=x");
+
+	it("keeps only the given keys that are set", () => {
+		expect(pickParams(params, ["filter", "tab"])).toBe("?filter=no-skins&tab=links");
+		expect(pickParams(params, ["filter", "missing"])).toBe("?filter=no-skins");
+		expect(pickParams(params, ["missing"])).toBe("");
+	});
+
+	it("sets, replaces or removes one key and keeps the rest", () => {
+		expect(setParam(params, "tab", "setup")).toBe("?filter=no-skins&tab=setup&q=x");
+		expect(setParam(params, "filter", null)).toBe("?tab=links&q=x");
+		expect(setParam(new URLSearchParams("filter=a"), "filter", null)).toBe("");
+		expect(params.get("tab")).toBe("links"); // the input isn't changed
 	});
 });

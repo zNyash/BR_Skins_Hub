@@ -5,7 +5,7 @@
 
 	const tabs = [
 		{ href: resolve("/dashboard"), label: "Home", icon: "house", exact: true },
-		{ href: "/dashboard/players", label: "Players", icon: "users" },
+		{ href: resolve("/dashboard/players"), label: "Players", icon: "users" },
 		{ href: "/dashboard/skins", label: "Skins", icon: "palette" }
 	];
 
@@ -13,7 +13,7 @@
 		tab.exact ? page.url.pathname === tab.href : page.url.pathname.startsWith(tab.href);
 </script>
 
-<!-- Players and Skins routes arrive in later tasks, so their hrefs can't go through the typed resolve() yet. -->
+<!-- The Skins route arrives in a later task, so its hrefs can't go through the typed resolve() yet. -->
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <nav

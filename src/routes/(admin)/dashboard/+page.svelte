@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import Icon from "$comp/icon.svelte";
 	import { osuAvatar } from "$lib/osu";
 	import {
@@ -7,6 +8,7 @@
 		SKIN_FILTERS,
 		recentlyEdited,
 		skinCountByPlayer,
+		timeAgo,
 		type PlayerFilter,
 		type SkinFilter
 	} from "./derive";
@@ -40,7 +42,7 @@
 		const rows = [
 			...PLAYER_FILTERS.map((f) => ({
 				label: PLAYER_LABELS[f.id],
-				href: `/dashboard/players?filter=${f.id}`,
+				href: `${resolve("/dashboard/players")}?filter=${f.id}`,
 				count: data.players.filter((p) => f.test(p, { skinCounts, now })).length
 			})),
 			...SKIN_FILTERS.map((f) => ({
@@ -51,22 +53,9 @@
 		];
 		return rows.filter((r) => r.count > 0);
 	});
-
-	function ago(time: number | undefined): string {
-		if (time === undefined) return "";
-		const min = Math.floor((Date.now() - time) / 60000);
-		if (min < 1) return "just now";
-		if (min < 60) return `${min} min ago`;
-		const h = Math.floor(min / 60);
-		if (h < 24) return `${h} h ago`;
-		const d = Math.floor(h / 24);
-		if (d < 30) return `${d} d ago`;
-		const mo = Math.floor(d / 30);
-		return mo < 12 ? `${mo} mo ago` : `${Math.floor(d / 365)} y ago`;
-	}
 </script>
 
-<!-- Players and Skins routes arrive in later tasks, so their hrefs can't go through the typed resolve() yet. -->
+<!-- The Skins route arrives in a later task, so its hrefs can't go through the typed resolve() yet. -->
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <div class="scroll-list h-full overflow-y-auto p-4 md:p-6">
@@ -99,7 +88,7 @@
 					<li>
 						<a
 							href={item.kind === "player"
-								? `/dashboard/players/${item.doc._id}`
+								? resolve(`/dashboard/players/${item.doc._id}`)
 								: `/dashboard/skins/${item.doc._id}`}
 							class="flex min-h-14 items-center gap-3 rounded-xl bg-layer-1 p-3 hover:bg-layer-2"
 						>
@@ -120,7 +109,7 @@
 							<span class="shrink-0 text-xs text-text-muted">
 								{item.kind === "player" ? "Player" : "Skin"}
 								{#if item.doc.updated_at !== undefined}
-									· {ago(item.doc.updated_at)}
+									· {timeAgo(item.doc.updated_at, Date.now())}
 								{/if}
 							</span>
 						</a>
@@ -168,6 +157,6 @@
 
 <PlayerCreatorDialog
 	bind:open={playerDialogOpen}
-	onCreated={(id) => goto("/dashboard/players/" + id)}
+	onCreated={(id) => goto(resolve(`/dashboard/players/${id}`))}
 />
 <SkinCreatorDialog bind:open={skinDialogOpen} onCreated={(id) => goto("/dashboard/skins/" + id)} />

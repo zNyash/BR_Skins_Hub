@@ -107,3 +107,39 @@ export function onlyTabChanged(from: URL, to: URL): boolean {
 	};
 	return strip(from) === strip(to);
 }
+
+/** Short relative time for list rows: "just now", "5 min ago", "3 h ago", "2 d ago", "4 mo ago", "1 y ago". */
+export function timeAgo(time: number, now: number): string {
+	const min = Math.floor((now - time) / 60000);
+	if (min < 1) return "just now";
+	if (min < 60) return `${min} min ago`;
+	const h = Math.floor(min / 60);
+	if (h < 24) return `${h} h ago`;
+	const d = Math.floor(h / 24);
+	if (d < 30) return `${d} d ago`;
+	const mo = Math.floor(d / 30);
+	return mo < 12 ? `${mo} mo ago` : `${Math.floor(d / 365)} y ago`;
+}
+
+/** Query string ("?a=1&b=2", or "" when empty) with only the `keys` of `params` that are set. */
+export function pickParams(params: URLSearchParams, keys: string[]): string {
+	const kept = new URLSearchParams();
+	for (const key of keys) {
+		const value = params.get(key);
+		if (value) kept.set(key, value);
+	}
+	return toQuery(kept);
+}
+
+/** Query string of `params` with `key` set to `value`, or removed when `value` is null. */
+export function setParam(params: URLSearchParams, key: string, value: string | null): string {
+	const next = new URLSearchParams(params);
+	if (value === null) next.delete(key);
+	else next.set(key, value);
+	return toQuery(next);
+}
+
+function toQuery(params: URLSearchParams): string {
+	const s = params.toString();
+	return s ? `?${s}` : "";
+}
