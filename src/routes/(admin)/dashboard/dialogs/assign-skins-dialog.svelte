@@ -60,7 +60,7 @@
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
 	<Dialog.Trigger>
 		{#snippet child({ props })}
-			<Button {...props} type="button" variant="secondary" size="sm">
+			<Button {...props} type="button" variant="secondary" size="sm" class="h-11 min-[900px]:h-8">
 				<Icon name="plus" />
 				Assign skins
 			</Button>

@@ -5,7 +5,7 @@
 {#if unsaved.dirty}
 	<div
 		role="status"
-		class="absolute bottom-6 left-1/2 flex w-[min(640px,calc(100%-48px))] -translate-x-1/2 animate-in items-center gap-3 rounded-xl bg-layer-2 p-3 pl-5 shadow-lg slide-in-from-bottom-4"
+		class="absolute bottom-6 left-1/2 z-40 flex w-[min(640px,calc(100%-48px))] -translate-x-1/2 animate-in items-center gap-3 rounded-xl bg-layer-2 p-3 pl-5 shadow-lg slide-in-from-bottom-4"
 		class:unsaved-shake={unsaved.shaking}
 		class:ring-2={unsaved.shaking}
 		class:ring-error={unsaved.shaking}
