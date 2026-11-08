@@ -51,12 +51,15 @@ export function registerEditor(next: Editor) {
 		editor = next;
 		return () => {
 			if (editor === next) editor = null;
+			clearTimeout(shakeTimer);
+			shaking = false;
 		};
 	});
 
 	beforeNavigate((navigation) => {
 		if (!unsaved.dirty && !saving) return;
-		if (navigation.to && onlyTabChanged(navigation.from!.url, navigation.to.url)) return;
+		if (navigation.from && navigation.to && onlyTabChanged(navigation.from.url, navigation.to.url))
+			return;
 		// "leave" (close/reload/external): cancelling makes the browser show its own prompt.
 		navigation.cancel();
 		if (navigation.type !== "leave") unsaved.shake();

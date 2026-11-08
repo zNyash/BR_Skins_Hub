@@ -219,20 +219,21 @@
 	border-radius: inherit;
 }
 
-/* Unsaved-changes bar: horizontal shake when navigation is blocked. translate-x is composed
-   with the bar's centering, so the keyframes keep -50%. */
+/* Unsaved-changes bar: horizontal shake when navigation is blocked. Tailwind v4's
+   -translate-x-1/2 uses the separate `translate` property, so these keyframes only animate
+   `transform` and the bar stays centered. */
 @keyframes unsaved-shake {
 	0%,
 	100% {
-		transform: translateX(-50%);
+		transform: none;
 	}
 	20%,
 	60% {
-		transform: translateX(calc(-50% - 8px));
+		transform: translateX(-8px);
 	}
 	40%,
 	80% {
-		transform: translateX(calc(-50% + 8px));
+		transform: translateX(8px);
 	}
 }
 
