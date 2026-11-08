@@ -218,3 +218,24 @@
 @utility radius-inherit {
 	border-radius: inherit;
 }
+
+/* Unsaved-changes bar: horizontal shake when navigation is blocked. translate-x is composed
+   with the bar's centering, so the keyframes keep -50%. */
+@keyframes unsaved-shake {
+	0%,
+	100% {
+		transform: translateX(-50%);
+	}
+	20%,
+	60% {
+		transform: translateX(calc(-50% - 8px));
+	}
+	40%,
+	80% {
+		transform: translateX(calc(-50% + 8px));
+	}
+}
+
+.unsaved-shake {
+	animation: unsaved-shake 0.6s ease-in-out;
+}
