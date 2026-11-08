@@ -4,7 +4,7 @@
 	import Button from "$comp/ui/button/button.svelte";
 	import { Input } from "$comp/ui/input";
 	import * as Select from "$comp/ui/select";
-	import { hasBlankLink, type LinkType } from "$lib/links";
+	import { hasBlankLink, isBlankLink, type LinkType } from "$lib/links";
 
 	// `children` is an optional action (e.g. a Save button) shown opposite "Add link".
 	let {
@@ -27,7 +27,7 @@
 		</Select.Root>
 		<Input
 			aria-label="Link"
-			aria-invalid={link.value.trim() === "" || undefined}
+			aria-invalid={isBlankLink(link) || undefined}
 			bind:value={link.value}
 			placeholder="URL or username"
 		/>

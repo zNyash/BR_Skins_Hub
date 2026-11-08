@@ -82,6 +82,7 @@ export function linkTarget(type: LinkType, value: string): { href: string | null
 		: { href: url.href, label: bareHost(url) };
 }
 
+export const isBlankLink = (link: { value: string }) => link.value.trim() === "";
+
 /** An empty row would be dropped silently on save, so it has to be filled in or removed first. */
-export const hasBlankLink = (links: { value: string }[]) =>
-	links.some((link) => link.value.trim() === "");
+export const hasBlankLink = (links: { value: string }[]) => links.some(isBlankLink);

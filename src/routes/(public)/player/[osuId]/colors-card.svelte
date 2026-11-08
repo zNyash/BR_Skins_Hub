@@ -23,7 +23,7 @@
 		}
 	}
 
-	// The slider fires `change` on every arrow-key step, so a pick waits until the value has
+	// The slider fires `change` on every arrow-key step, so its save waits until the value has
 	// settled. The preview (set on `input`) still follows every step.
 	const SLIDER_SAVE_DELAY_MS = 500;
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -36,7 +36,12 @@
 </script>
 
 <SettingsCard title="Colors">
-	<HuePicker value={shown} onPreview={(hue) => (huePreview.value = hue)} onPick={saveSoon} />
+	<HuePicker
+		value={shown}
+		onPreview={(hue) => (huePreview.value = hue)}
+		onPick={save}
+		onSlide={saveSoon}
+	/>
 	<p class="text-xs text-text-muted">
 		Saved as soon as you pick one. Visitors see your page in this color.
 	</p>

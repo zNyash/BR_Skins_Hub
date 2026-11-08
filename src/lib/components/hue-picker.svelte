@@ -7,11 +7,14 @@
 		value,
 		onPreview,
 		onPick,
+		onSlide,
 		label = "Profile color"
 	}: {
 		value: number;
 		onPreview?: (hue: number) => void;
 		onPick: (hue: number) => void;
+		// Slider `change` (fires on every arrow-key step); falls back to `onPick`.
+		onSlide?: (hue: number) => void;
 		label?: string;
 	} = $props();
 
@@ -57,7 +60,7 @@
 		class="h-3 min-w-0 flex-1 cursor-pointer appearance-none rounded-full accent-foreground"
 		style:background={TRACK}
 		oninput={(e) => onPreview?.(Number(e.currentTarget.value))}
-		onchange={(e) => onPick(Number(e.currentTarget.value))}
+		onchange={(e) => (onSlide ?? onPick)(Number(e.currentTarget.value))}
 	/>
 	<Input
 		type="number"
