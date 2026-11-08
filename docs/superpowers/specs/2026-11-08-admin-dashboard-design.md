@@ -131,7 +131,7 @@ Shared frame: an elevated card (`layer-1`, 16px radius) in the editor column.
 
 - **Profile:** Name, Cover URL; Bio (with the 0/200 counter); Profile color (the swatches and hue slider from the owner's Colors card, `colors-card.svelte`; its picker part is extracted into a shared component if it's tied to saving there, replacing today's plain number input), Tags (`tag-input`); Description (About tab) as a full-width textarea. Two columns, one under 560px.
 - **Skins:** a grid of the player's skins (thumbnail, `#position`, name, author). Reordered by dragging with `use:sortable`. Each card has an eye icon button to hide it from the profile (hidden cards are greyed out, "hidden from profile"). "+ Assign skins" opens `assign-skins-dialog`; new skins go to the front. Removing a skin is a ✕ on hover/focus.
-- **Links:** the same editing as the profile's Links card (`links-card.svelte`: type, value, reorder, remove, add, empty links blocked), sharing its logic instead of copying it where that's simple.
+- **Links:** the same editing as the profile's Links card (`links-card.svelte`: type, value, remove, add (no reorder), empty links blocked), sharing its logic instead of copying it where that's simple.
 - **Setup:** a read-only summary of present cards (one line each: card name and model, "–" for empty), and "Edit on profile ↗" (opens `/player/[osuId]?tab=setup`). With no setup: "No setup yet."
 
 Tab labels carry counts: "Skins · 12", "Links · 3", "Setup · 4/6".

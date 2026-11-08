@@ -1,5 +1,5 @@
 import { beforeNavigate } from "$app/navigation";
-import { onlyTabChanged } from "./derive";
+import { shouldBlock } from "./derive";
 
 type Editor = { isDirty: () => boolean; reset: () => void; save: () => Promise<void> };
 
@@ -57,11 +57,15 @@ export function registerEditor(next: Editor) {
 	});
 
 	beforeNavigate((navigation) => {
-		if (!unsaved.dirty && !saving) return;
-		if (navigation.from && navigation.to && onlyTabChanged(navigation.from.url, navigation.to.url))
-			return;
-		// "leave" (close/reload/external): cancelling makes the browser show its own prompt.
+		const decision = shouldBlock({
+			dirty: unsaved.dirty,
+			saving,
+			type: navigation.type,
+			from: navigation.from?.url ?? null,
+			to: navigation.to?.url ?? null
+		});
+		if (decision === "allow") return;
 		navigation.cancel();
-		if (navigation.type !== "leave") unsaved.shake();
+		if (decision === "block") unsaved.shake();
 	});
 }

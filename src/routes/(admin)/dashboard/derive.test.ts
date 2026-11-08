@@ -9,6 +9,7 @@ import {
 	parseFilter,
 	parseTab,
 	pickParams,
+	shouldBlock,
 	recentlyEdited,
 	setParam,
 	setupFilled,
@@ -194,6 +195,31 @@ describe("onlyTabChanged", () => {
 		expect(onlyTabChanged(url(base), url("/dashboard/players/1?tab=skins&filter=no-setup"))).toBe(
 			false
 		);
+	});
+});
+
+describe("shouldBlock", () => {
+	const url = (s: string) => new URL(s, "http://x");
+	const from = url("/dashboard/players/1?tab=profile");
+	const other = url("/dashboard/players/2");
+	const tab = url("/dashboard/players/1?tab=links");
+	const nav = { dirty: false, saving: false, type: "link", from, to: other };
+
+	it("allows anything while clean and idle", () => {
+		expect(shouldBlock(nav)).toBe("allow");
+	});
+
+	it("blocks going to another item while dirty or saving", () => {
+		expect(shouldBlock({ ...nav, dirty: true })).toBe("block");
+		expect(shouldBlock({ ...nav, saving: true })).toBe("block");
+	});
+
+	it("allows a tab-only change while dirty", () => {
+		expect(shouldBlock({ ...nav, dirty: true, to: tab })).toBe("allow");
+	});
+
+	it("leaves (cancel, no shake) on close/reload while dirty", () => {
+		expect(shouldBlock({ ...nav, dirty: true, type: "leave", to: null })).toBe("leave");
 	});
 });
 

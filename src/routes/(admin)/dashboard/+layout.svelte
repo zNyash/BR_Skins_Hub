@@ -52,7 +52,12 @@
 	});
 
 	function onKeydown(event: KeyboardEvent) {
-		if (!desktop.current || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "b")
+		if (
+			event.repeat ||
+			!desktop.current ||
+			!(event.ctrlKey || event.metaKey) ||
+			event.key.toLowerCase() !== "b"
+		)
 			return;
 		const target = event.target as HTMLElement | null;
 		if (target?.closest("input, textarea, select, [contenteditable]:not([contenteditable=false])"))

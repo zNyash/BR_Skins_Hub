@@ -58,7 +58,7 @@
 <!-- Needs attention links are resolve() plus a ?filter query, which the rule can't follow. -->
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 
-<div class="scroll-list h-full overflow-y-auto p-4 md:p-6">
+<div class="h-full overflow-y-auto p-4 md:p-6">
 	<div class="mx-auto flex max-w-3xl flex-col gap-6">
 		<h1 class="text-xl font-semibold">Home</h1>
 
@@ -114,6 +114,8 @@
 							</span>
 						</a>
 					</li>
+				{:else}
+					<li class="p-4 text-center text-sm text-text-muted">Nothing edited yet.</li>
 				{/each}
 			</ul>
 		</section>

@@ -21,11 +21,18 @@
 	import { PLAYER_FILTERS, parseFilter, setParam, skinCountByPlayer } from "../derive";
 	import PlayerCreatorDialog from "../dialogs/player-creator-dialog.svelte";
 	import ListPane from "../list-pane.svelte";
+	import { unsaved } from "../unsaved.svelte";
 	import PlayerRow from "./player-row.svelte";
 
 	let { data, children } = $props();
 
 	let creatorOpen = $state(false);
+
+	// Opening the creator would navigate away from unsaved changes: point at the bar instead.
+	function openCreator() {
+		if (unsaved.dirty || unsaved.saving) unsaved.shake();
+		else creatorOpen = true;
+	}
 
 	const filter = $derived(parseFilter("players", page.url.searchParams.get("filter")));
 	const skinCounts = $derived(skinCountByPlayer(data.skins));
@@ -80,7 +87,7 @@
 		get skinCounts() {
 			return skinCounts;
 		},
-		openCreator: () => (creatorOpen = true),
+		openCreator,
 		listHref: () => resolve("/dashboard/players") + filterQuery()
 	});
 
@@ -123,7 +130,7 @@
 			<button
 				type="button"
 				class="flex {field} items-center gap-2 rounded-lg bg-accent-color px-4 text-sm font-medium text-on-accent"
-				onclick={() => (creatorOpen = true)}
+				onclick={openCreator}
 			>
 				<Icon name="plus" class="size-4" />
 				New

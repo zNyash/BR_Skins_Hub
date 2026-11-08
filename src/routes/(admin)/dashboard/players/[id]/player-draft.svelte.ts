@@ -60,7 +60,13 @@ export function createPlayerDraft(player: () => Doc<"players">, skins: () => Ski
 			return;
 		}
 		toast.success("Player saved");
-		await Promise.all([invalidate("app:players"), invalidate("app:skins")]);
+		try {
+			await Promise.all([invalidate("app:players"), invalidate("app:skins")]);
+		} catch (e) {
+			// Saved, but the list couldn't reload; the draft stays until it does.
+			toast.error((e as Error).message);
+			return;
+		}
 		await tick();
 		// The server tidies some values (trims, drops blank usernames), so take what it stored.
 		base = loaded;

@@ -108,6 +108,23 @@ export function onlyTabChanged(from: URL, to: URL): boolean {
 	return strip(from) === strip(to);
 }
 
+/**
+ * What to do with a navigation while an editor is open: "block" cancels it and shakes the bar;
+ * "leave" (close/reload/external) only cancels, which makes the browser show its own prompt.
+ * Unsaved changes or a pending save block everything except a tab switch on the same page.
+ */
+export function shouldBlock(nav: {
+	dirty: boolean;
+	saving: boolean;
+	type: string;
+	from: URL | null;
+	to: URL | null;
+}): "allow" | "block" | "leave" {
+	if (!nav.dirty && !nav.saving) return "allow";
+	if (nav.from && nav.to && onlyTabChanged(nav.from, nav.to)) return "allow";
+	return nav.type === "leave" ? "leave" : "block";
+}
+
 /** Short relative time for list rows: "just now", "5 min ago", "3 h ago", "2 d ago", "4 mo ago", "1 y ago". */
 export function timeAgo(time: number, now: number): string {
 	const min = Math.floor((now - time) / 60000);

@@ -39,7 +39,9 @@
 
 	// Labels are always there when pinned; otherwise they fade in while the rail is expanded.
 	const label = $derived(
-		pinned ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+		pinned
+			? "opacity-100"
+			: "opacity-0 group-hover:opacity-100 group-has-[:focus-visible]:opacity-100"
 	);
 	const row =
 		"flex h-12 items-center gap-4 rounded-lg px-4 text-sm whitespace-nowrap text-text-muted hover:bg-layer-2";
@@ -51,7 +53,7 @@
 		aria-label="Dashboard"
 		class="group absolute inset-y-0 left-0 flex flex-col gap-1 overflow-hidden bg-layer-1 p-2 transition-[width] duration-150 {pinned
 			? ''
-			: 'w-16 focus-within:w-(--rail-w) focus-within:shadow-lg hover:w-(--rail-w) hover:shadow-lg'}"
+			: 'w-16 hover:w-(--rail-w) hover:shadow-lg has-[:focus-visible]:w-(--rail-w) has-[:focus-visible]:shadow-lg'}"
 		style:--rail-w="{width}px"
 		style:width={pinned ? "100%" : undefined}
 	>

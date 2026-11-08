@@ -20,11 +20,18 @@
 	import { SKIN_FILTERS, parseFilter, setParam } from "../derive";
 	import SkinCreatorDialog from "../dialogs/skin-creator-dialog.svelte";
 	import ListPane from "../list-pane.svelte";
+	import { unsaved } from "../unsaved.svelte";
 	import SkinRow from "./skin-row.svelte";
 
 	let { data, children } = $props();
 
 	let creatorOpen = $state(false);
+
+	// Opening the creator would navigate away from unsaved changes: point at the bar instead.
+	function openCreator() {
+		if (unsaved.dirty || unsaved.saving) unsaved.shake();
+		else creatorOpen = true;
+	}
 
 	const filter = $derived(parseFilter("skins", page.url.searchParams.get("filter")));
 
@@ -69,7 +76,7 @@
 		get results() {
 			return listQuery.results;
 		},
-		openCreator: () => (creatorOpen = true),
+		openCreator,
 		listHref: () => resolve("/dashboard/skins") + filterQuery()
 	});
 
@@ -107,7 +114,7 @@
 			<button
 				type="button"
 				class="flex {field} items-center gap-2 rounded-lg bg-accent-color px-4 text-sm font-medium text-on-accent"
-				onclick={() => (creatorOpen = true)}
+				onclick={openCreator}
 			>
 				<Icon name="plus" class="size-4" />
 				New
