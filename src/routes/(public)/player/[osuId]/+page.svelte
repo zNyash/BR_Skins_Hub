@@ -2,6 +2,7 @@
 	import PageHeading from "$comp/page-heading.svelte";
 	import Popover from "$comp/popover.svelte";
 	import { osuAvatar } from "$lib/osu";
+	import { claimView } from "$lib/views";
 	import { openTab } from "./open-tab";
 	import ProfileSidebar from "./profile-sidebar.svelte";
 	import ProfileTabs from "./profile-tabs.svelte";
@@ -17,6 +18,14 @@
 	// (same component, new data) must not hide their banner too.
 	let failedCover = $state<string | null>(null);
 	const showCover = $derived(Boolean(player.cover_url) && player.cover_url !== failedCover);
+
+	// Re-runs when navigating to another player (same component, new data). The owner check
+	// lives on the server; a failed count is ignored since the visitor can't act on it.
+	$effect(() => {
+		if (claimView(player._id)) {
+			fetch(`/api/players/${player._id}/views`, { method: "POST" }).catch(() => {});
+		}
+	});
 </script>
 
 <PageHeading

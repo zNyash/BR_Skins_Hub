@@ -19,8 +19,8 @@ function getClientIp(event: RequestEvent): string {
 	return event.getClientAddress();
 }
 
-function getBucketKey(key: string, ip: string): string {
-	return `${key}:${ip}`;
+function getBucketKey(key: string, ip: string, scope?: string): string {
+	return scope ? `${key}:${scope}:${ip}` : `${key}:${ip}`;
 }
 
 function cleanupExpiredBuckets() {
@@ -32,12 +32,13 @@ function cleanupExpiredBuckets() {
 
 export function createRateLimiter({ key, maxRequests, windowMs }: RateLimiterOptions) {
 	return {
-		check(event: RequestEvent) {
+		/** `scope` splits the limit further, e.g. per player instead of per ip alone. */
+		check(event: RequestEvent, scope?: string) {
 			cleanupExpiredBuckets();
 
 			const now = Date.now();
 			const ip = getClientIp(event);
-			const bucketKey = getBucketKey(key, ip);
+			const bucketKey = getBucketKey(key, ip, scope);
 			const existing = buckets.get(bucketKey);
 
 			if (!existing || now > existing.resetAt) {
