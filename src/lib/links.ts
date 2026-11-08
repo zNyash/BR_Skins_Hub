@@ -81,3 +81,7 @@ export function linkTarget(type: LinkType, value: string): { href: string | null
 		? profile(segments[0].replace(/^@/, ""))
 		: { href: url.href, label: bareHost(url) };
 }
+
+/** An empty row would be dropped silently on save, so it has to be filled in or removed first. */
+export const hasBlankLink = (links: { value: string }[]) =>
+	links.some((link) => link.value.trim() === "");
