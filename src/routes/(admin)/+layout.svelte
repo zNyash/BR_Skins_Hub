@@ -7,7 +7,7 @@
 	let { children } = $props();
 </script>
 
-<div class="flex h-screen flex-col overflow-hidden bg-surface">
+<div class="flex h-dvh flex-col overflow-hidden bg-surface">
 	<header
 		class="flex h-11 w-full items-center justify-start gap-3 border-b border-popover bg-card px-1"
 	>

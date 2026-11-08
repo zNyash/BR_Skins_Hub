@@ -55,17 +55,41 @@
 	}
 </script>
 
-{#if ctx.isDesktop}
-	<div class="flex h-full">
-		<div class="flex min-w-0 flex-col gap-3 py-4 pl-4" style:flex="1 0 360px">
-			{@render list()}
-		</div>
-		<div
-			class="relative min-w-[440px] p-4"
-			style:flex="0 1 {ctx.layout.editor}px"
-			style:container-type="inline-size"
-			bind:offsetWidth={editorWidth}
-		>
+<!--
+	One tree for both layouts: only classes change when `isDesktop` flips (resizing across 900px),
+	so the editor subtree, and the unsaved draft created inside it, is never remounted. The resize
+	handle and the drawer chrome are conditional siblings of the editor, not its parents.
+-->
+<div class={ctx.isDesktop ? "flex h-full" : "h-full"}>
+	<div
+		class={ctx.isDesktop
+			? "flex min-w-0 flex-col gap-3 py-4 pl-4"
+			: "flex h-full flex-col gap-3 p-4"}
+		style:flex={ctx.isDesktop ? "1 0 360px" : undefined}
+	>
+		{@render list()}
+	</div>
+	{#if !ctx.isDesktop && hasItem}
+		<div class="fixed inset-0 z-30 bg-surface/60" aria-hidden="true"></div>
+	{/if}
+	<!-- On the phone with nothing open the editor (the "Select a …" page) stays mounted but hidden. -->
+	<div
+		class={ctx.isDesktop
+			? "relative min-w-[440px] p-4"
+			: [
+					"fixed inset-x-0 top-24 bottom-0 z-30 flex-col rounded-t-2xl bg-layer-1 shadow-lg",
+					hasItem ? "flex" : "hidden",
+					swipePointer === -1 && "transition-transform"
+				]}
+		style:flex={ctx.isDesktop ? `0 1 ${ctx.layout.editor}px` : undefined}
+		style:transform={ctx.isDesktop ? undefined : `translateY(${swipeDy}px)`}
+		style:container-type="inline-size"
+		role={ctx.isDesktop ? undefined : "dialog"}
+		aria-modal={ctx.isDesktop ? undefined : "true"}
+		aria-label={ctx.isDesktop ? undefined : "Editor"}
+		bind:offsetWidth={editorWidth}
+	>
+		{#if ctx.isDesktop}
 			<div
 				class="absolute inset-y-0 left-0 w-1 cursor-col-resize before:absolute before:inset-y-0 before:left-0 before:w-[2px] before:bg-accent-color before:opacity-0 hover:before:opacity-100 focus-visible:outline-none focus-visible:before:opacity-100"
 				aria-label="Resize editor"
@@ -78,24 +102,7 @@
 					onCommit: ctx.setEditor
 				}}
 			></div>
-			{@render editor()}
-		</div>
-	</div>
-{:else}
-	<div class="flex h-full flex-col gap-3 p-4">
-		{@render list()}
-	</div>
-	{#if hasItem}
-		<div class="fixed inset-0 z-30 bg-surface/60" aria-hidden="true"></div>
-		<div
-			class="fixed inset-x-0 top-24 bottom-0 z-30 flex flex-col rounded-t-2xl bg-layer-1 shadow-lg"
-			class:transition-transform={swipePointer === -1}
-			style:transform="translateY({swipeDy}px)"
-			style:container-type="inline-size"
-			role="dialog"
-			aria-modal="true"
-			aria-label="Editor"
-		>
+		{:else}
 			<div
 				class="relative flex h-11 shrink-0 touch-none items-center justify-center"
 				role="presentation"
@@ -114,9 +121,9 @@
 					<Icon name="x" class="size-5" />
 				</button>
 			</div>
-			<div class="min-h-0 flex-1">
-				{@render editor()}
-			</div>
+		{/if}
+		<div class={ctx.isDesktop ? "h-full" : "min-h-0 flex-1"}>
+			{@render editor()}
 		</div>
-	{/if}
-{/if}
+	</div>
+</div>
