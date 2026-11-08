@@ -6,15 +6,12 @@
 	const tabs = [
 		{ href: resolve("/dashboard"), label: "Home", icon: "house", exact: true },
 		{ href: resolve("/dashboard/players"), label: "Players", icon: "users" },
-		{ href: "/dashboard/skins", label: "Skins", icon: "palette" }
+		{ href: resolve("/dashboard/skins"), label: "Skins", icon: "palette" }
 	];
 
 	const isActive = (tab: { href: string; exact?: boolean }) =>
 		tab.exact ? page.url.pathname === tab.href : page.url.pathname.startsWith(tab.href);
 </script>
-
-<!-- The Skins route arrives in a later task, so its hrefs can't go through the typed resolve() yet. -->
-<!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <nav
 	aria-label="Dashboard"

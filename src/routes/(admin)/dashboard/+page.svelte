@@ -47,7 +47,7 @@
 			})),
 			...SKIN_FILTERS.map((f) => ({
 				label: SKIN_LABELS[f.id],
-				href: `/dashboard/skins?filter=${f.id}`,
+				href: `${resolve("/dashboard/skins")}?filter=${f.id}`,
 				count: data.skins.filter((s) => f.test(s)).length
 			}))
 		];
@@ -55,7 +55,7 @@
 	});
 </script>
 
-<!-- The Skins route arrives in a later task, so its hrefs can't go through the typed resolve() yet. -->
+<!-- Needs attention links are resolve() plus a ?filter query, which the rule can't follow. -->
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <div class="scroll-list h-full overflow-y-auto p-4 md:p-6">
@@ -89,7 +89,7 @@
 						<a
 							href={item.kind === "player"
 								? resolve(`/dashboard/players/${item.doc._id}`)
-								: `/dashboard/skins/${item.doc._id}`}
+								: resolve(`/dashboard/skins/${item.doc._id}`)}
 							class="flex min-h-14 items-center gap-3 rounded-xl bg-layer-1 p-3 hover:bg-layer-2"
 						>
 							{#if item.kind === "player"}
@@ -159,4 +159,7 @@
 	bind:open={playerDialogOpen}
 	onCreated={(id) => goto(resolve(`/dashboard/players/${id}`))}
 />
-<SkinCreatorDialog bind:open={skinDialogOpen} onCreated={(id) => goto("/dashboard/skins/" + id)} />
+<SkinCreatorDialog
+	bind:open={skinDialogOpen}
+	onCreated={(id) => goto(resolve(`/dashboard/skins/${id}`))}
+/>

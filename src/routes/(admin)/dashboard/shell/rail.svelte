@@ -31,7 +31,7 @@
 	const items = $derived([
 		{ href: resolve("/dashboard"), label: "Home", icon: "house", count: null, exact: true },
 		{ href: resolve("/dashboard/players"), label: "Players", icon: "users", count: playerCount },
-		{ href: "/dashboard/skins", label: "Skins", icon: "palette", count: skinCount }
+		{ href: resolve("/dashboard/skins"), label: "Skins", icon: "palette", count: skinCount }
 	]);
 
 	const isActive = (item: { href: string; exact?: boolean }) =>
@@ -44,9 +44,6 @@
 	const row =
 		"flex h-12 items-center gap-4 rounded-lg px-4 text-sm whitespace-nowrap text-text-muted hover:bg-layer-2";
 </script>
-
-<!-- The Skins route arrives in a later task, so its hrefs can't go through the typed resolve() yet. -->
-<!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <!-- The placeholder keeps the page from moving; the panel inside grows over it on hover. -->
 <div class="relative z-20 shrink-0" style:width="{pinned ? width : RAIL_PX}px">

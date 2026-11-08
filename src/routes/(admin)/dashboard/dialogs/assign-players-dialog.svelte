@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import { SvelteSet } from "svelte/reactivity";
 	import Icon from "$comp/icon.svelte";
 	import SearchSorted from "$comp/search-sorted.svelte";
@@ -16,11 +17,11 @@
 		assignedIds: Id<"players">[];
 		skinName: string;
 		onAssign: (playerIds: Id<"players">[]) => void;
+		/** Bind it to open the dialog from somewhere other than its own trigger button. */
+		open?: boolean;
 	};
 
-	let { allPlayers, assignedIds, skinName, onAssign }: Props = $props();
-
-	let open = $state(false);
+	let { allPlayers, assignedIds, skinName, onAssign, open = $bindable(false) }: Props = $props();
 	let hideAssigned = $state(true);
 	const selected = new SvelteSet<Id<"players">>();
 
@@ -31,12 +32,14 @@
 		hideAssigned ? players.results.filter((p) => !assignedSet.has(p._id)) : players.results
 	);
 
-	function handleOpenChange(isOpen: boolean) {
-		if (isOpen) {
+	// Each opening starts fresh, whether from the trigger or from a bound `open`.
+	$effect.pre(() => {
+		if (!open) return;
+		untrack(() => {
 			selected.clear();
 			players.query = "";
-		}
-	}
+		});
+	});
 
 	function toggle(playerId: Id<"players">) {
 		if (assignedSet.has(playerId)) return;
@@ -50,7 +53,7 @@
 	}
 </script>
 
-<Dialog.Root bind:open onOpenChange={handleOpenChange}>
+<Dialog.Root bind:open>
 	<Dialog.Trigger>
 		{#snippet child({ props })}
 			<Button {...props} type="button" variant="secondary" size="sm">
