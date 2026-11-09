@@ -13,6 +13,14 @@ describe("cn", () => {
 		expect(cn("text-body", "text-caption")).toBe("text-caption");
 	});
 
+	it("cn lets shadow-none override the custom shadow-float", () => {
+		expect(cn("shadow-float", "shadow-none")).toBe("shadow-none");
+	});
+
+	it("cn lets a numeric duration override duration-fast", () => {
+		expect(cn("duration-fast", "duration-200")).toBe("duration-200");
+	});
+
 	it("buttonVariants keeps the type style with the variant color", () => {
 		const out = buttonVariants({ variant: "default" });
 		expect(out).toContain("text-body-strong");

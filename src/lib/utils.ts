@@ -6,6 +6,8 @@ import { createTV } from "tailwind-variants";
 export const twMergeConfig = {
 	extend: {
 		classGroups: {
+			shadow: [{ shadow: ["float"] }],
+			duration: [{ duration: ["fast", "base"] }],
 			"font-size": [
 				{
 					text: [

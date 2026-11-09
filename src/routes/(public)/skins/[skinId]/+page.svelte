@@ -94,7 +94,10 @@
 			>
 				<div class="common-grid">
 					{#each data.skin.players as player (player._id)}
-						<ListRow href={resolve("/(public)/player/[osuId]", { osuId: String(player.osu_id) })}>
+						<ListRow
+							href={resolve("/(public)/player/[osuId]", { osuId: String(player.osu_id) })}
+							class="rounded-md bg-layer-2 hover:bg-layer-3"
+						>
 							{#snippet leading()}
 								<Avatar size={40} osuId={player.osu_id} />
 							{/snippet}

@@ -8,7 +8,8 @@
 		backgroundImage,
 		leading,
 		children,
-		trailing
+		trailing,
+		class: className
 	}: {
 		href: string;
 		current?: boolean;
@@ -16,6 +17,7 @@
 		leading: Snippet;
 		children: Snippet;
 		trailing?: Snippet;
+		class?: string;
 	} = $props();
 </script>
 
@@ -26,7 +28,8 @@
 	aria-current={current ? "true" : undefined}
 	class={cn(
 		"relative isolate flex min-h-14 items-center gap-2 overflow-hidden rounded-lg p-2 transition-colors duration-fast",
-		current ? "bg-layer-3" : "bg-layer-1 hover:bg-layer-2"
+		current ? "bg-layer-3" : "bg-layer-1 hover:bg-layer-2",
+		className
 	)}
 >
 	{#if backgroundImage}

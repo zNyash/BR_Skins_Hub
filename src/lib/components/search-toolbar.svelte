@@ -30,6 +30,7 @@
 		<InputGroup.Root class="flex-1">
 			<InputGroup.Input
 				{placeholder}
+				aria-label={placeholder}
 				bind:value={list.query}
 				onkeydown={(e) => {
 					if (e.key === "Escape") list.query = "";
