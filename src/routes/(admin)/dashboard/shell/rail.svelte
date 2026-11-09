@@ -3,6 +3,7 @@
 	import { page } from "$app/state";
 	import Icon from "$comp/icon.svelte";
 	import { resizable } from "$lib/resizable";
+	import { cn } from "$lib/utils";
 
 	let {
 		pinned,
@@ -44,29 +45,29 @@
 			: "opacity-0 group-hover:opacity-100 group-has-[:focus-visible]:opacity-100"
 	);
 	const row =
-		"flex h-12 items-center gap-4 rounded-lg px-4 text-sm whitespace-nowrap text-text-muted hover:bg-layer-2";
+		"flex h-12 items-center gap-4 rounded-md px-4 text-body whitespace-nowrap text-text-muted transition-colors duration-fast hover:bg-layer-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-color";
 </script>
 
 <!-- The placeholder keeps the page from moving; the panel inside grows over it on hover. -->
 <div class="relative z-20 shrink-0" style:width="{pinned ? width : RAIL_PX}px">
 	<nav
 		aria-label="Dashboard"
-		class="group absolute inset-y-0 left-0 flex flex-col gap-1 overflow-hidden bg-layer-1 p-2 transition-[width] duration-150 {pinned
+		class="group absolute inset-y-0 left-0 flex flex-col gap-1 overflow-hidden bg-layer-1 p-2 transition-[width] duration-base {pinned
 			? ''
-			: 'w-16 hover:w-(--rail-w) hover:shadow-lg has-[:focus-visible]:w-(--rail-w) has-[:focus-visible]:shadow-lg'}"
+			: 'w-16 hover:w-(--rail-w) hover:shadow-float has-[:focus-visible]:w-(--rail-w) has-[:focus-visible]:shadow-float'}"
 		style:--rail-w="{width}px"
 		style:width={pinned ? "100%" : undefined}
 	>
 		{#each items as item (item.href)}
 			<a
 				href={item.href}
-				class="{row} {isActive(item) ? 'bg-layer-2 text-accent-color' : ''}"
+				class={cn(row, isActive(item) && "bg-layer-3 text-accent-color hover:bg-layer-3")}
 				aria-current={isActive(item) ? "page" : undefined}
 			>
 				<Icon name={item.icon} class="size-5 shrink-0" />
 				<span class="flex-1 transition-opacity {label}">{item.label}</span>
 				{#if item.count !== null}
-					<span class="text-xs transition-opacity {label}">{item.count}</span>
+					<span class="text-caption tabular-nums transition-opacity {label}">{item.count}</span>
 				{/if}
 			</a>
 		{/each}

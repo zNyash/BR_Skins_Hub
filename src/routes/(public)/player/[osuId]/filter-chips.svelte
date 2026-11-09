@@ -12,7 +12,7 @@
 
 	const GAP = 8; // gap-2
 	const CHIP =
-		"flex shrink-0 items-center gap-1 rounded-full bg-layer-3 px-3 py-1 text-sm font-medium whitespace-nowrap";
+		"flex h-7 shrink-0 items-center gap-1 rounded-md bg-layer-2 px-2 text-caption whitespace-nowrap";
 
 	let count = $state(0);
 	let selected = $state(0);
@@ -50,31 +50,31 @@
 {#snippet chipBody(filter: Filter)}
 	{humanize(filter.path)}
 	{#if filter.settings.length}
-		<Icon name="chevron-down" class="size-4 shrink-0 text-text-muted" />
+		<Icon name="chevron-down" class="size-3 shrink-0 text-text-muted" />
 	{/if}
 {/snippet}
 
 {#snippet details(filter: Filter)}
-	<p class="mb-3 text-base trim font-bold">{humanize(filter.path)}</p>
+	<p class="mb-3 text-card-title trim">{humanize(filter.path)}</p>
 	{#if filter.settings.length}
 		<dl class="grid grid-cols-2 gap-x-4 gap-y-2">
 			{#each filter.settings as setting (setting.property)}
 				<div class="flex min-w-0 flex-col gap-1">
-					<dt class="truncate text-xs text-text-muted" title={humanize(setting.property)}>
+					<dt class="truncate text-label text-text-muted" title={humanize(setting.property)}>
 						{humanize(setting.property)}
 					</dt>
-					<dd class="font-medium break-words">{settingText(setting.value)}</dd>
+					<dd class="text-body-strong break-words">{settingText(setting.value)}</dd>
 				</div>
 			{/each}
 		</dl>
 	{:else}
-		<p class="text-sm text-text-muted">No settings</p>
+		<p class="text-body text-text-muted">No settings</p>
 	{/if}
 {/snippet}
 
 {#if filters.length === 0}
 	<div class="flex h-7 items-center">
-		<span class="text-sm trim text-text-muted">No filters</span>
+		<span class="text-body trim text-text-muted">No filters</span>
 	</div>
 {:else}
 	<div {@attach fit} class="relative flex h-7 min-w-0 items-center gap-2 overflow-hidden">
@@ -89,7 +89,7 @@
 			{#if filter.settings.length}
 				<Popover class="max-h-90 w-72 overflow-auto p-3">
 					{#snippet trigger(props)}
-						<button {...props} type="button" class={cn(CHIP, "hover:bg-layer-4")}>
+						<button {...props} type="button" class={cn(CHIP, "hover:bg-layer-3")}>
 							{@render chipBody(filter)}
 						</button>
 					{/snippet}
@@ -114,7 +114,7 @@
 					<button
 						{...props}
 						type="button"
-						class={cn(CHIP, "text-text-muted hover:bg-layer-4")}
+						class={cn(CHIP, "text-text-muted hover:bg-layer-3")}
 						aria-label="{hidden.length} more filters"
 					>
 						+{hidden.length}
@@ -132,8 +132,8 @@
 								role="tab"
 								aria-selected={selected === i}
 								class={cn(
-									"shrink-0 truncate rounded-sm p-2 text-start text-sm text-text-muted",
-									selected === i && "bg-layer-3 text-foreground"
+									"shrink-0 truncate rounded-md p-2 text-start text-body text-text-muted",
+									selected === i && "bg-layer-3 text-text"
 								)}
 								onpointerenter={() => (selected = i)}
 								onclick={() => (selected = i)}

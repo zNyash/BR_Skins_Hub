@@ -3,6 +3,7 @@
 	import Icon from "$comp/icon.svelte";
 	import ImageCarousel from "$comp/image-carousel.svelte";
 	import Popover from "$comp/popover.svelte";
+	import Badge from "$comp/ui/badge/badge.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import Separator from "$comp/ui/separator/separator.svelte";
 	import type { Doc } from "$convex/_generated/dataModel";
@@ -16,19 +17,20 @@
 </script>
 
 <div
-	class="relative flex flex-col items-center justify-center overflow-clip rounded-lg bg-card outline outline-transparent hover:outline-primary"
+	class="relative flex flex-col items-center justify-center overflow-clip rounded-lg bg-layer-1 ring-accent-color transition-colors duration-fast hover:bg-layer-2"
 >
 	<div class={cn("w-full", hidden && "brightness-60 grayscale")}>
 		<ImageCarousel {skin} />
 	</div>
 
 	{#if hidden}
-		<span
+		<Badge
+			variant="image"
 			title="Hidden by the player"
-			class="pointer-events-none absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full bg-black/60 text-white"
+			class="pointer-events-none absolute top-2 right-2"
 		>
-			<Icon name="eye-off" class="size-3.5" />
-		</span>
+			<Icon name="eye-off" />
+		</Badge>
 	{/if}
 
 	<div class={cn("flex w-full flex-col p-1 px-2 pb-1", hidden && "opacity-60")}>
@@ -42,7 +44,7 @@
 			<p>{skin.name}</p>
 		</Popover>
 
-		<Separator class="mt-1 mb-2 bg-border" />
+		<Separator class="mt-1 mb-2 bg-layer-5" />
 
 		<span class="flex items-center gap-1">
 			<!-- Download Count -->
@@ -63,7 +65,7 @@
 
 			<Button
 				onclick={() => clipboard.copy(`${window.location.origin}/skins/${skin._id}`)}
-				variant="navigation"
+				variant="ghost"
 				size="icon-xs"
 				class={clipboard.copied
 					? "bg-success/20 text-success hover:bg-success/20 hover:text-success"

@@ -16,23 +16,33 @@
 
 <div class="form-grid">
 	<div class="flex flex-col gap-2">
-		<label for="player-name" class="text-sm">Name</label>
-		<Input id="player-name" class="h-11 min-[900px]:h-9" bind:value={draft.player.name} />
+		<label for="player-name" class="text-label">Name</label>
+		<Input
+			id="player-name"
+			class="h-11 bg-layer-2 min-[900px]:h-9"
+			bind:value={draft.player.name}
+		/>
 	</div>
 
 	<div class="flex flex-col gap-2">
-		<label for="player-cover" class="text-sm">Cover URL</label>
-		<Input id="player-cover" class="h-11 min-[900px]:h-9" bind:value={draft.player.cover_url} />
+		<label for="player-cover" class="text-label">Cover URL</label>
+		<Input
+			id="player-cover"
+			class="h-11 bg-layer-2 min-[900px]:h-9"
+			bind:value={draft.player.cover_url}
+		/>
 	</div>
 
 	<div class="flex flex-col gap-2">
 		<div class="flex items-end justify-between">
-			<label for="player-bio" class="text-sm">Bio</label>
-			<span class="text-xs {bioLength > BIO_MAX ? 'text-error' : 'text-text-muted'}">
+			<label for="player-bio" class="text-label">Bio</label>
+			<span
+				class="text-caption tabular-nums {bioLength > BIO_MAX ? 'text-error' : 'text-text-muted'}"
+			>
 				{bioLength}/{BIO_MAX}
 			</span>
 		</div>
-		<Textarea id="player-bio" rows={3} bind:value={draft.player.bio} />
+		<Textarea id="player-bio" class="bg-layer-2" rows={3} bind:value={draft.player.bio} />
 	</div>
 
 	<div class="flex flex-col gap-2">
@@ -44,8 +54,13 @@
 	</div>
 
 	<div class="full flex flex-col gap-2">
-		<label for="player-description" class="text-sm">Description (About tab)</label>
-		<Textarea id="player-description" rows={6} bind:value={draft.player.description} />
+		<label for="player-description" class="text-label">Description (About tab)</label>
+		<Textarea
+			id="player-description"
+			class="bg-layer-2"
+			rows={6}
+			bind:value={draft.player.description}
+		/>
 	</div>
 </div>
 

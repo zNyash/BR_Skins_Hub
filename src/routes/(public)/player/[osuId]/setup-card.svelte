@@ -1,6 +1,9 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
+	import Card from "$comp/card.svelte";
 	import Icon from "$comp/icon.svelte";
+	import { Badge } from "$comp/ui/badge";
+	import Button from "$comp/ui/button/button.svelte";
 	import { cn } from "$lib/utils";
 
 	let {
@@ -22,39 +25,28 @@
 		class?: string;
 		children: Snippet;
 	} = $props();
-	const id = $props.id();
 </script>
 
-<article
-	aria-labelledby={id}
-	class={cn("@container flex min-w-0 flex-col gap-3 rounded-xl bg-card p-4", className)}
->
-	<div class="flex flex-wrap items-center gap-3">
-		<span
-			class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"
-		>
-			<Icon name={icon} class="size-5" />
-		</span>
-		<h3 {id} class="text-base font-bold text-primary">{title}</h3>
-		{#if mainInput}
-			<span class="rounded-full bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
-				Main input
-			</span>
-		{/if}
-		<div class="ml-auto flex items-center gap-2">
+<Card {title} {icon} class={cn("@container min-w-0", className)}>
+	{#snippet trailing()}
+		<!-- Wraps on narrow cards, where the keyboard's two badges don't fit next to the title. -->
+		<div class="flex flex-wrap items-center justify-end gap-2">
+			{#if mainInput}
+				<Badge variant="accent">Main input</Badge>
+			{/if}
 			{@render badge?.()}
 			{#if canEdit}
-				<button
-					type="button"
-					class="flex size-9 items-center justify-center rounded-lg text-text-muted hover:bg-layer-2 hover:text-foreground"
+				<Button
+					variant="ghost"
+					size="icon"
 					aria-label="Edit {title.toLowerCase()}"
 					title="Edit"
 					onclick={onEdit}
 				>
-					<Icon name="pencil" class="size-4" />
-				</button>
+					<Icon name="pencil" />
+				</Button>
 			{/if}
 		</div>
-	</div>
+	{/snippet}
 	{@render children()}
-</article>
+</Card>

@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import Avatar from "$comp/avatar.svelte";
+	import Card from "$comp/card.svelte";
+	import EmptyState from "$comp/empty-state.svelte";
 	import Icon from "$comp/icon.svelte";
-	import { osuAvatar } from "$lib/osu";
 	import {
 		PLAYER_FILTERS,
 		SKIN_FILTERS,
@@ -60,12 +62,12 @@
 
 <div class="h-full overflow-y-auto p-4 md:p-6">
 	<div class="mx-auto flex max-w-3xl flex-col gap-6">
-		<h1 class="text-xl font-semibold">Home</h1>
+		<h1 class="text-page-title">Home</h1>
 
 		<div class="grid grid-cols-2 gap-4">
 			<button
 				type="button"
-				class="flex min-h-16 items-center gap-3 rounded-2xl bg-accent-color p-4 text-left font-medium text-surface"
+				class="flex min-h-16 items-center gap-3 rounded-lg bg-accent-color p-4 text-left text-body-strong text-on-accent transition-[filter] duration-fast hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-color"
 				onclick={() => (playerDialogOpen = true)}
 			>
 				<Icon name="user-plus" />
@@ -73,7 +75,7 @@
 			</button>
 			<button
 				type="button"
-				class="flex min-h-16 items-center gap-3 rounded-2xl bg-layer-2 p-4 text-left font-medium"
+				class="flex min-h-16 items-center gap-3 rounded-lg bg-layer-1 p-4 text-left text-body-strong transition-colors duration-fast hover:bg-layer-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-color"
 				onclick={() => (skinDialogOpen = true)}
 			>
 				<Icon name="plus" />
@@ -81,59 +83,55 @@
 			</button>
 		</div>
 
-		<section class="flex flex-col gap-3">
-			<h2 class="text-sm font-medium text-text-muted">Recently edited</h2>
-			<ul class="flex flex-col gap-2">
-				{#each recent as item (item.kind + item.doc._id)}
-					<li>
-						<a
-							href={item.kind === "player"
-								? resolve(`/dashboard/players/${item.doc._id}`)
-								: resolve(`/dashboard/skins/${item.doc._id}`)}
-							class="flex min-h-14 items-center gap-3 rounded-xl bg-layer-1 p-3 hover:bg-layer-2"
-						>
-							{#if item.kind === "player"}
-								<img
-									src={osuAvatar(item.doc.osu_id)}
-									alt=""
-									class="size-10 shrink-0 rounded-full bg-layer-3 object-cover"
-								/>
-							{:else}
-								<div class="h-10 w-16 shrink-0 overflow-hidden rounded-lg bg-layer-3">
-									{#if item.doc.preview_images[0]}
-										<img src={item.doc.preview_images[0]} alt="" class="size-full object-cover" />
-									{/if}
-								</div>
-							{/if}
-							<span class="min-w-0 flex-1 truncate font-medium">{item.doc.name}</span>
-							<span class="shrink-0 text-xs text-text-muted">
-								{item.kind === "player" ? "Player" : "Skin"}
-								{#if item.doc.updated_at !== undefined}
-									· {timeAgo(item.doc.updated_at, Date.now())}
+		<Card title="Recently edited" icon="history" level={2}>
+			{#if recent.length === 0}
+				<EmptyState icon="history" title="Nothing edited yet" />
+			{:else}
+				<ul class="flex flex-col gap-2">
+					{#each recent as item (item.kind + item.doc._id)}
+						<li>
+							<a
+								href={item.kind === "player"
+									? resolve(`/dashboard/players/${item.doc._id}`)
+									: resolve(`/dashboard/skins/${item.doc._id}`)}
+								class="flex min-h-16 items-center gap-3 rounded-md bg-layer-2 p-3 transition-colors duration-fast hover:bg-layer-3"
+							>
+								{#if item.kind === "player"}
+									<Avatar osuId={item.doc.osu_id} size={40} />
+								{:else}
+									<div class="h-10 w-16 shrink-0 overflow-hidden rounded-md bg-layer-3">
+										{#if item.doc.preview_images[0]}
+											<img src={item.doc.preview_images[0]} alt="" class="size-full object-cover" />
+										{/if}
+									</div>
 								{/if}
-							</span>
-						</a>
-					</li>
-				{:else}
-					<li class="p-4 text-center text-sm text-text-muted">Nothing edited yet.</li>
-				{/each}
-			</ul>
-		</section>
+								<span class="min-w-0 flex-1 truncate text-body-strong">{item.doc.name}</span>
+								<span class="shrink-0 text-caption text-text-muted">
+									{item.kind === "player" ? "Player" : "Skin"}
+									{#if item.doc.updated_at !== undefined}
+										· {timeAgo(item.doc.updated_at, Date.now())}
+									{/if}
+								</span>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</Card>
 
-		<section class="flex flex-col gap-3">
-			<h2 class="text-sm font-medium text-text-muted">Needs attention</h2>
+		<Card title="Needs attention" icon="circle-alert" level={2}>
 			{#if attention.length === 0}
-				<p class="text-text-muted">All good.</p>
+				<EmptyState icon="circle-check" title="All good" />
 			{:else if layoutCtx.isDesktop}
 				<ul class="flex flex-col gap-2">
 					{#each attention as row (row.href)}
 						<li>
 							<a
 								href={row.href}
-								class="flex min-h-12 items-center justify-between gap-3 rounded-xl bg-layer-1 p-3 hover:bg-layer-2"
+								class="flex min-h-12 items-center justify-between gap-3 rounded-md bg-layer-2 p-3 text-body transition-colors duration-fast hover:bg-layer-3"
 							>
 								<span>{row.label}</span>
-								<span class="font-medium text-accent-color">{row.count}</span>
+								<span class="text-body-strong text-accent-color tabular-nums">{row.count}</span>
 							</a>
 						</li>
 					{/each}
@@ -144,16 +142,16 @@
 						<li class="shrink-0 snap-start">
 							<a
 								href={row.href}
-								class="flex min-h-24 w-40 flex-col justify-between rounded-2xl bg-layer-1 p-4"
+								class="flex min-h-24 w-40 flex-col justify-between gap-2 rounded-md bg-layer-2 p-3"
 							>
-								<span class="text-2xl font-semibold text-accent-color">{row.count}</span>
-								<span class="text-sm text-text-muted">{row.label}</span>
+								<span class="text-value-lg text-accent-color tabular-nums">{row.count}</span>
+								<span class="text-caption text-text-muted">{row.label}</span>
 							</a>
 						</li>
 					{/each}
 				</ul>
 			{/if}
-		</section>
+		</Card>
 	</div>
 </div>
 

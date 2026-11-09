@@ -5,8 +5,8 @@
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import type { Doc } from "$convex/_generated/dataModel";
+	import Avatar from "$comp/avatar.svelte";
 	import { request } from "$lib/api";
-	import { osuAvatar } from "$lib/osu";
 	import type { SkinWithPlayers } from "$lib/types";
 	import { parseTab, setupFilled, type EditorTab } from "../../derive";
 	import DeleteDialog from "../../dialogs/delete-dialog.svelte";
@@ -89,11 +89,7 @@
 	{tab}
 >
 	{#snippet avatar()}
-		<img
-			src={osuAvatar(player.osu_id)}
-			alt=""
-			class="size-10 rounded-full bg-layer-3 object-cover"
-		/>
+		<Avatar osuId={player.osu_id} size={56} />
 	{/snippet}
 	{#snippet actions()}
 		<a

@@ -23,11 +23,11 @@
 	{@render children()}
 </div>
 
-<footer class="border-t border-layer-2 py-6 text-center text-sm text-text-muted">
+<footer class="border-t border-layer-2 py-6 text-center text-label text-text-muted">
 	Made by
 	<a
 		href={resolve("/(public)/player/[osuId]", { osuId: String(CREATOR.osuId) })}
-		class="font-medium text-foreground hover:text-primary"
+		class="text-body-strong text-text hover:text-accent-color"
 	>
 		{CREATOR.name}
 	</a>

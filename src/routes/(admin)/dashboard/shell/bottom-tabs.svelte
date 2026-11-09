@@ -20,8 +20,8 @@
 	{#each tabs as tab (tab.href)}
 		<a
 			href={tab.href}
-			class="flex min-h-14 flex-col items-center justify-center gap-1 text-xs {isActive(tab)
-				? 'bg-layer-2 text-accent-color'
+			class="flex min-h-14 flex-col items-center justify-center gap-1 text-label {isActive(tab)
+				? 'bg-layer-3 text-accent-color'
 				: 'text-text-muted'}"
 			aria-current={isActive(tab) ? "page" : undefined}
 		>

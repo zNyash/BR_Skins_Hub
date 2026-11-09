@@ -14,6 +14,7 @@
 <script lang="ts">
 	import FadeText from "$comp/fade-text.svelte";
 	import Icon from "$comp/icon.svelte";
+	import { Badge, type BadgeVariant } from "$comp/ui/badge";
 	import {
 		CARD_IDS,
 		STORAGE_LABELS,
@@ -53,13 +54,10 @@
 	const onOff = (on?: boolean) => (on === undefined ? undefined : on ? "On" : "Off");
 
 	const RT_BADGE = {
-		enabled: {
-			text: "Rapid trigger enabled",
-			class: "border-primary bg-primary text-primary-foreground"
-		},
-		disabled: { text: "Rapid trigger disabled", class: "border-layer-5 bg-layer-2" },
-		unsupported: { text: "No rapid trigger", class: "border-layer-3 text-text-muted" }
-	};
+		enabled: { text: "Rapid trigger enabled", variant: "accent" },
+		disabled: { text: "Rapid trigger disabled", variant: "soft" },
+		unsupported: { text: "No rapid trigger", variant: "soft" }
+	} satisfies Record<string, { text: string; variant: BadgeVariant }>;
 </script>
 
 {#snippet tile(
@@ -69,40 +67,43 @@
 	opts: { small?: boolean; hot?: boolean; class?: string } = {}
 )}
 	<div
-		class={cn("flex h-18 min-w-0 flex-col justify-between rounded-lg bg-layer-2 p-3", opts.class)}
+		class={cn(
+			"flex h-18 min-w-0 flex-col justify-between gap-2 rounded-md bg-layer-2 p-3",
+			opts.class
+		)}
 	>
-		<span class="text-xs trim text-text-muted">{label}</span>
+		<span class="text-label trim text-text-muted">{label}</span>
 		<FadeText
 			text={show(value)}
 			class={cn(
-				"trim font-bold",
-				opts.small ? "text-base" : "text-2xl",
-				opts.hot && value !== undefined && "text-primary"
+				"trim",
+				opts.small ? "text-card-title" : "text-value-lg",
+				opts.hot && value !== undefined && "text-accent-color"
 			)}
 		>
 			{#if unit && value !== undefined}
-				<span class="text-sm font-medium text-text-muted">&nbsp;{unit}</span>
+				<span class="text-caption text-text-muted">&nbsp;{unit}</span>
 			{/if}
 		</FadeText>
 	</div>
 {/snippet}
 
 {#snippet model(id: CardId, name: string | undefined)}
-	<div class="flex min-w-0 items-center gap-3 rounded-lg bg-layer-2 p-2">
+	<div class="flex min-w-0 items-center gap-3 rounded-md bg-layer-2 p-2">
 		<span
 			class="flex h-14 w-20 shrink-0 items-center justify-center rounded-md bg-layer-3 text-text-muted"
 			aria-hidden="true"
 		>
 			<Icon name={CARD_INFO[id].icon} class="size-6" />
 		</span>
-		<FadeText text={name || "Unknown"} class="flex-1 trim font-semibold" />
+		<FadeText text={name || "Unknown"} class="flex-1 text-card-title trim" />
 	</div>
 {/snippet}
 
 {#snippet addPrompt(id: CardId)}
 	<button
 		type="button"
-		class="flex min-h-24 flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-layer-4 text-sm text-text-muted hover:border-primary hover:text-foreground"
+		class="flex min-h-24 flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-layer-5 text-body text-text-muted transition-colors duration-fast hover:bg-layer-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent-color"
 		onclick={() => onEdit(id)}
 	>
 		<Icon name="plus" class="size-4" />
@@ -116,9 +117,7 @@
 		{#snippet rtBadge()}
 			{@const rt = setup.keyboard?.rapid_trigger}
 			{#if rt}
-				<span class={cn("rounded-full border px-3 py-1 text-xs font-semibold", RT_BADGE[rt].class)}>
-					{RT_BADGE[rt].text}
-				</span>
+				<Badge variant={RT_BADGE[rt].variant}>{RT_BADGE[rt].text}</Badge>
 			{/if}
 		{/snippet}
 		<SetupCard
@@ -136,14 +135,14 @@
 				{@const k = setup.keyboard}
 				{@const mode = rtMode(k)}
 				<div class="flex flex-col gap-3 @2xl:grid @2xl:grid-cols-[17.5rem_1fr]">
-					<div class="flex min-w-0 flex-col gap-3 rounded-lg bg-layer-2 p-3">
+					<div class="flex min-w-0 flex-col gap-3 rounded-md bg-layer-2 p-3">
 						<span
 							class="flex min-h-30 flex-1 items-center justify-center rounded-md bg-layer-3 text-text-muted @2xl:min-h-0"
 							aria-hidden="true"
 						>
 							<Icon name={CARD_INFO.keyboard.icon} class="size-8" />
 						</span>
-						<FadeText text={k.model || "Unknown"} class="text-lg trim font-bold" />
+						<FadeText text={k.model || "Unknown"} class="text-section-title trim" />
 					</div>
 					<!-- Always two rows, so the model block next to it keeps the same height. -->
 					<div
@@ -222,16 +221,18 @@
 				<dl class="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-x-6 gap-y-4">
 					{#each [["CPU", pc.cpu], ["GPU", pc.gpu], ["Motherboard", pc.motherboard], ["RAM", pc.ram], ["Cooler", pc.cooler]] as [label, value] (label)}
 						<div class="flex flex-col gap-1">
-							<dt class="text-xs text-text-muted">{label}</dt>
-							<dd class="font-medium break-words">{show(value)}</dd>
+							<dt class="text-label text-text-muted">{label}</dt>
+							<dd class="text-body-strong break-words">{show(value)}</dd>
 						</div>
 					{/each}
 					<div class="flex flex-col gap-1">
-						<dt class="text-xs text-text-muted">Storage</dt>
+						<dt class="text-label text-text-muted">Storage</dt>
 						{#each pc.storage ?? [] as drive, i (i)}
-							<dd class="font-medium break-words">{STORAGE_LABELS[drive.kind]} · {drive.name}</dd>
+							<dd class="text-body-strong break-words">
+								{STORAGE_LABELS[drive.kind]} · {drive.name}
+							</dd>
 						{:else}
-							<dd class="font-medium">–</dd>
+							<dd class="text-body-strong">–</dd>
 						{/each}
 					</div>
 				</dl>

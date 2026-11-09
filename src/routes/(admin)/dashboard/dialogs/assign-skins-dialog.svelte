@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { SvelteSet } from "svelte/reactivity";
 	import Icon from "$comp/icon.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
+	import SearchToolbar from "$comp/search-toolbar.svelte";
 	import Button from "$comp/ui/button/button.svelte";
+	import { Badge } from "$comp/ui/badge";
 	import * as Dialog from "$comp/ui/dialog";
 	import * as Tooltip from "$comp/ui/tooltip";
 	import type { Id } from "$convex/_generated/dataModel";
@@ -72,7 +73,7 @@
 			<Dialog.Title>Assign skins to {playerName || "player"}</Dialog.Title>
 		</Dialog.Header>
 
-		<SearchSorted list={skins} placeholder="Search skins by name..." />
+		<SearchToolbar list={skins} placeholder="Search skins by name..." />
 
 		<div class="flex gap-2">
 			{@render chip("Hide assigned", hideAssigned, () => (hideAssigned = !hideAssigned))}
@@ -82,7 +83,7 @@
 		<Tooltip.Provider delayDuration={150}>
 			<div class="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 py-1">
 				{#if visibleSkins.length === 0}
-					<p class="py-10 text-center text-muted-foreground">No skins match.</p>
+					<p class="py-10 text-center text-body text-text-muted">No skins match.</p>
 				{:else}
 					<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
 						{#each visibleSkins as skin (skin._id)}
@@ -90,14 +91,14 @@
 							{@const isSelected = selected.has(skin._id)}
 							<div
 								class={cn(
-									"relative overflow-hidden rounded-md bg-layer-2 transition",
-									isSelected && "ring-2 ring-primary",
-									!isAssigned && !isSelected && "hover:ring hover:ring-primary/60"
+									"relative overflow-hidden rounded-md bg-layer-2 transition-colors duration-fast",
+									isSelected && "bg-layer-3 ring-2 ring-accent-color",
+									!isAssigned && !isSelected && "hover:bg-layer-3"
 								)}
 							>
 								<button
 									type="button"
-									class="flex w-full flex-col text-left disabled:cursor-not-allowed"
+									class="flex w-full flex-col text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-color disabled:cursor-not-allowed"
 									disabled={isAssigned}
 									aria-pressed={isSelected}
 									onclick={() => toggle(skin._id)}
@@ -107,45 +108,43 @@
 										alt=""
 										class={cn("aspect-video w-full object-cover", isAssigned && "opacity-40")}
 									/>
-									<p class={cn("truncate p-1.5 text-xs", isAssigned && "opacity-50")}>
+									<p class={cn("truncate p-2 text-caption", isAssigned && "opacity-50")}>
 										{skin.name}
 									</p>
 								</button>
 
 								<span
 									class={cn(
-										"pointer-events-none absolute top-1.5 left-1.5 grid size-4 place-items-center rounded border border-white/60 bg-black/50",
-										isSelected && "border-primary bg-primary text-primary-foreground"
+										"pointer-events-none absolute top-2 left-2 grid size-4 place-items-center rounded-sm border border-text/60 bg-overlay",
+										isSelected && "border-accent-color bg-accent-color text-on-accent"
 									)}
 								>
 									{#if isSelected}<Icon name="check" class="size-3" />{/if}
 								</span>
 
 								{#if isAssigned}
-									<span
-										class="pointer-events-none absolute bottom-8 left-1.5 rounded bg-black/70 px-1 text-[10px]"
+									<Badge variant="image" class="pointer-events-none absolute bottom-10 left-2"
+										>Assigned</Badge
 									>
-										Assigned
-									</span>
 								{/if}
 
 								<Tooltip.Root>
 									<Tooltip.Trigger
 										type="button"
-										class="absolute top-1.5 right-1.5 grid size-5 place-items-center rounded-full bg-black/50 hover:bg-white hover:text-black"
+										class="absolute top-2 right-2 grid size-6 place-items-center rounded-full bg-overlay text-text transition-colors duration-fast hover:bg-layer-4 focus-visible:outline-2 focus-visible:outline-accent-color"
 									>
-										<Icon name="info" class="size-3.5" />
+										<Icon name="info" class="size-4" />
 									</Tooltip.Trigger>
 									<Tooltip.Content
 										side="right"
-										class="grid w-56 grid-cols-2 items-start gap-x-2 gap-y-1 bg-popover p-2 text-popover-foreground ring-1 ring-foreground/10"
-										arrowClasses="bg-popover fill-popover"
+										class="grid w-56 grid-cols-2 items-start gap-x-2 gap-y-1 bg-layer-2 p-2 text-caption text-text shadow-float"
+										arrowClasses="bg-layer-2 fill-layer-2"
 									>
-										<p class="col-span-2 text-center font-medium">{skin.name}</p>
+										<p class="col-span-2 text-center text-label">{skin.name}</p>
 										{@render infoRow("Author", skin.author ?? "Unknown")}
 										{@render infoRow("Players", String(skin.players.length))}
 										{#if skin.players.length > 0}
-											<p class="col-span-2 text-center text-muted-foreground">
+											<p class="col-span-2 text-center text-text-muted">
 												{skin.players
 													.slice(0, 3)
 													.map((p) => p.name)
@@ -164,7 +163,7 @@
 		</Tooltip.Provider>
 
 		<Dialog.Footer class="flex-row items-center justify-between sm:justify-between">
-			<span class="text-xs text-muted-foreground">
+			<span class="text-caption text-text-muted">
 				{selected.size} selected
 				{#if selected.size > 0}
 					· <button type="button" class="underline" onclick={() => selected.clear()}>clear</button>
@@ -191,10 +190,10 @@
 		aria-pressed={active}
 		{onclick}
 		class={cn(
-			"rounded-full border px-3 py-0.5 text-xs transition",
+			"flex h-11 items-center rounded-md px-2 text-caption transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-accent-color min-[900px]:h-7",
 			active
-				? "border-primary/60 bg-primary/20 text-foreground"
-				: "border-border text-muted-foreground hover:text-foreground"
+				? "bg-layer-3 text-text"
+				: "bg-layer-2 text-text-muted hover:bg-layer-3 hover:text-text"
 		)}
 	>
 		{label}
@@ -202,6 +201,6 @@
 {/snippet}
 
 {#snippet infoRow(label: string, value: string)}
-	<span class="text-right text-muted-foreground">{label}</span>
+	<span class="text-right text-text-muted">{label}</span>
 	<span class="truncate text-left">{value}</span>
 {/snippet}

@@ -2,11 +2,13 @@
 	import { getContext } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { goto, invalidate } from "$app/navigation";
+	import EmptyState from "$comp/empty-state.svelte";
 	import Icon from "$comp/icon.svelte";
+	import TagChip from "$comp/tag-chip.svelte";
+	import Button from "$comp/ui/button/button.svelte";
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { request } from "$lib/api";
-	import { osuAvatar } from "$lib/osu";
 	import type { SkinWithPlayers } from "$lib/types";
 	import AssignPlayersDialog from "../../dialogs/assign-players-dialog.svelte";
 	import DeleteDialog from "../../dialogs/delete-dialog.svelte";
@@ -63,7 +65,7 @@
 		await Promise.all([invalidate("app:skins"), invalidate("app:players")]);
 	}
 
-	const field = "h-11 min-[900px]:h-9";
+	const field = "h-11 bg-layer-2 min-[900px]:h-9";
 </script>
 
 <EditorFrame
@@ -72,7 +74,7 @@
 	menu={[{ label: "Delete…", onSelect: () => (deleteOpen = true), destructive: true }]}
 >
 	{#snippet avatar()}
-		<div class="h-10 w-16 overflow-hidden rounded-lg bg-layer-3">
+		<div class="h-10 w-16 overflow-hidden rounded-md bg-layer-3">
 			{#if skin.preview_images[0]}
 				<img src={skin.preview_images[0]} alt="" class="size-full object-cover" />
 			{/if}
@@ -81,17 +83,17 @@
 
 	<div class="form-grid">
 		<div class="flex flex-col gap-2">
-			<label for="skin-name" class="text-sm">Name</label>
+			<label for="skin-name" class="text-label">Name</label>
 			<Input id="skin-name" class={field} bind:value={draft.skin.name} />
 		</div>
 
 		<div class="flex flex-col gap-2">
-			<label for="skin-author" class="text-sm">Author</label>
+			<label for="skin-author" class="text-label">Author</label>
 			<Input id="skin-author" class={field} bind:value={draft.skin.author} />
 		</div>
 
 		<div class="full flex flex-col gap-2">
-			<label for="skin-url" class="text-sm">Download link</label>
+			<label for="skin-url" class="text-label">Download link</label>
 			<Input
 				id="skin-url"
 				type="url"
@@ -100,7 +102,7 @@
 				bind:value={draft.skin.download_url}
 			/>
 			{#if !urlValid}
-				<p class="text-xs text-error">Enter a valid URL.</p>
+				<p class="text-caption text-error">Enter a valid URL.</p>
 			{/if}
 		</div>
 
@@ -114,7 +116,7 @@
 
 		<section class="full flex flex-col gap-4" aria-label="Used by">
 			<div class="flex items-center justify-between gap-3">
-				<span class="text-sm">Used by · {assigned.length}</span>
+				<span class="text-label">Used by · {assigned.length}</span>
 				<!-- Always mounted here (never moved), so it can't unmount while open. -->
 				<AssignPlayersDialog
 					bind:open={assignOpen}
@@ -126,47 +128,43 @@
 			</div>
 
 			{#if assigned.length === 0}
-				<div class="flex flex-col gap-4 rounded-xl bg-layer-2 p-4">
-					<p class="text-sm text-text-muted">
-						Nobody uses this skin. Assign it to a player, or delete it to free up space.
-					</p>
-					<div class="flex flex-wrap gap-3">
-						<button
-							type="button"
-							class="flex h-11 items-center gap-2 rounded-lg bg-layer-3 px-3 text-sm hover:bg-layer-4 min-[900px]:h-8"
-							onclick={() => (assignOpen = true)}
-						>
-							<Icon name="user-plus" class="size-4" />
-							Assign
-						</button>
-						<button
-							type="button"
-							class="flex h-11 items-center gap-2 rounded-lg px-3 text-sm text-error hover:bg-layer-3 min-[900px]:h-8"
-							onclick={() => (deleteOpen = true)}
-						>
-							<Icon name="trash" class="size-4" />
-							Delete
-						</button>
-					</div>
-				</div>
-			{:else}
-				<ul class="flex flex-wrap gap-3">
-					{#each assigned as player (player._id)}
-						<li class="flex h-11 items-center gap-2 rounded-full bg-layer-2 pl-2 min-[900px]:h-9">
-							<img
-								src={osuAvatar(player.osu_id)}
-								alt=""
-								class="size-6 rounded-full bg-layer-3 object-cover"
-							/>
-							<span class="text-sm">{player.name}</span>
-							<button
-								type="button"
-								class="flex size-11 items-center justify-center rounded-full text-text-muted hover:bg-layer-3 hover:text-text min-[900px]:size-9"
-								aria-label="Unassign {player.name}"
-								onclick={() => removePlayer(player._id)}
+				<EmptyState
+					icon="users"
+					title="Nobody uses this skin"
+					text="Assign it to a player, or delete it to free up space."
+				>
+					{#snippet action()}
+						<div class="flex flex-wrap justify-center gap-3">
+							<Button
+								variant="secondary"
+								class="bg-layer-3 hover:bg-layer-4"
+								onclick={() => (assignOpen = true)}
 							>
-								<Icon name="x" class="size-4" />
-							</button>
+								<Icon name="user-plus" />
+								Assign
+							</Button>
+							<Button
+								variant="ghost"
+								class="text-error hover:bg-layer-3 hover:text-error"
+								onclick={() => (deleteOpen = true)}
+							>
+								<Icon name="trash" />
+								Delete
+							</Button>
+						</div>
+					{/snippet}
+				</EmptyState>
+			{:else}
+				<!-- The x buttons are 44px tall inside 28px chips on phones: the row gap keeps them apart. -->
+				<ul class="flex flex-wrap gap-x-2 gap-y-4 min-[900px]:gap-y-2">
+					{#each assigned as player (player._id)}
+						<li>
+							<TagChip
+								onremove={() => removePlayer(player._id)}
+								removeLabel="Unassign {player.name}"
+							>
+								{player.name}
+							</TagChip>
 						</li>
 					{/each}
 				</ul>

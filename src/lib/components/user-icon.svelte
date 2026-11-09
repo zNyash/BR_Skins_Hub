@@ -29,7 +29,7 @@
 	{#if user}
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger
-				class="group/avatar flex items-center justify-center rounded-md p-1 hover:bg-popover"
+				class="group/avatar flex items-center justify-center rounded-md p-1 hover:bg-layer-2"
 			>
 				<Avatar.Root class="group-hover/avatar:brightness-110">
 					<Avatar.Image src={osuAvatar(user.osu_id)} alt={user.username} />

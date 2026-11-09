@@ -11,26 +11,24 @@
 
 <nav
 	class="flex h-11 w-full items-center justify-center transition-all duration-300 {isFloating
-		? 'max-w-5xl rounded-b-md bg-card/75 backdrop-blur-md'
-		: 'max-w-[100vw] bg-card'}"
+		? 'max-w-5xl rounded-b-md bg-surface/75 backdrop-blur-md'
+		: 'max-w-[100vw] bg-surface'}"
 >
-	<div
-		class="flex w-full max-w-5xl items-center justify-between px-2 py-1 transition-all duration-300"
-	>
+	<div class="flex w-full max-w-5xl items-center justify-between px-2 transition-all duration-300">
 		<div class="invisible">
 			<UserIcon />
 		</div>
 		<div class="flex">
-			<Button variant="navigation" href="/">
+			<Button variant="ghost" href="/">
 				<Icon name="user-round" />
 				Players
 			</Button>
-			<Button variant="navigation" href="/skins">
+			<Button variant="ghost" href="/skins">
 				<Icon name="brush" />
 				Skins
 			</Button>
 			{#if user?.isAdmin}
-				<Button variant="navigation" href="/dashboard">
+				<Button variant="ghost" href="/dashboard">
 					<Icon name="layout-dashboard" />
 					Dashboard
 				</Button>

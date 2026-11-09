@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
+	import Card from "$comp/card.svelte";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import { Textarea } from "$comp/ui/textarea";
@@ -49,22 +50,19 @@
 
 <aside aria-label="Player" class="flex max-w-80 shrink-0 grow basis-64 flex-col gap-4 pt-4">
 	{#if player.bio || hasDescription(player.description) || isOwner}
-		<section aria-labelledby="bio-heading" class="flex flex-col gap-2 rounded-xl bg-card px-4 py-3">
-			<div class="flex min-h-8 items-center justify-between">
-				<h2 id="bio-heading" class="text-xs font-semibold tracking-wider text-text-muted uppercase">
-					Bio
-				</h2>
+		<Card title="Bio" level={2}>
+			{#snippet trailing()}
 				{#if isOwner && !editing && player.bio}
 					<Button variant="ghost" size="icon-sm" aria-label="Edit bio" onclick={startEditing}>
 						<Icon name="pencil" />
 					</Button>
 				{/if}
-			</div>
+			{/snippet}
 
 			{#if editing}
-				<Textarea aria-label="Bio" rows={4} bind:value={draft} />
+				<Textarea aria-label="Bio" rows={4} class="bg-layer-2" bind:value={draft} />
 				<div class="flex items-center gap-2">
-					<span class="text-xs {length > BIO_MAX ? 'text-destructive' : 'text-text-muted'}">
+					<span class="text-caption {length > BIO_MAX ? 'text-error' : 'text-text-muted'}">
 						{length}/{BIO_MAX}
 					</span>
 					<Button variant="secondary" size="sm" class="ml-auto" onclick={() => (editing = false)}>
@@ -76,11 +74,11 @@
 					</Button>
 				</div>
 			{:else if player.bio}
-				<p class="text-sm leading-relaxed whitespace-pre-line">{player.bio}</p>
+				<p class="text-body whitespace-pre-line">{player.bio}</p>
 			{:else if isOwner}
 				<button
 					type="button"
-					class="w-fit text-sm text-text-muted hover:text-foreground"
+					class="w-fit text-body text-text-muted hover:text-text"
 					onclick={startEditing}
 				>
 					Add a short bio
@@ -90,17 +88,17 @@
 			{#if !editing && hasDescription(player.description)}
 				<button
 					type="button"
-					class="w-fit text-sm font-medium text-primary hover:underline"
+					class="w-fit text-body-strong text-accent-color hover:underline"
 					onclick={onReadMore}
 				>
 					Read more
 				</button>
 			{/if}
-		</section>
+		</Card>
 	{/if}
 
 	{#if links.length > 0}
-		<ul aria-label="Links" class="flex flex-wrap gap-1.5">
+		<ul aria-label="Links" class="flex flex-wrap gap-2">
 			{#each links as link, i (i)}
 				<li><LinkButton type={link.type} value={link.value} /></li>
 			{/each}

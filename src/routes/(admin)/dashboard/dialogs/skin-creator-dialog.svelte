@@ -69,21 +69,21 @@
 		</Dialog.Header>
 
 		<form id="skin-creator-form" class="flex flex-col gap-3" onsubmit={handleSubmit}>
-			<div class="grid grid-cols-2 gap-2">
-				<div class="flex flex-col gap-1">
-					<label for="create_skin_name" class="text-sm">Name</label>
+			<div class="grid grid-cols-2 gap-3">
+				<div class="flex flex-col gap-2">
+					<label for="create_skin_name" class="text-label">Name</label>
 					<Input id="create_skin_name" autocomplete="off" bind:value={form.name} />
 				</div>
-				<div class="flex flex-col gap-1">
-					<label for="create_skin_author" class="text-sm">
-						Author <span class="text-xs text-muted-foreground">(optional)</span>
+				<div class="flex flex-col gap-2">
+					<label for="create_skin_author" class="text-label">
+						Author <span class="text-caption text-text-muted">(optional)</span>
 					</label>
 					<Input id="create_skin_author" autocomplete="off" bind:value={form.author} />
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-1">
-				<label for="create_skin_url" class="text-sm">Download URL</label>
+			<div class="flex flex-col gap-2">
+				<label for="create_skin_url" class="text-label">Download URL</label>
 				<Input
 					id="create_skin_url"
 					placeholder="https://..."
@@ -91,7 +91,7 @@
 					bind:value={form.download_url}
 				/>
 				{#if form.download_url && !urlValid}
-					<p class="text-xs text-muted-foreground">That doesn't look like a valid URL.</p>
+					<p class="text-caption text-text-muted">That doesn't look like a valid URL.</p>
 				{/if}
 			</div>
 		</form>

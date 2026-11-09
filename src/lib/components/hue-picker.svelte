@@ -32,7 +32,7 @@
 	}
 </script>
 
-<span class="text-sm">{label}</span>
+<span class="text-label">{label}</span>
 <div role="radiogroup" aria-label={label} class="flex flex-wrap gap-2">
 	{#each SWATCHES as hue (hue)}
 		<button
@@ -42,7 +42,7 @@
 			aria-label="Hue {hue}"
 			class={cn(
 				"size-11 rounded-full transition-shadow min-[900px]:size-8",
-				value === hue && "shadow-[0_0_0_2px_var(--card),0_0_0_4px_var(--text)]"
+				value === hue && "shadow-[0_0_0_2px_var(--layer-1),0_0_0_4px_var(--text)]"
 			)}
 			style:background="oklch(70% 0.15 {hue})"
 			onclick={() => onPick(hue)}
@@ -57,7 +57,7 @@
 		step="1"
 		aria-label="Hue"
 		{value}
-		class="h-3 min-w-0 flex-1 cursor-pointer appearance-none rounded-full accent-foreground"
+		class="h-3 min-w-0 flex-1 cursor-pointer appearance-none rounded-full accent-accent-color"
 		style:background={TRACK}
 		oninput={(e) => onPreview?.(Number(e.currentTarget.value))}
 		onchange={(e) => (onSlide ?? onPick)(Number(e.currentTarget.value))}

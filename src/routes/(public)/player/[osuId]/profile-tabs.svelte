@@ -3,7 +3,8 @@
 	import { toast } from "svelte-sonner";
 	import { page } from "$app/state";
 	import Icon from "$comp/icon.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
+	import * as Tabs from "$comp/ui/tabs";
+	import SearchToolbar from "$comp/search-toolbar.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
 	import { PLAYER_SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import {
@@ -72,14 +73,6 @@
 		saveOrder();
 	}
 
-	const tabClass = (tab: TabId) =>
-		cn(
-			"flex min-h-11 items-center gap-1.5 px-4 font-semibold transition-colors",
-			tab === active
-				? "text-foreground shadow-[inset_0_-2px_0_var(--accent-color)]"
-				: "text-text-muted hover:text-foreground"
-		);
-
 	async function saveOrder() {
 		try {
 			// Reloading keeps `player.tab_order` current, so a later failed save reverts to what's stored.
@@ -100,72 +93,64 @@
 	);
 </script>
 
-<section aria-label="Profile content" class="flex min-w-0 flex-[999_1_560px] flex-col gap-5 pt-4">
-	<div role="tablist" aria-label="Profile sections" class="flex items-end border-b border-layer-2">
-		<div
-			class="flex flex-wrap gap-1"
-			use:sortable={{ onMove: moveTab, onDrop: saveOrder, disabled: !isOwner }}
+<section aria-label="Profile content" class="flex min-w-0 flex-[999_1_560px] flex-col gap-4 pt-4">
+	<!-- The URL is the only source of truth: a click asks openTab to change ?tab=, and the bar
+	     follows `active`, so a cancelled navigation (unsaved changes) leaves it where it was. -->
+	<Tabs.Root bind:value={() => active, (tab) => openTab(tab as TabId)} activationMode="manual">
+		<Tabs.List
+			variant="line"
+			aria-label="Profile sections"
+			class="w-full justify-start border-b border-layer-2"
 		>
-			{#each visible as tab (tab)}
-				<div
-					data-sortable-item
-					animate:flip={{ duration: 150 }}
-					class={cn("flex items-center", SORTABLE_GHOST_CLASS)}
-				>
-					<button
-						type="button"
-						role="tab"
-						aria-selected={tab === active}
-						data-sortable-handle={isOwner || undefined}
-						title={isOwner ? "Drag to reorder" : undefined}
-						class={cn(tabClass(tab), isOwner && "cursor-grab touch-manipulation")}
-						onclick={() => openTab(tab)}
-					>
-						{LABELS[tab]}
-						{#if tab === "skins"}
-							<span class="font-medium text-text-muted">{player.skins.length - hiddenCount}</span>
-						{/if}
-					</button>
-				</div>
-			{/each}
-		</div>
-		{#if isOwner}
-			<button
-				type="button"
-				role="tab"
-				aria-selected={active === "settings"}
-				title="Only you can see this tab"
-				class={cn(tabClass("settings"), "ml-auto")}
-				onclick={() => openTab("settings")}
+			<div
+				class="flex flex-wrap gap-4"
+				use:sortable={{ onMove: moveTab, onDrop: saveOrder, disabled: !isOwner }}
 			>
-				<Icon name="settings" class="size-4" />
-				Settings
-			</button>
-		{/if}
-	</div>
+				{#each visible as tab (tab)}
+					<div data-sortable-item animate:flip={{ duration: 150 }} class={SORTABLE_GHOST_CLASS}>
+						<Tabs.Trigger
+							value={tab}
+							data-sortable-handle={isOwner || undefined}
+							title={isOwner ? "Drag to reorder" : undefined}
+							class={cn(isOwner && "cursor-grab touch-manipulation")}
+						>
+							{LABELS[tab]}
+							{#if tab === "skins"}
+								<span class="text-caption text-text-muted">{player.skins.length - hiddenCount}</span
+								>
+							{/if}
+						</Tabs.Trigger>
+					</div>
+				{/each}
+			</div>
+			{#if isOwner}
+				<Tabs.Trigger value="settings" title="Only you can see this tab" class="ml-auto flex-none">
+					<Icon name="settings" />
+					Settings
+				</Tabs.Trigger>
+			{/if}
+		</Tabs.List>
+	</Tabs.Root>
 
 	{#if active === "skins"}
 		<div role="tabpanel" class="flex flex-col gap-4">
-			<div class="flex w-full items-center justify-between gap-3">
-				<SearchSorted list={skins} placeholder="Search skins by name..." />
-				<div class="flex flex-col items-end gap-0.5">
-					<p class="text-xs">
-						Loaded {skins.results.length}
-						{skins.results.length === 1 ? "skin" : "skins"}
-					</p>
-					{#if hiddenCount > 0}
-						<button
-							type="button"
-							class="flex items-center gap-1 text-xs text-text-muted hover:text-foreground"
-							aria-pressed={showHidden}
-							onclick={() => (showHidden = !showHidden)}
-						>
-							<Icon name={showHidden ? "eye-off" : "eye"} class="size-3.5" />
-							{showHidden ? "Hide hidden skins" : `Show hidden skins (${hiddenCount})`}
-						</button>
-					{/if}
-				</div>
-			</div>
+			<SearchToolbar
+				list={skins}
+				placeholder="Search skins by name..."
+				total={showHidden ? player.skins.length : player.skins.length - hiddenCount}
+			>
+				{#if hiddenCount > 0}
+					<button
+						type="button"
+						class="flex w-fit items-center gap-1 text-caption text-text-muted transition-colors duration-fast hover:text-text"
+						aria-pressed={showHidden}
+						onclick={() => (showHidden = !showHidden)}
+					>
+						<Icon name={showHidden ? "eye-off" : "eye"} class="size-3" />
+						{showHidden ? "Hide hidden skins" : `Show hidden skins (${hiddenCount})`}
+					</button>
+				{/if}
+			</SearchToolbar>
 			<div class="common-grid">
 				{#each skins.results as skin (skin._id)}
 					<SkinCard {skin} hidden={skin.hidden} />

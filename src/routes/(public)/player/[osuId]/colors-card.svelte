@@ -4,7 +4,7 @@
 	import { huePreview } from "$lib/hue-preview.svelte";
 	import type { PlayerWithSkins } from "$lib/types";
 	import { errorMessage, saveProfile } from "./save-profile";
-	import SettingsCard from "./settings-card.svelte";
+	import Card from "$comp/card.svelte";
 
 	let { player }: { player: PlayerWithSkins } = $props();
 
@@ -35,14 +35,14 @@
 	}
 </script>
 
-<SettingsCard title="Colors">
+<Card title="Colors" level={2}>
 	<HuePicker
 		value={shown}
 		onPreview={(hue) => (huePreview.value = hue)}
 		onPick={save}
 		onSlide={saveSoon}
 	/>
-	<p class="text-xs text-text-muted">
+	<p class="text-caption text-text-muted">
 		Saved as soon as you pick one. Visitors see your page in this color.
 	</p>
-</SettingsCard>
+</Card>

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { getContext } from "svelte";
 	import { page } from "$app/state";
+	import EmptyState from "$comp/empty-state.svelte";
+	import Button from "$comp/ui/button/button.svelte";
 	import type { SkinsContext } from "../+layout.svelte";
 	import SkinForm from "./skin-form.svelte";
 
@@ -18,12 +20,11 @@
 		<SkinForm {skin} players={data.players} skins={data.skins} />
 	{/key}
 {:else}
-	<div
-		class="flex h-full flex-col items-center justify-center gap-4 rounded-2xl bg-layer-1 p-4 text-center"
-	>
-		<p class="text-text-muted">This skin doesn't exist anymore.</p>
-		<!-- listHref() is resolve() plus ?filter. -->
-		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-		<a href={ctx.listHref()} class="text-accent-color hover:underline">Back to skins</a>
+	<div class="flex h-full items-center justify-center rounded-xl bg-layer-1">
+		<EmptyState icon="search-x" title="This skin doesn't exist anymore">
+			{#snippet action()}
+				<Button variant="link" href={ctx.listHref()}>Back to skins</Button>
+			{/snippet}
+		</EmptyState>
 	</div>
 {/if}

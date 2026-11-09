@@ -17,7 +17,7 @@
 		onComplete,
 		class: className,
 		children,
-		fillColor = "bg-black/10",
+		fillColor = "bg-overlay",
 		from = "bottom",
 		...rest
 	}: ButtonProps & {

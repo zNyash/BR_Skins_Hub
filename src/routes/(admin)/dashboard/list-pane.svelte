@@ -70,14 +70,14 @@
 		{@render list()}
 	</div>
 	{#if !ctx.isDesktop && hasItem}
-		<div class="fixed inset-0 z-30 bg-surface/60" aria-hidden="true"></div>
+		<div class="fixed inset-0 z-30 bg-overlay" aria-hidden="true"></div>
 	{/if}
 	<!-- On the phone with nothing open the editor (the "Select a …" page) stays mounted but hidden. -->
 	<div
 		class={ctx.isDesktop
 			? "relative min-w-[440px] p-4"
 			: [
-					"fixed inset-x-0 top-24 bottom-0 z-30 flex-col rounded-t-2xl bg-layer-1 shadow-lg",
+					"fixed inset-x-0 top-24 bottom-0 z-30 flex-col rounded-t-xl bg-layer-1 shadow-float",
 					hasItem ? "flex" : "hidden",
 					swipePointer === -1 && "transition-transform"
 				]}

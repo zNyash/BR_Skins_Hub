@@ -31,6 +31,6 @@
 		{@html `<style>html:root{--hue:${hue}}</style>`}
 	{/if}
 </svelte:head>
-<Toaster />
+<Toaster toastOptions={{ class: "shadow-float!" }} />
 <ConfirmDialog />
 {@render children()}

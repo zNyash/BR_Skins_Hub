@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { flip } from "svelte/animate";
 	import Icon from "$comp/icon.svelte";
+	import { Badge } from "$comp/ui/badge";
+	import Button from "$comp/ui/button/button.svelte";
 	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import { cn } from "$lib/utils";
 	import type { ImageItem } from "../../skin-images";
@@ -47,7 +49,7 @@
 	}
 
 	const iconButton =
-		"flex size-11 shrink-0 items-center justify-center rounded-lg min-[900px]:size-8";
+		"flex size-11 shrink-0 items-center justify-center rounded-md transition-colors duration-fast min-[900px]:size-8";
 </script>
 
 <svelte:window
@@ -60,7 +62,7 @@
 {#if isFileDragOver}
 	<div class="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-surface/80 p-8">
 		<div
-			class="flex size-full flex-col items-center justify-center gap-3 rounded-2xl text-lg outline-2 outline-accent-color outline-dashed"
+			class="flex size-full flex-col items-center justify-center gap-3 rounded-xl text-section-title outline-2 outline-accent-color outline-dashed"
 		>
 			<Icon name="image-up" class="size-10 text-accent-color" />
 			Drop images to add them to {skinName || "this skin"}
@@ -71,19 +73,15 @@
 <section class="flex flex-col gap-4" aria-label="Images">
 	<div class="flex items-center justify-between gap-3">
 		<div class="flex min-w-0 flex-col gap-1">
-			<span class="text-sm leading-tight">Images · {images.length}</span>
-			<span class="text-xs leading-tight text-text-muted">
+			<span class="text-label">Images · {images.length}</span>
+			<span class="text-caption text-text-muted">
 				Drag to reorder · first is the thumbnail · drop files anywhere to add
 			</span>
 		</div>
-		<button
-			type="button"
-			class="flex h-11 shrink-0 items-center gap-2 rounded-lg bg-layer-2 px-3 text-sm hover:bg-layer-3 min-[900px]:h-8"
-			onclick={() => fileInput?.click()}
-		>
+		<Button variant="secondary" class="min-[900px]:h-8" onclick={() => fileInput?.click()}>
 			<Icon name="image-up" class="size-4" />
 			Add images
-		</button>
+		</Button>
 		<input
 			bind:this={fileInput}
 			type="file"
@@ -98,7 +96,7 @@
 	</div>
 
 	{#if images.length === 0}
-		<p class="rounded-xl bg-layer-2 p-4 text-center text-sm text-text-muted">No images yet.</p>
+		<p class="rounded-md bg-layer-2 p-4 text-center text-body text-text-muted">No images yet.</p>
 	{/if}
 	<div
 		class="images-grid grid gap-4"
@@ -109,7 +107,7 @@
 				data-sortable-item
 				animate:flip={{ duration: 150 }}
 				class={cn(
-					"group relative aspect-video cursor-grab touch-manipulation overflow-hidden rounded-xl bg-layer-2 select-none",
+					"group relative aspect-video cursor-grab touch-manipulation overflow-hidden rounded-md bg-layer-2 select-none",
 					SORTABLE_GHOST_CLASS,
 					item.kind === "file" && "outline-2 outline-offset-2 outline-accent-color outline-dashed"
 				)}
@@ -121,16 +119,10 @@
 					class="pointer-events-none size-full object-cover"
 				/>
 				{#if i === 0}
-					<span
-						class="absolute top-2 left-2 rounded-md bg-accent-color px-2 text-xs font-medium text-on-accent"
-					>
-						Thumbnail
-					</span>
+					<Badge class="absolute top-2 left-2 rounded-sm">Thumbnail</Badge>
 				{/if}
 				{#if item.kind === "file"}
-					<span class="absolute bottom-2 left-2 rounded-md bg-surface/80 px-2 text-xs">
-						not uploaded
-					</span>
+					<Badge variant="image" class="absolute bottom-2 left-2">not uploaded</Badge>
 				{/if}
 				<button
 					type="button"

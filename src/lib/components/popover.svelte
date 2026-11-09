@@ -147,7 +147,7 @@
 	popover="manual"
 	role={pin ? "dialog" : "tooltip"}
 	class={cn(
-		"fixed inset-auto m-0 rounded-lg bg-layer-2 text-foreground outline outline-border",
+		"fixed inset-auto m-0 rounded-md bg-layer-2 text-text shadow-float",
 		className,
 		// A display class passed in (e.g. `flex`) would otherwise beat the browser's hiding of a
 		// closed popover and leave its empty box on the page.

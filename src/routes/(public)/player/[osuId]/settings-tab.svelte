@@ -20,7 +20,7 @@
 </script>
 
 <div role="tabpanel" class="flex flex-col gap-3">
-	<p class="text-sm text-text-muted">Only you can see this tab.</p>
+	<p class="text-body text-text-muted">Only you can see this tab.</p>
 	<!-- Fixed layout: Colors, Links / Tab order, Preferences. One column on narrow screens. -->
 	<div class="grid grid-cols-1 items-stretch gap-4 min-[760px]:grid-cols-2">
 		<ColorsCard {player} />

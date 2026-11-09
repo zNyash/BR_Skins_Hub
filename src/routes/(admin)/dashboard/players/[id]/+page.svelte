@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { getContext } from "svelte";
 	import { page } from "$app/state";
+	import EmptyState from "$comp/empty-state.svelte";
+	import Button from "$comp/ui/button/button.svelte";
 	import type { PlayersContext } from "../+layout.svelte";
 	import PlayerForm from "./player-form.svelte";
 
@@ -18,12 +20,11 @@
 		<PlayerForm {player} players={data.players} skins={data.skins} />
 	{/key}
 {:else}
-	<div
-		class="flex h-full flex-col items-center justify-center gap-4 rounded-2xl bg-layer-1 p-4 text-center"
-	>
-		<p class="text-text-muted">This player doesn't exist anymore.</p>
-		<!-- listHref() is resolve() plus ?filter. -->
-		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-		<a href={ctx.listHref()} class="text-accent-color hover:underline">Back to players</a>
+	<div class="flex h-full items-center justify-center rounded-xl bg-layer-1">
+		<EmptyState icon="search-x" title="This player doesn't exist anymore">
+			{#snippet action()}
+				<Button variant="link" href={ctx.listHref()}>Back to players</Button>
+			{/snippet}
+		</EmptyState>
 	</div>
 {/if}
