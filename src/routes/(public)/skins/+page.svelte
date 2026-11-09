@@ -17,10 +17,7 @@
 <PageHeading title="Skins Listing" />
 <main class="main">
 	<section class="section">
-		<div class="flex w-full items-center justify-between">
-			<SearchToolbar list={skins} placeholder="Search skins by name..." />
-			<p class="text-xs">Loaded {data.skins.length} skins</p>
-		</div>
+		<SearchToolbar list={skins} placeholder="Search skins by name..." total={data.skins.length} />
 		<div class="common-grid">
 			{#each skins.results as skin (skin._id)}
 				<SkinCard {skin} />
