@@ -11,8 +11,8 @@
 
 <nav
 	class="flex h-11 w-full items-center justify-center transition-all duration-300 {isFloating
-		? 'max-w-5xl rounded-b-md bg-card/75 backdrop-blur-md'
-		: 'max-w-[100vw] bg-card'}"
+		? 'max-w-5xl rounded-b-md bg-surface/75 backdrop-blur-md'
+		: 'max-w-[100vw] bg-surface'}"
 >
 	<div
 		class="flex w-full max-w-5xl items-center justify-between px-2 py-1 transition-all duration-300"

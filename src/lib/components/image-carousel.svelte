@@ -62,10 +62,10 @@
 					onclick={() => (currentIndex = i)}
 				>
 					<div
-						class="flex h-0.5 w-full items-end justify-center bg-background duration-100 group-hover/indicator:h-3 group-hover/indicator:bg-popover/50"
+						class="flex h-0.5 w-full items-end justify-center bg-surface duration-100 group-hover/indicator:h-3 group-hover/indicator:bg-overlay"
 					>
 						<div
-							class={`h-0.5 rounded-full transition-discrete duration-300 ${i === currentIndex ? "w-full bg-primary" : "w-1"}`}
+							class={`h-0.5 rounded-full transition-discrete duration-300 ${i === currentIndex ? "w-full bg-accent-color" : "w-1"}`}
 						></div>
 					</div>
 				</button>

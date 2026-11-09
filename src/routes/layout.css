@@ -248,8 +248,8 @@
 }
 
 ::selection {
-	background-color: var(--color-primary);
-	color: var(--color-primary-foreground);
+	background-color: var(--accent-color);
+	color: var(--on-accent-color);
 }
 
 @utility shape-squircle {
