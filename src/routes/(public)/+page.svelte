@@ -25,7 +25,10 @@
 		/>
 		<div class="common-grid">
 			{#each players.results as player (player._id)}
-				<ListRow href={resolve(`/(public)/player/[osuId]`, { osuId: String(player.osu_id) })}>
+				<ListRow
+					href={resolve(`/(public)/player/[osuId]`, { osuId: String(player.osu_id) })}
+					backgroundImage={player.cover_url}
+				>
 					{#snippet leading()}
 						<Avatar size={40} osuId={player.osu_id} />
 					{/snippet}

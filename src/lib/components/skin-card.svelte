@@ -17,7 +17,7 @@
 </script>
 
 <div
-	class="relative flex flex-col items-center justify-center overflow-clip rounded-lg bg-layer-1 duration-fast hover:bg-layer-2"
+	class="relative flex flex-col items-center justify-center overflow-clip rounded-lg bg-layer-1 ring-accent-color duration-fast hover:bg-layer-2"
 >
 	<div class={cn("w-full", hidden && "brightness-60 grayscale")}>
 		<ImageCarousel {skin} />
