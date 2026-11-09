@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { flip } from "svelte/animate";
 	import Icon from "$comp/icon.svelte";
+	import { Badge } from "$comp/ui/badge";
 	import type { Id } from "$convex/_generated/dataModel";
 	import { SORTABLE_GHOST_CLASS, moveItem, sortable } from "$lib/sortable";
 	import type { SkinWithPlayers } from "$lib/types";
@@ -24,12 +25,12 @@
 
 	// Icon buttons: 44px on the phone layout, smaller next to a mouse.
 	const iconButton =
-		"flex size-11 shrink-0 items-center justify-center rounded-lg min-[900px]:size-8";
+		"flex size-11 shrink-0 items-center justify-center rounded-md transition-colors duration-fast min-[900px]:size-8";
 </script>
 
 <div class="flex flex-col gap-4">
 	<div class="flex items-center justify-between gap-3">
-		<p class="text-sm text-text-muted">
+		<p class="text-body text-text-muted">
 			{draft.skins.length === 0 ? "No skins assigned yet." : "Drag to reorder · first shows first"}
 		</p>
 		<AssignSkinsDialog
@@ -49,7 +50,7 @@
 				data-sortable-item
 				animate:flip={{ duration: 150 }}
 				class={cn(
-					"group flex cursor-grab touch-manipulation flex-col gap-3 rounded-xl bg-layer-2 p-3 select-none",
+					"group flex cursor-grab touch-manipulation flex-col gap-3 rounded-md bg-layer-2 p-3 select-none",
 					SORTABLE_GHOST_CLASS
 				)}
 			>
@@ -59,13 +60,11 @@
 						alt=""
 						draggable="false"
 						class={cn(
-							"aspect-video w-full rounded-lg bg-layer-3 object-cover",
+							"aspect-video w-full rounded-md bg-layer-3 object-cover",
 							item.hidden && "brightness-60 grayscale"
 						)}
 					/>
-					<span class="absolute top-2 left-2 rounded-md bg-surface/80 px-2 text-xs tabular-nums">
-						#{i + 1}
-					</span>
+					<Badge variant="image" class="absolute top-2 left-2 tabular-nums">#{i + 1}</Badge>
 					<button
 						type="button"
 						class={cn(
@@ -80,8 +79,8 @@
 				</div>
 				<div class="flex items-center gap-2">
 					<div class={cn("min-w-0 flex-1", item.hidden && "opacity-50")}>
-						<p class="truncate text-sm">{item.skin.name}</p>
-						<p class="truncate text-xs text-text-muted">
+						<p class="truncate text-body">{item.skin.name}</p>
+						<p class="truncate text-caption text-text-muted">
 							{item.hidden ? "hidden from profile" : `by ${item.skin.author ?? "Unknown"}`}
 						</p>
 					</div>

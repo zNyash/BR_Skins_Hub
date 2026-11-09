@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from "$comp/icon.svelte";
+	import TagChip from "$comp/tag-chip.svelte";
 	import { Input } from "$comp/ui/input";
 	import { normalizeTags } from "$lib/tags";
 
@@ -34,14 +34,15 @@
 </script>
 
 <div class="flex flex-col gap-2">
-	<label for={id} class="text-sm">
-		Tags <span class="text-xs text-muted-foreground">(search only, not shown publicly)</span>
+	<label for={id} class="text-label">
+		Tags <span class="text-caption text-text-muted">(search only, not shown publicly)</span>
 	</label>
 	<Input
 		{id}
 		list="{id}-suggestions"
 		placeholder="Type a tag and press Enter"
 		autocomplete="off"
+		class="bg-layer-2"
 		bind:value={input}
 		onkeydown={handleKeydown}
 		onblur={() => input.trim() && addTag()}
@@ -52,19 +53,10 @@
 		{/each}
 	</datalist>
 	{#if tags.length > 0}
-		<div class="flex flex-wrap gap-1">
+		<!-- The x buttons are 44px tall inside 28px chips on phones: the row gap keeps them apart. -->
+		<div class="flex flex-wrap gap-x-2 gap-y-4 min-[900px]:gap-y-2">
 			{#each tags as tag (tag)}
-				<span class="flex items-center gap-1 rounded-full bg-layer-2 py-0.5 pr-1 pl-2.5 text-xs">
-					{tag}
-					<button
-						type="button"
-						aria-label="Remove tag {tag}"
-						class="flex size-11 items-center justify-center rounded-full hover:bg-layer-3 min-[900px]:size-auto min-[900px]:p-0.5"
-						onclick={() => removeTag(tag)}
-					>
-						<Icon name="x" class="size-3" />
-					</button>
-				</span>
+				<TagChip onremove={() => removeTag(tag)} removeLabel="Remove {tag}">{tag}</TagChip>
 			{/each}
 		</div>
 	{/if}

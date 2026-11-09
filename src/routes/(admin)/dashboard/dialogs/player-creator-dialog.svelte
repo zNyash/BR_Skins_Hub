@@ -63,8 +63,8 @@
 			</Dialog.Description>
 		</Dialog.Header>
 
-		<form id="player-creator-form" class="flex flex-col gap-1" onsubmit={handleSubmit}>
-			<label for="create_osu_id" class="text-sm">osu! ID or profile link</label>
+		<form id="player-creator-form" class="flex flex-col gap-2" onsubmit={handleSubmit}>
+			<label for="create_osu_id" class="text-label">osu! ID or profile link</label>
 			<Input
 				id="create_osu_id"
 				placeholder="7562902 or osu.ppy.sh/users/7562902"
@@ -72,7 +72,7 @@
 				bind:value={input}
 			/>
 			{#if input && !osuId}
-				<p class="text-xs text-muted-foreground">
+				<p class="text-caption text-text-muted">
 					That doesn't look like an osu! ID or profile link.
 				</p>
 			{/if}

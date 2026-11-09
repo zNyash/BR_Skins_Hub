@@ -41,8 +41,7 @@
 		<Dialog.Header>
 			<Dialog.Title>Delete {kind}</Dialog.Title>
 			<Dialog.Description>
-				Type <strong class="text-foreground">{name}</strong> to delete this {kind}. This can't be
-				undone.
+				Type <strong class="text-text">{name}</strong> to delete this {kind}. This can't be undone.
 			</Dialog.Description>
 		</Dialog.Header>
 

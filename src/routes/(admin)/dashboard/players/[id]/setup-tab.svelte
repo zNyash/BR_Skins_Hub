@@ -33,17 +33,17 @@
 	{#if cards.length > 0}
 		<ul class="flex flex-col gap-2">
 			{#each cards as card (card.id)}
-				<li class="flex items-center justify-between gap-3 rounded-lg bg-layer-2 p-3 text-sm">
+				<li class="flex items-center justify-between gap-3 rounded-md bg-layer-2 p-3 text-body">
 					<span class="text-text-muted">{card.title}</span>
 					<span class="min-w-0 truncate">{card.model}</span>
 				</li>
 			{/each}
 		</ul>
 	{:else}
-		<p class="text-sm text-text-muted">No setup yet.</p>
+		<p class="text-body text-text-muted">No setup yet.</p>
 	{/if}
 	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus ?tab -->
-	<a href={profileSetup} target="_blank" class="text-sm text-accent-color hover:underline">
+	<a href={profileSetup} target="_blank" class="text-body text-accent-color hover:underline">
 		Edit on profile ↗
 	</a>
 </div>
