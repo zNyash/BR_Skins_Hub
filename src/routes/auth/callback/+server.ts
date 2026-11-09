@@ -10,6 +10,12 @@ export async function GET(event: RequestEvent) {
 	const code = event.url.searchParams.get("code");
 	if (!code) redirect(302, "/auth/login");
 
+	// Must match the cookie set by /auth/login in this browser (login CSRF); one use only.
+	const state = event.url.searchParams.get("state");
+	const expected = event.cookies.get("oauth_state");
+	event.cookies.delete("oauth_state", { path: "/" });
+	if (!state || state !== expected) redirect(302, "/auth/login");
+
 	// Fetch osu! profile
 	const profile = await auth.authorize({
 		code,
