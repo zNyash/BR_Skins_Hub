@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { invalidate } from "$app/navigation";
 	import Icon from "$comp/icon.svelte";
@@ -22,11 +23,10 @@
 	const nameValid = $derived(form.name.trim().length > 0);
 	const urlValid = $derived(URL.canParse(form.download_url.trim()));
 
-	function handleOpenChange(isOpen: boolean) {
-		if (isOpen) {
-			form = { ...emptyForm };
-		}
-	}
+	// Each opening starts fresh, whether from a trigger or from a bound `open`.
+	$effect.pre(() => {
+		if (open) untrack(() => (form = { ...emptyForm }));
+	});
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -59,7 +59,7 @@
 	}
 </script>
 
-<Dialog.Root bind:open onOpenChange={handleOpenChange}>
+<Dialog.Root bind:open>
 	<Dialog.Content class="bg-layer-1 sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title>New skin</Dialog.Title>

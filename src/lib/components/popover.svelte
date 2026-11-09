@@ -148,7 +148,10 @@
 	role={pin ? "dialog" : "tooltip"}
 	class={cn(
 		"fixed inset-auto m-0 rounded-lg bg-layer-2 text-foreground outline outline-border",
-		className
+		className,
+		// A display class passed in (e.g. `flex`) would otherwise beat the browser's hiding of a
+		// closed popover and leave its empty box on the page.
+		"[&:not(:popover-open)]:hidden"
 	)}
 	onpointerenter={() => clearTimeout(hideTimer)}
 	onpointerleave={hoverOut}

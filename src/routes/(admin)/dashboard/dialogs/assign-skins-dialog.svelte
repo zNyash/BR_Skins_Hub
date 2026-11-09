@@ -5,43 +5,50 @@
 	import Button from "$comp/ui/button/button.svelte";
 	import * as Dialog from "$comp/ui/dialog";
 	import * as Tooltip from "$comp/ui/tooltip";
-	import type { Doc, Id } from "$convex/_generated/dataModel";
-	import { PLAYER_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
-	import { osuAvatar } from "$lib/osu";
+	import type { Id } from "$convex/_generated/dataModel";
+	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
+	import type { SkinWithPlayers } from "$lib/types";
 	import { cn, formatDate } from "$lib/utils";
 
 	type Props = {
-		allPlayers: Doc<"players">[];
-		/** Players already in the editor's draft. They can't be selected again. */
-		assignedIds: Id<"players">[];
-		skinName: string;
-		onAssign: (playerIds: Id<"players">[]) => void;
+		allSkins: SkinWithPlayers[];
+		/** Skins already in the editor's draft. They can't be selected again. */
+		assignedIds: Id<"skins">[];
+		playerName: string;
+		onAssign: (skinIds: Id<"skins">[]) => void;
 	};
 
-	let { allPlayers, assignedIds, skinName, onAssign }: Props = $props();
+	let { allSkins, assignedIds, playerName, onAssign }: Props = $props();
 
 	let open = $state(false);
 	let hideAssigned = $state(true);
-	const selected = new SvelteSet<Id<"players">>();
+	let onlyUnused = $state(false);
+	const selected = new SvelteSet<Id<"skins">>();
 
-	const players = useListQuery(() => allPlayers, PLAYER_LIST);
+	// Search and sort, then the chip filters on top.
+	const skins = useListQuery(() => allSkins, SKIN_LIST);
 
 	const assignedSet = $derived(new Set(assignedIds));
-	const visiblePlayers = $derived(
-		hideAssigned ? players.results.filter((p) => !assignedSet.has(p._id)) : players.results
+	const visibleSkins = $derived(
+		skins.results.filter((skin) => {
+			if (hideAssigned && assignedSet.has(skin._id)) return false;
+			if (onlyUnused && skin.players.length > 0) return false;
+			return true;
+		})
 	);
 
 	function handleOpenChange(isOpen: boolean) {
+		// Start each session fresh so a cancelled selection doesn't linger.
 		if (isOpen) {
 			selected.clear();
-			players.query = "";
+			skins.query = "";
 		}
 	}
 
-	function toggle(playerId: Id<"players">) {
-		if (assignedSet.has(playerId)) return;
-		if (selected.has(playerId)) selected.delete(playerId);
-		else selected.add(playerId);
+	function toggle(skinId: Id<"skins">) {
+		if (assignedSet.has(skinId)) return;
+		if (selected.has(skinId)) selected.delete(skinId);
+		else selected.add(skinId);
 	}
 
 	function confirm() {
@@ -53,45 +60,34 @@
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
 	<Dialog.Trigger>
 		{#snippet child({ props })}
-			<Button {...props} type="button" variant="secondary" size="sm">
+			<Button {...props} type="button" variant="secondary" size="sm" class="h-11 min-[900px]:h-8">
 				<Icon name="plus" />
-				Assign players
+				Assign skins
 			</Button>
 		{/snippet}
 	</Dialog.Trigger>
 
 	<Dialog.Content class="flex max-h-[85vh] flex-col gap-3 bg-layer-1 sm:max-w-3xl">
 		<Dialog.Header>
-			<Dialog.Title>Assign players to {skinName || "skin"}</Dialog.Title>
+			<Dialog.Title>Assign skins to {playerName || "player"}</Dialog.Title>
 		</Dialog.Header>
 
-		<SearchSorted list={players} placeholder="Search players..." />
+		<SearchSorted list={skins} placeholder="Search skins by name..." />
 
 		<div class="flex gap-2">
-			<button
-				type="button"
-				aria-pressed={hideAssigned}
-				onclick={() => (hideAssigned = !hideAssigned)}
-				class={cn(
-					"rounded-full border px-3 py-0.5 text-xs transition",
-					hideAssigned
-						? "border-primary/60 bg-primary/20 text-foreground"
-						: "border-border text-muted-foreground hover:text-foreground"
-				)}
-			>
-				Hide assigned
-			</button>
+			{@render chip("Hide assigned", hideAssigned, () => (hideAssigned = !hideAssigned))}
+			{@render chip("Unassigned to anyone", onlyUnused, () => (onlyUnused = !onlyUnused))}
 		</div>
 
 		<Tooltip.Provider delayDuration={150}>
 			<div class="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 py-1">
-				{#if visiblePlayers.length === 0}
-					<p class="py-10 text-center text-muted-foreground">No players match.</p>
+				{#if visibleSkins.length === 0}
+					<p class="py-10 text-center text-muted-foreground">No skins match.</p>
 				{:else}
-					<div class="grid grid-cols-3 gap-2 sm:grid-cols-5">
-						{#each visiblePlayers as player (player._id)}
-							{@const isAssigned = assignedSet.has(player._id)}
-							{@const isSelected = selected.has(player._id)}
+					<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+						{#each visibleSkins as skin (skin._id)}
+							{@const isAssigned = assignedSet.has(skin._id)}
+							{@const isSelected = selected.has(skin._id)}
 							<div
 								class={cn(
 									"relative overflow-hidden rounded-md bg-layer-2 transition",
@@ -104,15 +100,15 @@
 									class="flex w-full flex-col text-left disabled:cursor-not-allowed"
 									disabled={isAssigned}
 									aria-pressed={isSelected}
-									onclick={() => toggle(player._id)}
+									onclick={() => toggle(skin._id)}
 								>
 									<img
-										src={osuAvatar(player.osu_id)}
+										src={skin.preview_images[0]}
 										alt=""
-										class={cn("aspect-square w-full object-cover", isAssigned && "opacity-40")}
+										class={cn("aspect-video w-full object-cover", isAssigned && "opacity-40")}
 									/>
 									<p class={cn("truncate p-1.5 text-xs", isAssigned && "opacity-50")}>
-										{player.name}
+										{skin.name}
 									</p>
 								</button>
 
@@ -145,18 +141,19 @@
 										class="grid w-56 grid-cols-2 items-start gap-x-2 gap-y-1 bg-popover p-2 text-popover-foreground ring-1 ring-foreground/10"
 										arrowClasses="bg-popover fill-popover"
 									>
-										<p class="col-span-2 text-center font-medium">{player.name}</p>
-										{@render infoRow("osu! ID", String(player.osu_id))}
-										{#if player.previous_usernames?.length}
+										<p class="col-span-2 text-center font-medium">{skin.name}</p>
+										{@render infoRow("Author", skin.author ?? "Unknown")}
+										{@render infoRow("Players", String(skin.players.length))}
+										{#if skin.players.length > 0}
 											<p class="col-span-2 text-center text-muted-foreground">
-												aka {player.previous_usernames.slice(0, 3).join(", ")}
+												{skin.players
+													.slice(0, 3)
+													.map((p) => p.name)
+													.join(", ")}{skin.players.length > 3 ? ", …" : ""}
 											</p>
 										{/if}
-										{@render infoRow("Added", formatDate(player._creationTime))}
-										{@render infoRow(
-											"Synced",
-											player.synced_at ? formatDate(player.synced_at) : "Never"
-										)}
+										{@render infoRow("Uploaded", formatDate(skin._creationTime))}
+										{@render infoRow("Updated", formatDate(skin.updated_at ?? skin._creationTime))}
 									</Tooltip.Content>
 								</Tooltip.Root>
 							</div>
@@ -181,12 +178,28 @@
 				</Dialog.Close>
 				<Button type="button" disabled={selected.size === 0} onclick={confirm}>
 					Assign {selected.size || ""}
-					{selected.size === 1 ? "player" : "players"}
+					{selected.size === 1 ? "skin" : "skins"}
 				</Button>
 			</div>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
+
+{#snippet chip(label: string, active: boolean, onclick: () => void)}
+	<button
+		type="button"
+		aria-pressed={active}
+		{onclick}
+		class={cn(
+			"rounded-full border px-3 py-0.5 text-xs transition",
+			active
+				? "border-primary/60 bg-primary/20 text-foreground"
+				: "border-border text-muted-foreground hover:text-foreground"
+		)}
+	>
+		{label}
+	</button>
+{/snippet}
 
 {#snippet infoRow(label: string, value: string)}
 	<span class="text-right text-muted-foreground">{label}</span>

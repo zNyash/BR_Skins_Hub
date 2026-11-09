@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { linkTarget, type LinkType } from "./links";
+import { hasBlankLink, linkTarget, type LinkType } from "./links";
 
 describe("linkTarget", () => {
 	it.each([
@@ -35,5 +35,18 @@ describe("linkTarget", () => {
 		["twitch", "https://twitch.tv/videos/123", "https://twitch.tv/videos/123", "twitch.tv"]
 	])("%s %j", (type, value, href, label) => {
 		expect(linkTarget(type as LinkType, value)).toEqual({ href, label });
+	});
+});
+
+describe("hasBlankLink", () => {
+	it("is true when a value is empty or whitespace", () => {
+		const links: { type: LinkType; value: string }[] = [{ type: "twitch", value: "  " }];
+		expect(hasBlankLink(links)).toBe(true);
+	});
+
+	it("is false when every value is filled, or there are no links", () => {
+		const links: { type: LinkType; value: string }[] = [{ type: "twitch", value: "foo" }];
+		expect(hasBlankLink(links)).toBe(false);
+		expect(hasBlankLink([])).toBe(false);
 	});
 });

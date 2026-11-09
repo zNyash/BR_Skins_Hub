@@ -1,4 +1,4 @@
-import { error, type RequestEvent } from "@sveltejs/kit";
+import { error, redirect, type RequestEvent } from "@sveltejs/kit";
 import { SignJWT, jwtVerify } from "jose";
 import { ADMIN_OSU_IDS, JWT_SECRET } from "$env/static/private";
 
@@ -46,4 +46,10 @@ export function requireAdmin(event: RequestEvent): SessionUser {
 	const user = requireUser(event);
 	if (!isAdmin(user.osu_id)) error(403, "Only admins can do this");
 	return user;
+}
+
+/** For admin pages: visitors go to the login, signed-in non-admins to the home page. */
+export function assertAdminPage(locals: App.Locals): void {
+	if (!locals.user) redirect(302, "/auth/login");
+	if (!isAdmin(locals.user.osu_id)) redirect(302, "/");
 }

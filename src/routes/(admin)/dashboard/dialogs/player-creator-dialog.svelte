@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { invalidate } from "$app/navigation";
 	import Icon from "$comp/icon.svelte";
@@ -21,11 +22,10 @@
 
 	const osuId = $derived(parseOsuId(input));
 
-	function handleOpenChange(isOpen: boolean) {
-		if (isOpen) {
-			input = "";
-		}
-	}
+	// Each opening starts fresh, whether from a trigger or from a bound `open`.
+	$effect.pre(() => {
+		if (open) untrack(() => (input = ""));
+	});
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -54,7 +54,7 @@
 	}
 </script>
 
-<Dialog.Root bind:open onOpenChange={handleOpenChange}>
+<Dialog.Root bind:open>
 	<Dialog.Content class="bg-layer-1 sm:max-w-sm">
 		<Dialog.Header>
 			<Dialog.Title>New player</Dialog.Title>
