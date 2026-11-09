@@ -23,7 +23,7 @@
 	const fitStyle = $derived(`aspect-ratio: ${ratio}; width: min(100cqw, calc(100cqh * ${ratio}))`);
 </script>
 
-<div class={cn("flex min-h-0 flex-col gap-3 rounded-lg bg-layer-2 p-3", className)}>
+<div class={cn("flex min-h-0 flex-col gap-3 rounded-md bg-layer-2 p-3", className)}>
 	{#if box}
 		<div class="[container-type:size] flex min-h-0 flex-1 items-center justify-center">
 			<Popover class="px-2 py-1">
@@ -32,11 +32,11 @@
 						{...props}
 						role="img"
 						aria-label="Active area of {tablet.area_w} by {tablet.area_h} mm. {caption}"
-						class="relative rounded-md border border-layer-5 bg-card"
+						class="relative rounded-md border border-layer-5 bg-layer-3"
 						style={fitStyle}
 					>
 						<div
-							class="absolute rounded-sm border-2 border-primary bg-primary/15"
+							class="absolute rounded-sm border-2 border-accent-color bg-accent-color/15"
 							style:left="{box.left}%"
 							style:top="{box.top}%"
 							style:width="{box.width}%"
@@ -54,12 +54,12 @@
 			<div
 				role="img"
 				aria-label="Active area of {tablet.area_w} by {tablet.area_h} mm"
-				class="rounded-sm border-2 border-primary bg-primary/15"
+				class="rounded-sm border-2 border-accent-color bg-accent-color/15"
 				style={fitStyle}
 			></div>
 		</div>
-		<span class="text-center text-xs trim text-text-muted">Full tablet size not set</span>
+		<span class="text-center text-caption trim text-text-muted">Full tablet size not set</span>
 	{:else}
-		<span class="m-auto text-2xl font-bold text-text-muted">–</span>
+		<span class="m-auto text-value-lg text-text-muted">–</span>
 	{/if}
 </div>

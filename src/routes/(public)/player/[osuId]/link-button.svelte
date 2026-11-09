@@ -27,10 +27,10 @@
 	}
 
 	const classes =
-		"flex min-h-9 items-center gap-2 rounded-lg border border-layer-2 bg-card py-1 pr-3 pl-2.5 text-sm transition-colors hover:bg-layer-2";
+		"flex h-11 items-center gap-2 rounded-md bg-layer-1 px-3 text-body transition-colors duration-fast hover:bg-layer-2 focus-visible:outline-2 focus-visible:outline-accent-color min-[900px]:h-9";
 </script>
 
-{#snippet content(icon: string, label: string, iconClass = "text-primary")}
+{#snippet content(icon: string, label: string, iconClass = "text-accent-color")}
 	<Icon name={icon} class={cn("size-4 shrink-0", iconClass)} />
 	<span class="truncate">{label}</span>
 {/snippet}
@@ -38,7 +38,7 @@
 {#if type === "discord"}
 	<button
 		type="button"
-		class={cn(classes, copyState === "failed" && "border-error/60 bg-error/15 hover:bg-error/20")}
+		class={cn(classes, copyState === "failed" && "bg-error/15 hover:bg-error/20")}
 		title="Copy Discord username"
 		onclick={copy}
 	>

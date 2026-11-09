@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Avatar from "$comp/avatar.svelte";
 	import PageHeading from "$comp/page-heading.svelte";
 	import Popover from "$comp/popover.svelte";
 	import { osuAvatar } from "$lib/osu";
@@ -45,36 +46,32 @@
 					onerror={() => (failedCover = player.cover_url ?? null)}
 				/>
 			{:else}
-				<div class="flex size-full items-center justify-center bg-primary/25">
+				<div class="flex size-full items-center justify-center bg-accent-color/25">
 					{#if isOwner}
-						<p class="text-sm">Log in again to update your banner.</p>
+						<p class="text-body">Log in again to update your banner.</p>
 					{/if}
 				</div>
 			{/if}
 			<div
-				class="pointer-events-none absolute inset-0 bg-linear-to-t from-background to-transparent to-60%"
+				class="pointer-events-none absolute inset-0 bg-linear-to-t from-surface to-transparent to-60%"
 			></div>
 		</div>
 
 		<div class="relative -mt-10 flex items-end gap-3 px-4 sm:-mt-16 sm:gap-4 sm:px-10">
 			<a href={`https://osu.ppy.sh/users/${player.osu_id}`} target="_blank" class="shrink-0">
-				<img
-					src={osuAvatar(player.osu_id)}
-					alt="{player.name} Profile Picture"
-					class="size-20 shape-squircle rounded-3xl border-2 border-layer-3 object-cover drop-shadow-lg sm:size-28"
-				/>
+				<Avatar osuId={player.osu_id} size={80} alt="{player.name} Profile Picture" />
 			</a>
 			{#if player.previous_usernames && player.previous_usernames.length > 0}
 				<Popover class="px-2 py-1">
 					{#snippet trigger(props)}
 						<button {...props} type="button" class="pb-1 text-start">
-							<h1 class="text-xl font-bold sm:text-2xl">{player.name}</h1>
+							<h1 class="text-page-title">{player.name}</h1>
 						</button>
 					{/snippet}
-					<p class="text-sm">{player.previous_usernames.join(", ")}</p>
+					<p class="text-body">{player.previous_usernames.join(", ")}</p>
 				</Popover>
 			{:else}
-				<h1 class="pb-1 text-xl font-bold sm:text-2xl">{player.name}</h1>
+				<h1 class="pb-1 text-page-title">{player.name}</h1>
 			{/if}
 		</div>
 	</header>

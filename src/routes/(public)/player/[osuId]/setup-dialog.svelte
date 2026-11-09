@@ -222,8 +222,8 @@
 
 {#snippet field(f: Field)}
 	{@const inputId = `setup-${f.key}`}
-	<div class={cn("flex flex-col gap-1.5", f.wide && "sm:col-span-2")}>
-		<label for={inputId} class="text-sm">
+	<div class={cn("flex flex-col gap-2", f.wide && "sm:col-span-2")}>
+		<label for={inputId} class="text-label">
 			{f.label}
 			{#if f.unit}<span class="text-text-muted">({f.unit})</span>{/if}
 		</label>
@@ -232,17 +232,23 @@
 				id={inputId}
 				type="number"
 				step={f.whole ? 1 : "any"}
+				class="bg-layer-2"
 				bind:value={draft[f.key] as number | null | undefined}
 			/>
 		{:else}
-			<Input id={inputId} maxlength={100} bind:value={draft[f.key] as string | null | undefined} />
+			<Input
+				id={inputId}
+				maxlength={100}
+				class="bg-layer-2"
+				bind:value={draft[f.key] as string | null | undefined}
+			/>
 		{/if}
 	</div>
 {/snippet}
 
 <Dialog.Root open={card !== null}>
 	<Dialog.Content
-		class="max-h-[calc(100dvh-2rem)] overflow-y-auto bg-layer-1 sm:max-w-lg"
+		class="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg"
 		showCloseButton={false}
 		onEscapeKeydown={(e) => {
 			e.preventDefault();
@@ -256,7 +262,7 @@
 		{#if card}
 			<Dialog.Header>
 				<Dialog.Title class="flex items-center gap-2">
-					<Icon name={CARD_INFO[card].icon} class="size-5 text-primary" />
+					<Icon name={CARD_INFO[card].icon} class="size-5 text-accent-color" />
 					{CARD_INFO[card].title}
 				</Dialog.Title>
 				<Dialog.Description>Leave anything you don't know empty.</Dialog.Description>
@@ -273,11 +279,14 @@
 				{#if card === "pc"}
 					{#each PC_FIELDS as f (f.key)}{@render field(f)}{/each}
 					<fieldset class="flex flex-col gap-2 sm:col-span-2">
-						<legend class="mb-1.5 text-sm">Storage</legend>
+						<legend class="mb-2 text-label">Storage</legend>
 						{#each draft.storage ?? [] as drive, i (i)}
 							<div class="flex gap-2">
 								<Select.Root type="single" bind:value={drive.kind}>
-									<Select.Trigger class="w-32 shrink-0" aria-label="Drive {i + 1} type">
+									<Select.Trigger
+										class="w-32 shrink-0 bg-layer-2 hover:bg-layer-3 data-[state=open]:bg-layer-3"
+										aria-label="Drive {i + 1} type"
+									>
 										{STORAGE_LABELS[drive.kind]}
 									</Select.Trigger>
 									<Select.Content>
@@ -290,6 +299,7 @@
 									aria-label="Drive {i + 1} name"
 									placeholder="Samsung 990 Pro 2TB"
 									maxlength={100}
+									class="bg-layer-2"
 									bind:value={drive.name}
 								/>
 								<Button
@@ -318,10 +328,13 @@
 				{/if}
 
 				{#if card === "keyboard"}
-					<div class="flex flex-col gap-1.5">
-						<span class="text-sm" id="setup-rt-label">Rapid trigger</span>
+					<div class="flex flex-col gap-2">
+						<span class="text-label" id="setup-rt-label">Rapid trigger</span>
 						<Select.Root type="single" bind:value={rt}>
-							<Select.Trigger aria-labelledby="setup-rt-label">
+							<Select.Trigger
+								class="bg-layer-2 hover:bg-layer-3 data-[state=open]:bg-layer-3"
+								aria-labelledby="setup-rt-label"
+							>
 								{RT_OPTIONS[rt as keyof typeof RT_OPTIONS] ?? "–"}
 							</Select.Trigger>
 							<Select.Content>
@@ -339,8 +352,12 @@
 							unit: "mm",
 							number: true
 						})}
-						<label class="flex items-center gap-2 text-sm sm:col-span-2">
-							<input type="checkbox" class="size-4 accent-primary" bind:checked={splitRelease} />
+						<label class="flex items-center gap-2 text-body sm:col-span-2">
+							<input
+								type="checkbox"
+								class="size-4 accent-accent-color"
+								bind:checked={splitRelease}
+							/>
 							Different release value
 						</label>
 						{#if splitRelease}
@@ -350,10 +367,13 @@
 				{/if}
 
 				{#if card === "in_game"}
-					<div class="flex flex-col gap-1.5">
-						<span class="text-sm" id="setup-raw-label">Raw input</span>
+					<div class="flex flex-col gap-2">
+						<span class="text-label" id="setup-raw-label">Raw input</span>
 						<Select.Root type="single" bind:value={rawInput}>
-							<Select.Trigger aria-labelledby="setup-raw-label">
+							<Select.Trigger
+								class="bg-layer-2 hover:bg-layer-3 data-[state=open]:bg-layer-3"
+								aria-labelledby="setup-raw-label"
+							>
 								{rawInput === "on" ? "On" : rawInput === "off" ? "Off" : "–"}
 							</Select.Trigger>
 							<Select.Content>
@@ -366,19 +386,19 @@
 				{/if}
 
 				{#if isMainInputCard(card)}
-					<label class="flex items-center gap-2 text-sm sm:col-span-2">
-						<input type="checkbox" class="size-4 accent-primary" bind:checked={mainInput} />
+					<label class="flex items-center gap-2 text-body sm:col-span-2">
+						<input type="checkbox" class="size-4 accent-accent-color" bind:checked={mainInput} />
 						This is my main input
 					</label>
 				{/if}
 
 				{#if card === "tablet"}
 					<section class="flex flex-col gap-2 sm:col-span-2" aria-label="OpenTabletDriver">
-						<span class="text-sm font-medium">Import from OpenTabletDriver</span>
+						<span class="text-body-strong">Import from OpenTabletDriver</span>
 						<label
 							class={cn(
-								"flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed border-layer-4 px-4 py-5 text-center text-sm text-text-muted hover:border-primary hover:text-foreground",
-								dragging && "border-primary text-foreground"
+								"flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed border-layer-5 p-4 text-center text-body text-text-muted transition-colors duration-fast hover:bg-layer-2 hover:text-text",
+								dragging && "bg-layer-2 text-text"
 							)}
 							ondragover={(e) => {
 								e.preventDefault();
@@ -404,20 +424,20 @@
 							/>
 						</label>
 						<div class="flex items-center gap-2 rounded-md bg-layer-2 px-3 py-2">
-							<code class="min-w-0 flex-1 text-xs break-all">{hint.path}</code>
+							<code class="min-w-0 flex-1 text-caption break-all">{hint.path}</code>
 							<Button variant="ghost" size="sm" onclick={copyPath}>
 								<Icon name="copy" class="size-4" />
 								Copy
 							</Button>
 						</div>
-						<p class="text-xs text-text-muted">
+						<p class="text-caption text-text-muted">
 							Copy the path, then {hint.howTo.charAt(0).toLowerCase() + hint.howTo.slice(1)} Only filters
 							that are turned on are imported.
 						</p>
 
 						{#if profiles.length > 1}
-							<div class="flex flex-col gap-1.5">
-								<span class="text-sm">This file has several tablets. Which one is yours?</span>
+							<div class="flex flex-col gap-2">
+								<span class="text-body">This file has several tablets. Which one is yours?</span>
 								<div class="flex flex-wrap gap-2">
 									{#each profiles as profile, i (i)}
 										<Button variant="secondary" size="sm" onclick={() => applyProfile(profile)}>
@@ -429,11 +449,13 @@
 						{/if}
 
 						{#if draft.filters?.length}
-							<ul class="flex flex-col gap-1.5">
+							<ul class="flex flex-col gap-2">
 								{#each draft.filters as filter, i (i)}
-									<li class="flex items-center gap-2 rounded-md bg-layer-2 py-1 pr-1 pl-3 text-sm">
-										<span class="min-w-0 flex-1 font-medium">{humanize(filter.path)}</span>
-										<span class="text-xs text-text-muted">
+									<li
+										class="flex items-center gap-2 rounded-md bg-layer-2 py-1 pr-1 pl-3 text-body"
+									>
+										<span class="min-w-0 flex-1 text-body-strong">{humanize(filter.path)}</span>
+										<span class="text-caption text-text-muted">
 											{filter.settings.length}
 											{filter.settings.length === 1 ? "setting" : "settings"}
 										</span>

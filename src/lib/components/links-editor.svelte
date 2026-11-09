@@ -19,7 +19,7 @@
 	<div class="flex items-center gap-2">
 		<Select.Root type="single" bind:value={link.type}>
 			<Select.Trigger
-				class="w-28 capitalize data-[size=default]:h-11 min-[900px]:data-[size=default]:h-9"
+				class="w-28 bg-layer-2 capitalize hover:bg-layer-3 data-[state=open]:bg-layer-3"
 				aria-label="Link type">{link.type}</Select.Trigger
 			>
 			<Select.Content>
@@ -33,12 +33,11 @@
 			aria-invalid={isBlankLink(link) || undefined}
 			bind:value={link.value}
 			placeholder="URL or username"
-			class="h-11 min-[900px]:h-9"
+			class="bg-layer-2"
 		/>
 		<Button
 			variant="secondary"
 			size="icon"
-			class="size-11 min-[900px]:size-9"
 			aria-label="Remove link"
 			onclick={() => links.splice(i, 1)}
 		>
@@ -46,17 +45,13 @@
 		</Button>
 	</div>
 {:else}
-	<p class="text-sm text-text-muted">No links yet.</p>
+	<p class="text-body text-text-muted">No links yet.</p>
 {/each}
 {#if hasBlankLink(links)}
-	<p class="text-xs text-destructive">Fill in or remove the empty link before saving.</p>
+	<p class="text-caption text-error">Fill in or remove the empty link before saving.</p>
 {/if}
 <div class="mt-auto flex items-center justify-between gap-2 pt-1">
-	<Button
-		variant="secondary"
-		class="h-11 min-[900px]:h-9"
-		onclick={() => links.push({ type: "custom", value: "" })}
-	>
+	<Button variant="secondary" onclick={() => links.push({ type: "custom", value: "" })}>
 		<Icon name="plus" />
 		Add link
 	</Button>

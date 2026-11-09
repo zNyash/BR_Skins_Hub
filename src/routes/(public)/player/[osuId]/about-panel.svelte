@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
+	import Card from "$comp/card.svelte";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import { Textarea } from "$comp/ui/textarea";
@@ -48,28 +49,30 @@
 					Save
 				</Button>
 			</div>
-			<Textarea
-				aria-label="Description"
-				rows={14}
-				class="font-mono text-sm leading-relaxed"
-				bind:value={draft}
-			/>
+			<Textarea aria-label="Description" rows={14} class="font-mono" bind:value={draft} />
 		</div>
 	{:else}
-		<div class="relative max-w-3xl rounded-xl bg-card px-7 py-6">
-			{#if isOwner && hasDescription(player.description)}
-				<Button variant="secondary" class="absolute top-3 right-3" onclick={startEditing}>
-					<Icon name="pencil" />
-					Edit
-				</Button>
-			{/if}
+		{#snippet editButton()}
+			<Button variant="secondary" onclick={startEditing}>
+				<Icon name="pencil" />
+				Edit
+			</Button>
+		{/snippet}
+		<Card
+			class="max-w-3xl"
+			trailing={isOwner && hasDescription(player.description) ? editButton : undefined}
+		>
 			{#if hasDescription(player.description)}
-				<p class="leading-relaxed whitespace-pre-wrap">{player.description}</p>
+				<p class="text-body whitespace-pre-wrap">{player.description}</p>
 			{:else}
-				<button type="button" class="text-text-muted hover:text-foreground" onclick={startEditing}>
+				<button
+					type="button"
+					class="w-fit text-body text-text-muted hover:text-text"
+					onclick={startEditing}
+				>
 					Add a description
 				</button>
 			{/if}
-		</div>
+		</Card>
 	{/if}
 </div>

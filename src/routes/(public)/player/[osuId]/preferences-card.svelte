@@ -5,7 +5,7 @@
 	import { request } from "$lib/api";
 	import { cn } from "$lib/utils";
 	import { errorMessage } from "./save-profile";
-	import SettingsCard from "./settings-card.svelte";
+	import Card from "$comp/card.svelte";
 
 	const useMyColor = $derived(page.data.user?.useMyColor ?? true);
 	let saving = $state(false);
@@ -26,11 +26,11 @@
 	}
 </script>
 
-<SettingsCard title="Preferences">
+<Card title="Preferences" level={2}>
 	<div class="flex items-center gap-4">
-		<div class="flex flex-1 flex-col gap-0.5">
-			<span id="pref-my-color" class="font-medium">My color everywhere</span>
-			<span class="text-sm text-text-muted">
+		<div class="flex flex-1 flex-col gap-1">
+			<span id="pref-my-color" class="text-body-strong">My color everywhere</span>
+			<span class="text-body text-text-muted">
 				Use your profile color on every page, except other players' profiles.
 			</span>
 		</div>
@@ -41,18 +41,18 @@
 			aria-labelledby="pref-my-color"
 			disabled={saving}
 			class={cn(
-				"relative h-6.5 w-11.5 shrink-0 rounded-full transition-colors disabled:opacity-60",
-				useMyColor ? "bg-primary" : "bg-layer-3"
+				"relative h-7 w-12 shrink-0 rounded-full transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-color disabled:opacity-60",
+				useMyColor ? "bg-accent-color" : "bg-layer-3"
 			)}
 			onclick={toggle}
 		>
 			<span
 				class={cn(
-					"absolute top-0.75 size-5 rounded-full bg-foreground transition-[left]",
-					useMyColor ? "left-5.75" : "left-0.75"
+					"absolute top-1 size-5 rounded-full bg-text transition-[left] duration-fast",
+					useMyColor ? "left-6" : "left-1"
 				)}
 			></span>
 		</button>
 	</div>
-	<p class="text-xs text-text-muted">Toggles save as soon as you flip them.</p>
-</SettingsCard>
+	<p class="text-caption text-text-muted">Toggles save as soon as you flip them.</p>
+</Card>

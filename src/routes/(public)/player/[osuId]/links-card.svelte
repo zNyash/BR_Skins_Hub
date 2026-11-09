@@ -7,7 +7,7 @@
 	import { hasBlankLink } from "$lib/links";
 	import type { PlayerWithSkins } from "$lib/types";
 	import { errorMessage, saveProfile } from "./save-profile";
-	import SettingsCard from "./settings-card.svelte";
+	import Card from "$comp/card.svelte";
 	import { guardUnsaved } from "./unsaved-guard.svelte";
 
 	let { player }: { player: PlayerWithSkins } = $props();
@@ -47,11 +47,11 @@
 	);
 </script>
 
-<SettingsCard title="Links">
+<Card title="Links" level={2}>
 	<LinksEditor bind:links={draft}>
 		<Button disabled={!dirty || hasBlank || saving} onclick={save}>
 			{#if saving}<Icon name="loader-circle" class="animate-spin" />{/if}
 			Save
 		</Button>
 	</LinksEditor>
-</SettingsCard>
+</Card>
