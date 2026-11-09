@@ -12,7 +12,8 @@
 		if (!open) answerConfirm(false);
 	}}
 >
-	<Dialog.Content class="bg-layer-1 sm:max-w-sm" showCloseButton={false}>
+	<!-- Above any dialog that asks a question (its portal sits earlier in <body>, so equal z loses). -->
+	<Dialog.Content class="z-60 bg-layer-1 sm:max-w-sm" overlayClass="z-60" showCloseButton={false}>
 		{#if pending}
 			<Dialog.Header>
 				<Dialog.Title>{pending.title}</Dialog.Title>
