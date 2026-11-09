@@ -2,7 +2,7 @@
 	import * as Avatar from "$comp/ui/avatar";
 	import { osuAvatar } from "$lib/osu";
 
-	type Size = 28 | 40 | 56 | 80;
+	type Size = 28 | 40 | 56 | 80 | 128;
 
 	let { osuId, size, alt = "" }: { osuId: number; size: Size; alt?: string } = $props();
 
@@ -10,7 +10,8 @@
 		28: "size-7",
 		40: "size-10",
 		56: "size-14",
-		80: "size-20"
+		80: "size-20",
+		128: "size-32"
 	};
 </script>
 
