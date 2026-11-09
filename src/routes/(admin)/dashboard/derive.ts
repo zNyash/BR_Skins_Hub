@@ -61,24 +61,6 @@ export function parseTab(v: string | null): EditorTab {
 	return TABS.find((t) => t === v) ?? "profile";
 }
 
-/** 1-based position of `id` in the list, or null when it isn't there (e.g. filtered out). */
-export function stepPosition<T extends { _id: string }>(list: T[], id: string): number | null {
-	const i = list.findIndex((item) => item._id === id);
-	return i === -1 ? null : i + 1;
-}
-
-/** The id before/after `id`, wrapping around. If `id` isn't in the list, the first id. */
-export function step<T extends { _id: string }>(
-	list: T[],
-	id: string,
-	delta: 1 | -1
-): string | null {
-	if (list.length === 0) return null;
-	const i = list.findIndex((item) => item._id === id);
-	if (i === -1) return list[0]._id;
-	return list[(i + delta + list.length) % list.length]._id;
-}
-
 type Recent = { kind: "player"; doc: Doc<"players"> } | { kind: "skin"; doc: SkinWithPlayers };
 
 /** The `n` most recently edited players and skins together, newest first; undated ones last. */
@@ -136,16 +118,6 @@ export function timeAgo(time: number, now: number): string {
 	if (d < 30) return `${d} d ago`;
 	const mo = Math.floor(d / 30);
 	return mo < 12 ? `${mo} mo ago` : `${Math.floor(d / 365)} y ago`;
-}
-
-/** Query string ("?a=1&b=2", or "" when empty) with only the `keys` of `params` that are set. */
-export function pickParams(params: URLSearchParams, keys: string[]): string {
-	const kept = new URLSearchParams();
-	for (const key of keys) {
-		const value = params.get(key);
-		if (value) kept.set(key, value);
-	}
-	return toQuery(kept);
 }
 
 /** Query string of `params` with `key` set to `value`, or removed when `value` is null. */

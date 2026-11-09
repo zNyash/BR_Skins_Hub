@@ -8,14 +8,11 @@ import {
 	onlyTabChanged,
 	parseFilter,
 	parseTab,
-	pickParams,
 	shouldBlock,
 	recentlyEdited,
 	setParam,
 	setupFilled,
 	skinCountByPlayer,
-	step,
-	stepPosition,
 	timeAgo
 } from "./derive";
 
@@ -40,8 +37,6 @@ const skin = (
 		players: [],
 		...over
 	}) as unknown as SkinWithPlayers;
-
-const item = (id: string) => ({ _id: id });
 
 describe("skinCountByPlayer", () => {
 	it("counts skins per player and leaves out players without skins", () => {
@@ -141,29 +136,6 @@ describe("parseTab", () => {
 	});
 });
 
-describe("step and stepPosition", () => {
-	const list = [item("a"), item("b"), item("c")];
-
-	it("steps forward and backward, wrapping", () => {
-		expect(step(list, "b", 1)).toBe("c");
-		expect(step(list, "c", 1)).toBe("a");
-		expect(step(list, "a", -1)).toBe("c");
-	});
-
-	it("goes to the first item when the id is absent", () => {
-		expect(step(list, "zz", 1)).toBe("a");
-	});
-
-	it("returns null for an empty list", () => {
-		expect(step([], "a", 1)).toBeNull();
-	});
-
-	it("gives a 1-based position, null when absent", () => {
-		expect(stepPosition([item("a"), item("b")], "b")).toBe(2);
-		expect(stepPosition([item("a"), item("b")], "zz")).toBeNull();
-	});
-});
-
 describe("recentlyEdited", () => {
 	it("mixes kinds newest first, undated last, capped at n", () => {
 		const p1 = player({ _id: "p1", updated_at: 10 });
@@ -234,14 +206,8 @@ describe("timeAgo", () => {
 	});
 });
 
-describe("pickParams and setParam", () => {
+describe("setParam", () => {
 	const params = new URLSearchParams("filter=no-skins&tab=links&q=x");
-
-	it("keeps only the given keys that are set", () => {
-		expect(pickParams(params, ["filter", "tab"])).toBe("?filter=no-skins&tab=links");
-		expect(pickParams(params, ["filter", "missing"])).toBe("?filter=no-skins");
-		expect(pickParams(params, ["missing"])).toBe("");
-	});
 
 	it("sets, replaces or removes one key and keeps the rest", () => {
 		expect(setParam(params, "tab", "setup")).toBe("?filter=no-skins&tab=setup&q=x");

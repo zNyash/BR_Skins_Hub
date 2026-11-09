@@ -5,16 +5,12 @@
 	import Popover from "$comp/popover.svelte";
 	import { setParam, type EditorTab } from "./derive";
 
-	/** The editor card: header (avatar, name, stepper, ⋯ menu), optional tab bar, scrolling body. */
+	/** The editor card: header (avatar, name, ⋯ menu), optional tab bar, scrolling body. */
 	let {
 		title,
 		subtitle,
 		avatar,
 		cover,
-		position,
-		total,
-		onPrev,
-		onNext,
 		menu,
 		tabs,
 		tab,
@@ -25,11 +21,6 @@
 		subtitle: string;
 		avatar: Snippet;
 		cover?: string;
-		/** 1-based place in the list, or null when the item isn't in it (filtered out). */
-		position: number | null;
-		total: number;
-		onPrev: () => void;
-		onNext: () => void;
 		menu: { label: string; onSelect: () => void; destructive?: boolean }[];
 		tabs?: { id: EditorTab; label: string }[];
 		tab?: EditorTab;
@@ -50,7 +41,7 @@
 	}
 
 	const iconButton =
-		"flex size-11 min-[900px]:size-9 items-center justify-center rounded-lg text-text-muted hover:bg-layer-3 disabled:opacity-50";
+		"flex size-11 min-[900px]:size-9 items-center justify-center rounded-lg text-text-muted hover:bg-layer-3";
 </script>
 
 <!-- Tabs only change the query string of this page; there's no route to resolve(). -->
@@ -76,27 +67,6 @@
 			</div>
 		</div>
 		<div class="relative flex shrink-0 items-center">
-			<button
-				type="button"
-				class={iconButton}
-				aria-label="Previous"
-				disabled={total === 0}
-				onclick={onPrev}
-			>
-				<Icon name="chevron-left" class="size-4" />
-			</button>
-			<span class="min-w-12 text-center text-sm text-text-muted tabular-nums">
-				{position ?? "–"}/{total}
-			</span>
-			<button
-				type="button"
-				class={iconButton}
-				aria-label="Next"
-				disabled={total === 0}
-				onclick={onNext}
-			>
-				<Icon name="chevron-right" class="size-4" />
-			</button>
 			<Popover hover={false} class="flex min-w-40 flex-col p-1">
 				{#snippet trigger(props)}
 					<button {...props} type="button" class={iconButton} aria-label="More actions">

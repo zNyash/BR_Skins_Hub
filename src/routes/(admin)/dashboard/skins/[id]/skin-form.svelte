@@ -2,15 +2,12 @@
 	import { getContext } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { goto, invalidate } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import { page } from "$app/state";
 	import Icon from "$comp/icon.svelte";
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { request } from "$lib/api";
 	import { osuAvatar } from "$lib/osu";
 	import type { SkinWithPlayers } from "$lib/types";
-	import { pickParams, step, stepPosition } from "../../derive";
 	import AssignPlayersDialog from "../../dialogs/assign-players-dialog.svelte";
 	import DeleteDialog from "../../dialogs/delete-dialog.svelte";
 	import TagInput from "../../dialogs/tag-input.svelte";
@@ -55,15 +52,6 @@
 		draft.playerIds = draft.playerIds.filter((p) => p !== id);
 	}
 
-	/** Next/previous skin in the filtered, sorted list, keeping the filter. */
-	function go(delta: 1 | -1) {
-		const id = step(ctx.results, skin._id, delta);
-		if (!id) return;
-		const target = resolve(`/dashboard/skins/${id}`);
-		// eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus a query string
-		goto(target + pickParams(page.url.searchParams, ["filter"]));
-	}
-
 	async function remove() {
 		// Rejections are shown by the dialog, which then stays open.
 		await request(`/api/skins/${skin._id}`, { method: "DELETE" });
@@ -81,10 +69,6 @@
 <EditorFrame
 	title={skin.name}
 	subtitle={skin.author ? `by ${skin.author}` : "No author"}
-	position={stepPosition(ctx.results, skin._id)}
-	total={ctx.results.length}
-	onPrev={() => go(-1)}
-	onNext={() => go(1)}
 	menu={[{ label: "Delete…", onSelect: () => (deleteOpen = true), destructive: true }]}
 >
 	{#snippet avatar()}

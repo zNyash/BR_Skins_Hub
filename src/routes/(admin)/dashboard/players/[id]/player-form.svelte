@@ -8,14 +8,7 @@
 	import { request } from "$lib/api";
 	import { osuAvatar } from "$lib/osu";
 	import type { SkinWithPlayers } from "$lib/types";
-	import {
-		parseTab,
-		pickParams,
-		setupFilled,
-		step,
-		stepPosition,
-		type EditorTab
-	} from "../../derive";
+	import { parseTab, setupFilled, type EditorTab } from "../../derive";
 	import DeleteDialog from "../../dialogs/delete-dialog.svelte";
 	import EditorFrame from "../../editor-frame.svelte";
 	import { registerEditor, unsaved } from "../../unsaved.svelte";
@@ -57,15 +50,6 @@
 		[...new Set([...players, ...skins].flatMap((doc) => doc.tags ?? []))].sort()
 	);
 
-	/** Next/previous player in the filtered, sorted list, keeping the filter and the tab. */
-	function go(delta: 1 | -1) {
-		const id = step(ctx.results, player._id, delta);
-		if (!id) return;
-		const target = resolve(`/dashboard/players/${id}`);
-		// eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus a query string
-		goto(target + pickParams(page.url.searchParams, ["filter", "tab"]));
-	}
-
 	async function sync() {
 		// The reload would leave edits compared against data they weren't made from.
 		if (unsaved.dirty) {
@@ -97,10 +81,6 @@
 	title={player.name}
 	subtitle="osu! #{player.osu_id}"
 	cover={player.cover_url}
-	position={stepPosition(ctx.results, player._id)}
-	total={ctx.results.length}
-	onPrev={() => go(-1)}
-	onNext={() => go(1)}
 	menu={[
 		{ label: "Sync with osu!", onSelect: sync },
 		{ label: "Delete…", onSelect: () => (deleteOpen = true), destructive: true }
