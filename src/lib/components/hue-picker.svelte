@@ -57,7 +57,7 @@
 		step="1"
 		aria-label="Hue"
 		{value}
-		class="accent-color h-3 min-w-0 flex-1 cursor-pointer appearance-none rounded-full"
+		class="h-3 min-w-0 flex-1 cursor-pointer appearance-none rounded-full accent-accent-color"
 		style:background={TRACK}
 		oninput={(e) => onPreview?.(Number(e.currentTarget.value))}
 		onchange={(e) => (onSlide ?? onPick)(Number(e.currentTarget.value))}
