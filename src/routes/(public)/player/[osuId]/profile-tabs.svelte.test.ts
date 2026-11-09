@@ -20,7 +20,7 @@ const player = {
 } as unknown as PlayerWithSkins;
 
 beforeEach(() => {
-	fakePage.url = new URL("http://localhost/player/1?tab=skins");
+	fakePage.url.searchParams.set("tab", "skins");
 	navigation.cancelled = false;
 	openTab.mockReset();
 	openTab.mockImplementation(fakeOpenTab);
