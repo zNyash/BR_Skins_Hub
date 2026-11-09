@@ -11,7 +11,7 @@
 	<header
 		class="flex h-11 w-full items-center justify-start gap-3 border-b border-popover bg-card px-1"
 	>
-		<Button variant="navigation" class="-mr-3" href={resolve("/")}>
+		<Button variant="ghost" class="-mr-3" href={resolve("/")}>
 			<Icon name="arrow-left" class="size-4" />
 			Back to website
 		</Button>

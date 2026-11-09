@@ -21,16 +21,16 @@
 			<UserIcon />
 		</div>
 		<div class="flex">
-			<Button variant="navigation" href="/">
+			<Button variant="ghost" href="/">
 				<Icon name="user-round" />
 				Players
 			</Button>
-			<Button variant="navigation" href="/skins">
+			<Button variant="ghost" href="/skins">
 				<Icon name="brush" />
 				Skins
 			</Button>
 			{#if user?.isAdmin}
-				<Button variant="navigation" href="/dashboard">
+				<Button variant="ghost" href="/dashboard">
 					<Icon name="layout-dashboard" />
 					Dashboard
 				</Button>

@@ -12,11 +12,11 @@
 <PageHeading title={String(page.status)} />
 
 <header class="flex h-11 items-center justify-center bg-card">
-	<Button variant="navigation" href="/">
+	<Button variant="ghost" href="/">
 		<Icon name="user-round" />
 		Players
 	</Button>
-	<Button variant="navigation" href="/skins">
+	<Button variant="ghost" href="/skins">
 		<Icon name="brush" />
 		Skins
 	</Button>

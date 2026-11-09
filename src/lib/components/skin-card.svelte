@@ -63,7 +63,7 @@
 
 			<Button
 				onclick={() => clipboard.copy(`${window.location.origin}/skins/${skin._id}`)}
-				variant="navigation"
+				variant="ghost"
 				size="icon-xs"
 				class={clipboard.copied
 					? "bg-success/20 text-success hover:bg-success/20 hover:text-success"

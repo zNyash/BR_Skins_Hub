@@ -53,7 +53,7 @@
 			{/each}
 		</Select.Content>
 	</Select.Root>
-	<Button onclick={toggleOrder} variant="outline">
+	<Button onclick={toggleOrder} variant="ghost">
 		<Icon name={sortIcon} />
 	</Button>
 </ButtonGroup.Root>
