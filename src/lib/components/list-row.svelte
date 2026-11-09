@@ -18,7 +18,7 @@
 </script>
 
 <!-- Callers pass an href they already built with resolve(). -->
-<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
 <a
 	{href}
 	aria-current={current ? "true" : undefined}
