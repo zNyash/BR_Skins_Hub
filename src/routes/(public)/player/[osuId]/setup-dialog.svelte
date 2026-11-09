@@ -477,7 +477,7 @@
 
 			<Dialog.Footer class="gap-2 sm:justify-between">
 				{#if setup[card]}
-					<Button variant="ghost" class="text-destructive" disabled={saving} onclick={clearCard}>
+					<Button variant="ghost" class="text-error" disabled={saving} onclick={clearCard}>
 						Clear card
 					</Button>
 				{/if}

@@ -94,7 +94,9 @@
 </script>
 
 <section aria-label="Profile content" class="flex min-w-0 flex-[999_1_560px] flex-col gap-4 pt-4">
-	<Tabs.Root value={active} activationMode="manual" onValueChange={(tab) => openTab(tab as TabId)}>
+	<!-- The URL is the only source of truth: a click asks openTab to change ?tab=, and the bar
+	     follows `active`, so a cancelled navigation (unsaved changes) leaves it where it was. -->
+	<Tabs.Root bind:value={() => active, (tab) => openTab(tab as TabId)} activationMode="manual">
 		<Tabs.List
 			variant="line"
 			aria-label="Profile sections"

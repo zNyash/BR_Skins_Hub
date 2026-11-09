@@ -57,7 +57,7 @@
 			></div>
 		</div>
 
-		<div class="relative -mt-10 flex items-end gap-3 px-4 sm:-mt-16 sm:gap-4 sm:px-10">
+		<div class="relative -mt-10 flex items-end gap-3 px-4 sm:gap-4 sm:px-10">
 			<a href={`https://osu.ppy.sh/users/${player.osu_id}`} target="_blank" class="shrink-0">
 				<Avatar osuId={player.osu_id} size={80} alt="{player.name} Profile Picture" />
 			</a>
