@@ -46,7 +46,7 @@
 				<img
 					src={image}
 					alt={skin.name}
-					class="size-full {linked ? 'cursor-pointer' : ''} radius-inherit object-cover"
+					class="size-full shrink-0 {linked ? 'cursor-pointer' : ''} radius-inherit object-cover"
 				/>
 			{/each}
 		</a>
