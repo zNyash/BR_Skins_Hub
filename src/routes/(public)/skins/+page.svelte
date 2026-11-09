@@ -1,6 +1,6 @@
 <script lang="ts">
 	import PageHeading from "$comp/page-heading.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
+	import SearchToolbar from "$comp/search-toolbar.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
 	import { SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 
@@ -18,7 +18,7 @@
 <main class="main">
 	<section class="section">
 		<div class="flex w-full items-center justify-between">
-			<SearchSorted list={skins} placeholder="Search skins by name..." />
+			<SearchToolbar list={skins} placeholder="Search skins by name..." />
 			<p class="text-xs">Loaded {data.skins.length} skins</p>
 		</div>
 		<div class="common-grid">

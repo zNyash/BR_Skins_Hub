@@ -2,7 +2,7 @@
 	import { resolve } from "$app/paths";
 	import PageHeading from "$comp/page-heading.svelte";
 	import PlayerCard from "$comp/player-card.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
+	import SearchToolbar from "$comp/search-toolbar.svelte";
 	import { PLAYER_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 
 	let { data } = $props();
@@ -18,7 +18,7 @@
 <main class="main">
 	<section class="section">
 		<div class="flex w-full items-center justify-between">
-			<SearchSorted list={players} placeholder="Search players by name or ID..." />
+			<SearchToolbar list={players} placeholder="Search players by name or ID..." />
 			<p class="text-xs">Loaded {data.players.length} players</p>
 		</div>
 		<div class="common-grid">

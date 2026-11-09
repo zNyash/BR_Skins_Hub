@@ -3,7 +3,7 @@
 	import { toast } from "svelte-sonner";
 	import { page } from "$app/state";
 	import Icon from "$comp/icon.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
+	import SearchToolbar from "$comp/search-toolbar.svelte";
 	import SkinCard from "$comp/skin-card.svelte";
 	import { PLAYER_SKIN_LIST, useListQuery } from "$lib/hooks/list-query.svelte";
 	import {
@@ -147,7 +147,7 @@
 	{#if active === "skins"}
 		<div role="tabpanel" class="flex flex-col gap-4">
 			<div class="flex w-full items-center justify-between gap-3">
-				<SearchSorted list={skins} placeholder="Search skins by name..." />
+				<SearchToolbar list={skins} placeholder="Search skins by name..." />
 				<div class="flex flex-col items-end gap-0.5">
 					<p class="text-xs">
 						Loaded {skins.results.length}

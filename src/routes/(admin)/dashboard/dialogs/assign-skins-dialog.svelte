@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SvelteSet } from "svelte/reactivity";
 	import Icon from "$comp/icon.svelte";
-	import SearchSorted from "$comp/search-sorted.svelte";
+	import SearchToolbar from "$comp/search-toolbar.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import * as Dialog from "$comp/ui/dialog";
 	import * as Tooltip from "$comp/ui/tooltip";
@@ -72,7 +72,7 @@
 			<Dialog.Title>Assign skins to {playerName || "player"}</Dialog.Title>
 		</Dialog.Header>
 
-		<SearchSorted list={skins} placeholder="Search skins by name..." />
+		<SearchToolbar list={skins} placeholder="Search skins by name..." />
 
 		<div class="flex gap-2">
 			{@render chip("Hide assigned", hideAssigned, () => (hideAssigned = !hideAssigned))}
