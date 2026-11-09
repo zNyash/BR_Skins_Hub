@@ -14,7 +14,6 @@
 	const filled = $derived(setupFilled(player));
 </script>
 
-<!-- The list builds href with resolve() plus the ?filter query. -->
 <ListRow {href} {current}>
 	{#snippet leading()}
 		<Avatar osuId={player.osu_id} size={40} />

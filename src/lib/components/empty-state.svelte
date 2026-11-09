@@ -12,7 +12,7 @@
 
 <div class="flex flex-col items-center justify-center gap-3 p-8 text-center">
 	<div class="flex size-10 items-center justify-center rounded-md bg-layer-2 text-text-muted">
-		<Icon name={icon} />
+		<Icon name={icon} class="size-5" />
 	</div>
 	<p class="text-body-strong">{title}</p>
 	{#if text}

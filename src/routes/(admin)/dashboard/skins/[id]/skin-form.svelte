@@ -128,34 +128,32 @@
 			</div>
 
 			{#if assigned.length === 0}
-				<div class="rounded-md bg-layer-2">
-					<EmptyState
-						icon="users"
-						title="Nobody uses this skin"
-						text="Assign it to a player, or delete it to free up space."
-					>
-						{#snippet action()}
-							<div class="flex flex-wrap justify-center gap-3">
-								<Button
-									variant="secondary"
-									class="bg-layer-3 hover:bg-layer-4"
-									onclick={() => (assignOpen = true)}
-								>
-									<Icon name="user-plus" />
-									Assign
-								</Button>
-								<Button
-									variant="ghost"
-									class="text-error hover:bg-layer-3 hover:text-error"
-									onclick={() => (deleteOpen = true)}
-								>
-									<Icon name="trash" />
-									Delete
-								</Button>
-							</div>
-						{/snippet}
-					</EmptyState>
-				</div>
+				<EmptyState
+					icon="users"
+					title="Nobody uses this skin"
+					text="Assign it to a player, or delete it to free up space."
+				>
+					{#snippet action()}
+						<div class="flex flex-wrap justify-center gap-3">
+							<Button
+								variant="secondary"
+								class="bg-layer-3 hover:bg-layer-4"
+								onclick={() => (assignOpen = true)}
+							>
+								<Icon name="user-plus" />
+								Assign
+							</Button>
+							<Button
+								variant="ghost"
+								class="text-error hover:bg-layer-3 hover:text-error"
+								onclick={() => (deleteOpen = true)}
+							>
+								<Icon name="trash" />
+								Delete
+							</Button>
+						</div>
+					{/snippet}
+				</EmptyState>
 			{:else}
 				<!-- The x buttons are 44px tall inside 28px chips on phones: the row gap keeps them apart. -->
 				<ul class="flex flex-wrap gap-x-2 gap-y-4 min-[900px]:gap-y-2">

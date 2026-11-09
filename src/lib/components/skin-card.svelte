@@ -44,7 +44,7 @@
 			<p>{skin.name}</p>
 		</Popover>
 
-		<Separator class="mt-1 mb-2 bg-border" />
+		<Separator class="mt-1 mb-2 bg-layer-5" />
 
 		<span class="flex items-center gap-1">
 			<!-- Download Count -->

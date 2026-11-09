@@ -22,7 +22,8 @@
 	const titleId = $props.id();
 </script>
 
-<section
+<svelte:element
+	this={title ? "section" : "div"}
 	aria-labelledby={title ? titleId : undefined}
 	class={cn("flex flex-col gap-3 rounded-lg bg-layer-1 p-4", className)}
 >
@@ -46,4 +47,4 @@
 		</div>
 	{/if}
 	{@render children()}
-</section>
+</svelte:element>

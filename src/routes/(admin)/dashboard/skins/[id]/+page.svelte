@@ -23,7 +23,6 @@
 	<div class="flex h-full items-center justify-center rounded-xl bg-layer-1">
 		<EmptyState icon="search-x" title="This skin doesn't exist anymore">
 			{#snippet action()}
-				<!-- listHref() is resolve() plus ?filter. -->
 				<Button variant="link" href={ctx.listHref()}>Back to skins</Button>
 			{/snippet}
 		</EmptyState>

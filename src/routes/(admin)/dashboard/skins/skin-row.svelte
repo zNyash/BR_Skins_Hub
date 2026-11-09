@@ -9,7 +9,6 @@
 	const images = $derived(skin.preview_images.length);
 </script>
 
-<!-- The list builds href with resolve() plus the ?filter query. -->
 <ListRow {href} {current}>
 	{#snippet leading()}
 		<div class="h-10 w-16 shrink-0 overflow-hidden rounded-md bg-layer-3">

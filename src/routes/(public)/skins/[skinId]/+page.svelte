@@ -44,7 +44,10 @@
 						{#if data.skin.author}
 							<p class="text-caption text-text-muted">by {data.skin.author}</p>
 
-							<Separator orientation="vertical" class="bg-border data-[orientation=vertical]:h-4" />
+							<Separator
+								orientation="vertical"
+								class="bg-layer-5 data-[orientation=vertical]:h-4"
+							/>
 						{/if}
 
 						<span class="flex items-center gap-1 text-caption text-text-muted">
@@ -52,7 +55,7 @@
 							{data.skin.download_count}
 						</span>
 
-						<Separator orientation="vertical" class="bg-border data-[orientation=vertical]:h-4" />
+						<Separator orientation="vertical" class="bg-layer-5 data-[orientation=vertical]:h-4" />
 
 						<span class="flex items-center gap-1 text-caption text-text-muted">
 							<Icon name="cloud-upload" class="size-4" />
