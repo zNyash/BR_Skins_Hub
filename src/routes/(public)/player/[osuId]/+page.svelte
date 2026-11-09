@@ -37,7 +37,7 @@
 <main class="main">
 	<header class="w-full max-w-6xl px-2">
 		<!-- osu! profile covers are 2400×640, so the banner keeps that shape and only scales. -->
-		<div class="relative aspect-[2400/640] w-full overflow-hidden rounded-lg">
+		<div class="relative aspect-2400/640 w-full overflow-hidden rounded-lg rounded-b-none">
 			{#if showCover}
 				<img
 					src={player.cover_url}
