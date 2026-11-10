@@ -67,7 +67,7 @@
 		min="0"
 		max="360"
 		aria-label="Hue value"
-		class="h-11 w-20 min-[900px]:h-9"
+		class="h-11 w-20 bg-layer-2 min-[900px]:h-9"
 		{value}
 		onchange={fromNumber}
 	/>

@@ -72,13 +72,23 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div class="flex flex-col gap-2">
 					<label for="create_skin_name" class="text-label">Name</label>
-					<Input id="create_skin_name" autocomplete="off" bind:value={form.name} />
+					<Input
+						id="create_skin_name"
+						class="bg-layer-2"
+						autocomplete="off"
+						bind:value={form.name}
+					/>
 				</div>
 				<div class="flex flex-col gap-2">
 					<label for="create_skin_author" class="text-label">
 						Author <span class="text-caption text-text-muted">(optional)</span>
 					</label>
-					<Input id="create_skin_author" autocomplete="off" bind:value={form.author} />
+					<Input
+						id="create_skin_author"
+						class="bg-layer-2"
+						autocomplete="off"
+						bind:value={form.author}
+					/>
 				</div>
 			</div>
 
@@ -86,6 +96,7 @@
 				<label for="create_skin_url" class="text-label">Download URL</label>
 				<Input
 					id="create_skin_url"
+					class="bg-layer-2"
 					placeholder="https://..."
 					autocomplete="off"
 					bind:value={form.download_url}

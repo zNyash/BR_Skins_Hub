@@ -46,7 +46,12 @@
 		</Dialog.Header>
 
 		<form id="delete-form" onsubmit={handleSubmit}>
-			<Input aria-label="Name to confirm" autocomplete="off" bind:value={typed} />
+			<Input
+				aria-label="Name to confirm"
+				class="bg-layer-2"
+				autocomplete="off"
+				bind:value={typed}
+			/>
 		</form>
 
 		<Dialog.Footer>

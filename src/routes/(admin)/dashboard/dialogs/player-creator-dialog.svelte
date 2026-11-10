@@ -67,6 +67,7 @@
 			<label for="create_osu_id" class="text-label">osu! ID or profile link</label>
 			<Input
 				id="create_osu_id"
+				class="bg-layer-2"
 				placeholder="7562902 or osu.ppy.sh/users/7562902"
 				autocomplete="off"
 				bind:value={input}
