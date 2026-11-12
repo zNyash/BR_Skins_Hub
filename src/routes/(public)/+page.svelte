@@ -30,7 +30,7 @@
 					backgroundImage={player.cover_url}
 				>
 					{#snippet leading()}
-						<Avatar size={40} osuId={player.osu_id} />
+						<Avatar size="sm" osuId={player.osu_id} />
 					{/snippet}
 					<p class="truncate text-body-strong text-text">{player.name}</p>
 				</ListRow>

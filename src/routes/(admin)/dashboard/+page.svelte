@@ -97,7 +97,7 @@
 								class="flex min-h-16 items-center gap-3 rounded-md bg-layer-2 p-3 transition-colors duration-fast hover:bg-layer-3"
 							>
 								{#if item.kind === "player"}
-									<Avatar osuId={item.doc.osu_id} size={40} />
+									<Avatar osuId={item.doc.osu_id} size="sm" />
 								{:else}
 									<div class="h-10 w-16 shrink-0 overflow-hidden rounded-md bg-layer-3">
 										{#if item.doc.preview_images[0]}

@@ -16,7 +16,7 @@
 
 <ListRow {href} {current}>
 	{#snippet leading()}
-		<Avatar osuId={player.osu_id} size={40} />
+		<Avatar osuId={player.osu_id} size="sm" />
 	{/snippet}
 	<p class="truncate text-body-strong">{player.name}</p>
 	{#snippet trailing()}
