@@ -121,6 +121,8 @@
 			{/if}
 			<OskDropzone
 				bind:file={draft.osk}
+				bind:optimize={editor.optimizeOsk}
+				status={editor.oskStatus}
 				label="Drop a .osk to replace the file, or click to choose it"
 				onpick={fillFromOsk}
 			/>
