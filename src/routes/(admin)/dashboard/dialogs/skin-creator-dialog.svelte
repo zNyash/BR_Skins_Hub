@@ -8,6 +8,9 @@
 	import { Input } from "$comp/ui/input";
 	import type { Id } from "$convex/_generated/dataModel";
 	import { request } from "$lib/api";
+	import { uploadOsk } from "$lib/drive-upload";
+	import { readOsk } from "$lib/osk";
+	import OskDropzone from "../osk-dropzone.svelte";
 
 	type Props = {
 		open: boolean;
@@ -19,28 +22,51 @@
 	const emptyForm = { name: "", author: "", download_url: "" };
 	let form = $state({ ...emptyForm });
 	let isCreating = $state(false);
+	/** A dropped .osk: uploaded to Google Drive on create, replacing the download URL field. */
+	let osk = $state<File | null>(null);
+	/** Upload progress in %, or null when not uploading. */
+	let progress = $state<number | null>(null);
 
 	const nameValid = $derived(form.name.trim().length > 0);
 	const urlValid = $derived(URL.canParse(form.download_url.trim()));
 
 	// Each opening starts fresh, whether from a trigger or from a bound `open`.
 	$effect.pre(() => {
-		if (open) untrack(() => (form = { ...emptyForm }));
+		if (open)
+			untrack(() => {
+				form = { ...emptyForm };
+				osk = null;
+				progress = null;
+			});
 	});
+
+	async function fillFromOsk(file: File) {
+		try {
+			const info = await readOsk(file);
+			form.name = info.name;
+			form.author = info.author ?? "";
+		} catch (e) {
+			osk = null;
+			toast.error((e as Error).message);
+		}
+	}
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
-		if (!nameValid || !urlValid || isCreating) return;
+		if (!nameValid || (!osk && !urlValid) || isCreating) return;
 
 		isCreating = true;
 
 		try {
+			const download_url = osk
+				? await uploadOsk(osk, form.name.trim(), (p) => (progress = p))
+				: form.download_url.trim();
 			const { id } = await request<{ id: Id<"skins"> }>("/api/skins", {
 				method: "POST",
 				body: {
 					name: form.name.trim(),
 					author: form.author.trim() || undefined,
-					download_url: form.download_url.trim(),
+					download_url,
 					preview_images: []
 				}
 			});
@@ -55,6 +81,7 @@
 			toast.error((e as Error).message);
 		} finally {
 			isCreating = false;
+			progress = null;
 		}
 	}
 </script>
@@ -69,6 +96,8 @@
 		</Dialog.Header>
 
 		<form id="skin-creator-form" class="flex flex-col gap-3" onsubmit={handleSubmit}>
+			<OskDropzone bind:file={osk} onpick={fillFromOsk} />
+
 			<div class="grid grid-cols-2 gap-3">
 				<div class="flex flex-col gap-2">
 					<label for="create_skin_name" class="text-label">Name</label>
@@ -92,19 +121,23 @@
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-2">
-				<label for="create_skin_url" class="text-label">Download URL</label>
-				<Input
-					id="create_skin_url"
-					class="bg-layer-2"
-					placeholder="https://..."
-					autocomplete="off"
-					bind:value={form.download_url}
-				/>
-				{#if form.download_url && !urlValid}
-					<p class="text-caption text-text-muted">That doesn't look like a valid URL.</p>
-				{/if}
-			</div>
+			{#if osk}
+				<p class="text-caption text-text-muted">Uploads to Google Drive on create.</p>
+			{:else}
+				<div class="flex flex-col gap-2">
+					<label for="create_skin_url" class="text-label">Download URL</label>
+					<Input
+						id="create_skin_url"
+						class="bg-layer-2"
+						placeholder="https://..."
+						autocomplete="off"
+						bind:value={form.download_url}
+					/>
+					{#if form.download_url && !urlValid}
+						<p class="text-caption text-text-muted">That doesn't look like a valid URL.</p>
+					{/if}
+				</div>
+			{/if}
 		</form>
 
 		<Dialog.Footer>
@@ -116,11 +149,11 @@
 			<Button
 				form="skin-creator-form"
 				type="submit"
-				disabled={!nameValid || !urlValid || isCreating}
+				disabled={!nameValid || (!osk && !urlValid) || isCreating}
 			>
 				{#if isCreating}
 					<Icon name="loader-circle" class="animate-spin" />
-					Creating
+					{progress === null ? "Creating" : `Uploading ${progress}%`}
 				{:else}
 					<Icon name="plus" />
 					Create
