@@ -2,7 +2,7 @@ import { onDestroy, tick, untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import { invalidate } from "$app/navigation";
 import { request } from "$lib/api";
-import { uploadOsk } from "$lib/drive-upload";
+import { uploadOsk, type OskStatus } from "$lib/drive-upload";
 import type { SkinWithPlayers } from "$lib/types";
 import { createUploadThing } from "$lib/uploadthing";
 import { resolveImageUrls, type ImageItem } from "../../skin-images";
@@ -54,18 +54,22 @@ export function createSkinDraft(skin: () => SkinWithPlayers) {
 		draft = structuredClone(base);
 	}
 
-	/** Uploads a pending .osk to Google Drive and puts its link in the draft. Progress is a toast. */
+	// Not part of the draft: neither makes the skin "changed".
+	let optimizeOsk = $state(true);
+	let oskStatus = $state<OskStatus | null>(null);
+
+	/** Uploads a pending .osk to Google Drive and puts its link in the draft. */
 	async function uploadPendingOsk() {
 		if (!draft.osk) return;
-		const toastId = toast.loading("Uploading .osk… 0%");
 		try {
-			draft.skin.download_url = await uploadOsk(draft.osk, draft.skin.name.trim(), (p) =>
-				toast.loading(`Uploading .osk… ${p}%`, { id: toastId })
-			);
+			draft.skin.download_url = await uploadOsk(draft.osk, draft.skin.name.trim(), {
+				optimize: optimizeOsk,
+				onStatus: (status) => (oskStatus = status)
+			});
 			// Uploaded: saving again (e.g. after a failed PATCH) doesn't upload it twice.
 			draft.osk = null;
 		} finally {
-			toast.dismiss(toastId);
+			oskStatus = null;
 		}
 	}
 
@@ -123,6 +127,16 @@ export function createSkinDraft(skin: () => SkinWithPlayers) {
 		},
 		set draft(value) {
 			draft = value;
+		},
+		get optimizeOsk() {
+			return optimizeOsk;
+		},
+		set optimizeOsk(value) {
+			optimizeOsk = value;
+		},
+		/** The pending .osk upload's current step, or null. */
+		get oskStatus() {
+			return oskStatus;
 		},
 		isDirty: () => dirty,
 		reset,

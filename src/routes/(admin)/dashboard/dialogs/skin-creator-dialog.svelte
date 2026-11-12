@@ -8,7 +8,7 @@
 	import { Input } from "$comp/ui/input";
 	import type { Id } from "$convex/_generated/dataModel";
 	import { request } from "$lib/api";
-	import { uploadOsk } from "$lib/drive-upload";
+	import { uploadOsk, type OskStatus } from "$lib/drive-upload";
 	import { readOsk } from "$lib/osk";
 	import OskDropzone from "../osk-dropzone.svelte";
 
@@ -24,8 +24,9 @@
 	let isCreating = $state(false);
 	/** A dropped .osk: uploaded to Google Drive on create, replacing the download URL field. */
 	let osk = $state<File | null>(null);
-	/** Upload progress in %, or null when not uploading. */
-	let progress = $state<number | null>(null);
+	let optimize = $state(true);
+	/** What the .osk upload is doing, or null when not uploading. */
+	let oskStatus = $state<OskStatus | null>(null);
 
 	const nameValid = $derived(form.name.trim().length > 0);
 	const urlValid = $derived(URL.canParse(form.download_url.trim()));
@@ -36,7 +37,8 @@
 			untrack(() => {
 				form = { ...emptyForm };
 				osk = null;
-				progress = null;
+				optimize = true;
+				oskStatus = null;
 			});
 	});
 
@@ -59,7 +61,10 @@
 
 		try {
 			const download_url = osk
-				? await uploadOsk(osk, form.name.trim(), (p) => (progress = p))
+				? await uploadOsk(osk, form.name.trim(), {
+						optimize,
+						onStatus: (status) => (oskStatus = status)
+					})
 				: form.download_url.trim();
 			const { id } = await request<{ id: Id<"skins"> }>("/api/skins", {
 				method: "POST",
@@ -81,7 +86,7 @@
 			toast.error((e as Error).message);
 		} finally {
 			isCreating = false;
-			progress = null;
+			oskStatus = null;
 		}
 	}
 </script>
@@ -96,7 +101,7 @@
 		</Dialog.Header>
 
 		<form id="skin-creator-form" class="flex flex-col gap-3" onsubmit={handleSubmit}>
-			<OskDropzone bind:file={osk} onpick={fillFromOsk} />
+			<OskDropzone bind:file={osk} bind:optimize status={oskStatus} onpick={fillFromOsk} />
 
 			<div class="grid grid-cols-2 gap-3">
 				<div class="flex flex-col gap-2">
@@ -153,7 +158,7 @@
 			>
 				{#if isCreating}
 					<Icon name="loader-circle" class="animate-spin" />
-					{progress === null ? "Creating" : `Uploading ${progress}%`}
+					Creating
 				{:else}
 					<Icon name="plus" />
 					Create

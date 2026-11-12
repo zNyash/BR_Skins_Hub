@@ -5,6 +5,10 @@ import { sveltekit } from "@sveltejs/kit/vite";
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
+	// The .osk optimizer worker loads its PNG codecs (wasm) with dynamic imports.
+	worker: { format: "es" },
+	// Pre-bundling breaks how @jsquash finds its .wasm files.
+	optimizeDeps: { exclude: ["@jsquash/oxipng", "@jsquash/png"] },
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
