@@ -9,7 +9,12 @@ type Call = { url: string; init: RequestInit };
  * A fake Google: answers by url, records every request. `folders` is what the letter-folder
  * search returns.
  */
-function fakeGoogle({ folders = [] as { id: string }[], status = 200 } = {}) {
+function fakeGoogle({
+	folders = [] as { id: string }[],
+	status = 200,
+	/** Metadata for `GET files/<id>?fields=mimeType,parents`. */
+	meta = {} as Record<string, { mimeType: string; parents: string[] }>
+} = {}) {
 	const calls: Call[] = [];
 	const fetchFn = vi.fn(async (input: string | URL | Request, init: RequestInit = {}) => {
 		const url = String(input);
@@ -24,6 +29,10 @@ function fakeGoogle({ folders = [] as { id: string }[], status = 200 } = {}) {
 		if (url.includes("/permissions")) return Response.json({ id: "perm" });
 		if (url.startsWith("https://www.googleapis.com/drive/v3/files?q=")) {
 			return Response.json({ files: folders });
+		}
+		const metaId = /\/files\/([^/?]+)\?fields=mimeType/.exec(url)?.[1];
+		if (metaId && (!init.method || init.method === "GET")) {
+			return meta[metaId] ? Response.json(meta[metaId]) : new Response("", { status: 404 });
 		}
 		if (url.startsWith("https://www.googleapis.com/drive/v3/files")) {
 			return Response.json({ id: init.method === "POST" ? "NEW" : "x" });
@@ -120,12 +129,55 @@ describe("createDrive", () => {
 		expect(JSON.parse(String(perm.init.body))).toEqual({ role: "reader", type: "anyone" });
 	});
 
-	it("trashes the file a Drive link points to", async () => {
-		const google = fakeGoogle();
+	const OSK = "application/octet-stream";
+	const trashed = (google: ReturnType<typeof fakeGoogle>) =>
+		google.calls.filter((c) => c.init.method === "PATCH");
+
+	it("trashes a file in a letter folder inside skins", async () => {
+		const google = fakeGoogle({
+			meta: {
+				f9: { mimeType: OSK, parents: ["A1"] },
+				A1: { mimeType: "application/vnd.google-apps.folder", parents: ["SKINS"] }
+			}
+		});
 		await createDrive(config, google.fetchFn).trash("https://drive.google.com/file/d/f9/view");
-		const patch = google.calls.find((c) => c.init.method === "PATCH");
+		const [patch] = trashed(google);
 		expect(patch?.url).toBe("https://www.googleapis.com/drive/v3/files/f9");
 		expect(JSON.parse(String(patch?.init.body))).toEqual({ trashed: true });
+	});
+
+	it("trashes a file directly inside skins", async () => {
+		const google = fakeGoogle({ meta: { f9: { mimeType: OSK, parents: ["SKINS"] } } });
+		await createDrive(config, google.fetchFn).trash("https://drive.google.com/uc?id=f9");
+		expect(trashed(google)).toHaveLength(1);
+	});
+
+	it("never trashes folders", async () => {
+		const google = fakeGoogle({
+			meta: { A1: { mimeType: "application/vnd.google-apps.folder", parents: ["SKINS"] } }
+		});
+		await createDrive(config, google.fetchFn).trash("https://drive.google.com/open?id=A1");
+		expect(trashed(google)).toHaveLength(0);
+	});
+
+	it("leaves files outside the skins folder alone", async () => {
+		const google = fakeGoogle({
+			meta: {
+				f9: { mimeType: OSK, parents: ["OTHER"] },
+				OTHER: { mimeType: "application/vnd.google-apps.folder", parents: ["root"] }
+			}
+		});
+		await createDrive(config, google.fetchFn).trash("https://drive.google.com/uc?id=f9");
+		expect(trashed(google)).toHaveLength(0);
+	});
+
+	it("keeps a file that a kept link still points to, in any link form", async () => {
+		const google = fakeGoogle({ meta: { f9: { mimeType: OSK, parents: ["SKINS"] } } });
+		await createDrive(config, google.fetchFn).trash("https://drive.google.com/file/d/f9/view", [
+			"https://example.com/other.osk",
+			"https://drive.google.com/uc?export=download&id=f9"
+		]);
+		expect(google.calls).toHaveLength(0);
 	});
 
 	it("throws on a failed Drive response", async () => {

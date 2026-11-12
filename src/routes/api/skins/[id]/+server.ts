@@ -18,6 +18,11 @@ const SkinBody = v.object({
 	player_ids: v.optional(v.array(convexId))
 });
 
+/** Every skin's download link, so a .osk still in use is never trashed. */
+async function skinLinks() {
+	return (await convex.query(api.skins.list, {})).map((skin) => skin.download_url);
+}
+
 /** Saves the skin and who uses it. Removed images (UploadThing) and a replaced .osk (Drive) are cleaned up afterwards. */
 export const PATCH: RequestHandler = async (event) => {
 	const admin = requireAdmin(event);
@@ -33,9 +38,9 @@ export const PATCH: RequestHandler = async (event) => {
 
 	const kept = new Set(fields.preview_images);
 	await deleteUploadThingImages(before?.preview_images.filter((url) => !kept.has(url)) ?? []);
-	// A replaced .osk goes to the Drive trash (non-Drive links are left alone).
+	// A replaced .osk goes to the Drive trash, unless this or another skin still links to it.
 	if (before && before.download_url !== fields.download_url) {
-		await trashDriveFile(before.download_url);
+		await trashDriveFile(before.download_url, await skinLinks());
 	}
 
 	return new Response(null, { status: 204 });
@@ -48,6 +53,6 @@ export const DELETE: RequestHandler = async (event) => {
 		id: event.params.id
 	});
 	await deleteUploadThingImages(images);
-	await trashDriveFile(download_url);
+	await trashDriveFile(download_url, await skinLinks());
 	return new Response(null, { status: 204 });
 };

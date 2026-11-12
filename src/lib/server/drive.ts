@@ -85,6 +85,12 @@ export function createDrive(config: DriveConfig, fetchFn: typeof fetch = fetch) 
 		return (await created.json()).id as string;
 	}
 
+	async function meta(id: string): Promise<{ mimeType: string; parents: string[] }> {
+		const response = await call(`${FILES}/${encodeURIComponent(id)}?fields=mimeType,parents`);
+		const body = await response.json();
+		return { mimeType: body.mimeType, parents: body.parents ?? [] };
+	}
+
 	return {
 		/**
 		 * Opens a resumable upload in the skin's letter folder and returns its session url. The
@@ -118,10 +124,27 @@ export function createDrive(config: DriveConfig, fetchFn: typeof fetch = fetch) 
 			return `https://drive.google.com/uc?export=download&id=${fileId}`;
 		},
 
-		/** Moves the file a Drive link points to into the trash. Non-Drive links are ignored. */
-		async trash(url: string) {
+		/**
+		 * Moves the file a Drive link points to into the trash. With full Drive access this could
+		 * reach anything, so it only trashes files (never folders) inside `skins` or one of its
+		 * letter folders, and skips a file that a `keep` link (in any link form) still points to.
+		 */
+		async trash(url: string, keep: string[] = []) {
 			const id = getDriveFileId(url);
-			if (!id) return;
+			if (!id || keep.some((link) => getDriveFileId(link) === id)) return;
+
+			const file = await meta(id);
+			if (file.mimeType === FOLDER) return;
+			const inSkins = async () => {
+				if (file.parents.includes(config.folderId)) return true;
+				// One level down: the letter folders.
+				for (const parent of file.parents) {
+					if ((await meta(parent)).parents.includes(config.folderId)) return true;
+				}
+				return false;
+			};
+			if (!(await inSkins())) return;
+
 			await call(`${FILES}/${encodeURIComponent(id)}`, {
 				method: "PATCH",
 				json: { trashed: true }
@@ -154,11 +177,14 @@ export function getDrive() {
 	return drive;
 }
 
-/** Trashes the Drive file behind a skin's old link. Cleanup must never fail a save, so errors are only logged. */
-export async function trashDriveFile(url: string) {
+/**
+ * Trashes the Drive file behind a skin's old link, unless a `keep` link still uses it. Cleanup must
+ * never fail a save, so errors are only logged.
+ */
+export async function trashDriveFile(url: string, keep: string[] = []) {
 	if (!getDriveFileId(url)) return;
 	try {
-		await getDrive().trash(url);
+		await getDrive().trash(url, keep);
 	} catch (e) {
 		console.error("[drive] failed to trash", url, e);
 	}
