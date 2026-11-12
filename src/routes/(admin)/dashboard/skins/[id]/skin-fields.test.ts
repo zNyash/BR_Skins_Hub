@@ -44,7 +44,8 @@ describe("snapshotFromSkin", () => {
 				{ id: "https://img/a", kind: "url", url: "https://img/a" },
 				{ id: "https://img/b", kind: "url", url: "https://img/b" }
 			],
-			playerIds: ["p1", "p2"]
+			playerIds: ["p1", "p2"],
+			osk: null
 		});
 	});
 });
@@ -106,5 +107,37 @@ describe("skinBody", () => {
 			preview_images: ["https://img/z"],
 			player_ids: ["p1", "p2"]
 		});
+	});
+});
+
+describe("pending .osk", () => {
+	const osk = new File(["x"], "a.osk");
+
+	it("starts with no pending .osk", () => {
+		expect(snapshotFromSkin(skin()).osk).toBeNull();
+	});
+
+	it("a pending .osk makes the draft changed", () => {
+		const base = snapshotFromSkin(skin());
+		expect(
+			draftChanged(
+				edit((d) => (d.osk = osk)),
+				base
+			)
+		).toBe(true);
+	});
+
+	it("a pending .osk makes an invalid download link savable", () => {
+		const d = edit((d) => {
+			d.osk = osk;
+			d.skin.download_url = "";
+		});
+		expect(draftError(d)).toBeNull();
+	});
+
+	it("without a .osk an invalid link is still an error", () => {
+		expect(draftError(edit((d) => (d.skin.download_url = "")))).toBe(
+			"Enter a valid download link."
+		);
 	});
 });

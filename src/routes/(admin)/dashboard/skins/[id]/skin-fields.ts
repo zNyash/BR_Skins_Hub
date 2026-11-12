@@ -7,6 +7,8 @@ export type SkinDraft = {
 	skin: { name: string; author: string; download_url: string; tags: string[] };
 	images: ImageItem[];
 	playerIds: Id<"players">[];
+	/** A dropped .osk, uploaded to Google Drive on save; its link replaces `download_url`. */
+	osk: File | null;
 };
 
 /** The skin as a draft, with a missing author and tags as empty values. */
@@ -19,7 +21,8 @@ export function snapshotFromSkin(s: SkinWithPlayers): SkinDraft {
 			tags: s.tags ?? []
 		},
 		images: s.preview_images.map((url) => ({ id: url, kind: "url", url })),
-		playerIds: s.players.map((p) => p._id)
+		playerIds: s.players.map((p) => p._id),
+		osk: null
 	};
 }
 
@@ -35,14 +38,18 @@ export function draftChanged(draft: SkinDraft, base: SkinDraft): boolean {
 	return (
 		json(draft.skin) !== json(base.skin) ||
 		json(ids(draft)) !== json(ids(base)) ||
-		json(players(draft)) !== json(players(base))
+		json(players(draft)) !== json(players(base)) ||
+		draft.osk !== base.osk
 	);
 }
 
 /** Why the draft can't be saved yet, or null when it can. */
 export function draftError(draft: SkinDraft): string | null {
 	if (draft.skin.name.trim() === "") return "Give the skin a name.";
-	if (!URL.canParse(draft.skin.download_url.trim())) return "Enter a valid download link.";
+	// A pending .osk brings its own link.
+	if (!draft.osk && !URL.canParse(draft.skin.download_url.trim())) {
+		return "Enter a valid download link.";
+	}
 	return null;
 }
 
