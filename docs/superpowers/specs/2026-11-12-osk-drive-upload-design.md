@@ -113,7 +113,7 @@ shows the %) → `POST /api/skins`.
 **Skin editor:** dropzone under the Download link field. On drop, the file is kept in the draft as
 pending (the draft becomes dirty); name and author are filled only if empty. Save: `uploadOsk`
 first, its link replaces `download_url`, then the usual PATCH (which trashes the old file). Progress
-shows in the unsaved bar's save button. Reset drops the pending file.
+shows as an updating toast, so the unsaved bar stays unchanged. Reset drops the pending file.
 
 **Errors:** every failure is a toast; nothing is saved, the dialog / draft stays as it was. A file
 uploaded to Drive whose skin save then fails is left there (rare; can be deleted by hand).
