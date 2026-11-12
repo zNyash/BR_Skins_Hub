@@ -89,7 +89,7 @@
 	{tab}
 >
 	{#snippet avatar()}
-		<Avatar osuId={player.osu_id} size={56} />
+		<Avatar osuId={player.osu_id} size="md" />
 	{/snippet}
 	{#snippet actions()}
 		<a
