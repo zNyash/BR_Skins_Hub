@@ -2,6 +2,7 @@ import { onDestroy, tick, untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import { invalidate } from "$app/navigation";
 import { request } from "$lib/api";
+import { uploadOsk } from "$lib/drive-upload";
 import type { SkinWithPlayers } from "$lib/types";
 import { createUploadThing } from "$lib/uploadthing";
 import { resolveImageUrls, type ImageItem } from "../../skin-images";
@@ -53,6 +54,21 @@ export function createSkinDraft(skin: () => SkinWithPlayers) {
 		draft = structuredClone(base);
 	}
 
+	/** Uploads a pending .osk to Google Drive and puts its link in the draft. Progress is a toast. */
+	async function uploadPendingOsk() {
+		if (!draft.osk) return;
+		const toastId = toast.loading("Uploading .osk… 0%");
+		try {
+			draft.skin.download_url = await uploadOsk(draft.osk, draft.skin.name.trim(), (p) =>
+				toast.loading(`Uploading .osk… ${p}%`, { id: toastId })
+			);
+			// Uploaded: saving again (e.g. after a failed PATCH) doesn't upload it twice.
+			draft.osk = null;
+		} finally {
+			toast.dismiss(toastId);
+		}
+	}
+
 	/** Uploads the pending files (in their current order) and swaps them for their urls. */
 	async function uploadPending(): Promise<string[]> {
 		const files = draft.images.flatMap((item) => (item.kind === "file" ? [item.file] : []));
@@ -77,6 +93,7 @@ export function createSkinDraft(skin: () => SkinWithPlayers) {
 			return;
 		}
 		try {
+			await uploadPendingOsk();
 			const preview_images = await uploadPending();
 			await request(`/api/skins/${skin()._id}`, {
 				method: "PATCH",

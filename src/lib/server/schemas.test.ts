@@ -1,6 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
-import { bio, hue, playerSkins, setupPatch, tabOrder } from "./schemas";
+import { MAX_OSK_BYTES } from "$lib/osk";
+import { bio, hue, oskSize, playerSkins, setupPatch, tabOrder } from "./schemas";
 
 describe("playerSkins", () => {
 	it("accepts ordered skins with hidden flags", () => {
@@ -158,5 +159,20 @@ describe("setupPatch tablet filters", () => {
 	it("rejects more than 50 settings on a filter", () => {
 		const settings = Array.from({ length: 51 }, (_, i) => ({ property: `P${i}`, value: "1" }));
 		expect(parse({ filters: [{ ...filter, settings }] }).success).toBe(false);
+	});
+});
+
+describe("oskSize", () => {
+	it("accepts 1 byte up to 300 MB", () => {
+		expect(v.safeParse(oskSize, 1).success).toBe(true);
+		expect(v.safeParse(oskSize, MAX_OSK_BYTES).success).toBe(true);
+	});
+
+	it("rejects empty, fractional and too-big sizes", () => {
+		expect(v.safeParse(oskSize, 0).success).toBe(false);
+		expect(v.safeParse(oskSize, 1.5).success).toBe(false);
+		const tooBig = v.safeParse(oskSize, MAX_OSK_BYTES + 1);
+		expect(tooBig.success).toBe(false);
+		expect(tooBig.issues?.[0].message).toBe("must be at most 300 MB");
 	});
 });

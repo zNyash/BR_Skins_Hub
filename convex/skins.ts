@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query, type QueryCtx } from "./_generated/server";
+import { directDriveLink } from "./lib/links";
 import { adminMutation, fail, serverMutation } from "./lib/functions";
 import { deleteRelations, setSkinPlayers } from "./lib/relations";
 import { skinFields } from "./validators";
@@ -67,8 +68,10 @@ export const upsert = adminMutation({
 		...skinFields,
 		player_ids: v.optional(v.array(v.id("players")))
 	},
-	handler: async (ctx, { id, player_ids, ...fields }) => {
+	handler: async (ctx, { id, player_ids, ...rest }) => {
 		const now = Date.now();
+		// Pasted Drive share links are stored as direct downloads.
+		const fields = { ...rest, download_url: directDriveLink(rest.download_url) };
 		let skinId: Id<"skins">;
 
 		if (id === undefined) {
@@ -103,6 +106,6 @@ export const remove = adminMutation({
 
 		await deleteRelations(ctx.db, { skin: skinId });
 		await ctx.db.delete(skinId);
-		return skin.preview_images;
+		return { images: skin.preview_images, download_url: skin.download_url };
 	}
 });

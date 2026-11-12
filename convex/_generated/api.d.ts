@@ -10,10 +10,12 @@
 
 import type * as auth from "../auth.js";
 import type * as lib_functions from "../lib/functions.js";
+import type * as lib_links from "../lib/links.js";
 import type * as lib_order from "../lib/order.js";
 import type * as lib_relations from "../lib/relations.js";
 import type * as lib_setup from "../lib/setup.js";
 import type * as lib_usernames from "../lib/usernames.js";
+import type * as migrations from "../migrations.js";
 import type * as players from "../players.js";
 import type * as skins from "../skins.js";
 import type * as validators from "../validators.js";
@@ -27,10 +29,12 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   "lib/functions": typeof lib_functions;
+  "lib/links": typeof lib_links;
   "lib/order": typeof lib_order;
   "lib/relations": typeof lib_relations;
   "lib/setup": typeof lib_setup;
   "lib/usernames": typeof lib_usernames;
+  migrations: typeof migrations;
   players: typeof players;
   skins: typeof skins;
   validators: typeof validators;

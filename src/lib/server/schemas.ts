@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { MAX_OSK_BYTES } from "$lib/osk";
 import { normalizeTags } from "$lib/tags";
 
 /** Building blocks for request body schemas. Messages read as "<field> <message>". */
@@ -200,3 +201,11 @@ export const setupPatch = v.strictObject({
 		})
 	)
 });
+
+/** Size in bytes of a .osk about to be uploaded to Google Drive. */
+export const oskSize = v.pipe(
+	v.number("must be a size in bytes"),
+	v.integer("must be a size in bytes"),
+	v.minValue(1, "must not be empty"),
+	v.maxValue(MAX_OSK_BYTES, "must be at most 300 MB")
+);

@@ -9,9 +9,11 @@
 	import { Input } from "$comp/ui/input";
 	import type { Doc, Id } from "$convex/_generated/dataModel";
 	import { request } from "$lib/api";
+	import { readOsk } from "$lib/osk";
 	import type { SkinWithPlayers } from "$lib/types";
 	import AssignPlayersDialog from "../../dialogs/assign-players-dialog.svelte";
 	import DeleteDialog from "../../dialogs/delete-dialog.svelte";
+	import OskDropzone from "../../osk-dropzone.svelte";
 	import TagInput from "../../dialogs/tag-input.svelte";
 	import EditorFrame from "../../editor-frame.svelte";
 	import { registerEditor } from "../../unsaved.svelte";
@@ -44,7 +46,20 @@
 		draft.playerIds.flatMap((id) => players.find((p) => p._id === id) ?? [])
 	);
 
-	const urlValid = $derived(URL.canParse(draft.skin.download_url.trim()));
+	// A pending .osk replaces the link on save, so the current one doesn't need to be valid.
+	const urlValid = $derived(draft.osk !== null || URL.canParse(draft.skin.download_url.trim()));
+
+	/** Fills name and author from the dropped .osk, but only where they're empty. */
+	async function fillFromOsk(file: File) {
+		try {
+			const info = await readOsk(file);
+			if (!draft.skin.name.trim()) draft.skin.name = info.name;
+			if (!draft.skin.author.trim() && info.author) draft.skin.author = info.author;
+		} catch (e) {
+			draft.osk = null;
+			toast.error((e as Error).message);
+		}
+	}
 
 	function addPlayers(ids: Id<"players">[]) {
 		for (const id of ids) if (!draft.playerIds.includes(id)) draft.playerIds.push(id);
@@ -103,6 +118,16 @@
 			/>
 			{#if !urlValid}
 				<p class="text-caption text-error">Enter a valid URL.</p>
+			{/if}
+			<OskDropzone
+				bind:file={draft.osk}
+				label="Drop a .osk to replace the file, or click to choose it"
+				onpick={fillFromOsk}
+			/>
+			{#if draft.osk}
+				<p class="text-caption text-text-muted">
+					Uploaded to Google Drive on save; the link above is replaced.
+				</p>
 			{/if}
 		</div>
 
