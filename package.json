@@ -56,6 +56,7 @@
 		"@uploadthing/svelte": "^7.3.3",
 		"convex": "^1.37.0",
 		"convex-helpers": "^0.1.133",
+		"fflate": "^0.8.3",
 		"fuse.js": "^7.3.0",
 		"jose": "^6.2.3",
 		"osu-api-extended": "^3.1.11",
