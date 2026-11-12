@@ -36,11 +36,13 @@
 ### Task 1: Read name and author from a .osk
 
 **Files:**
+
 - Create: `src/lib/osk.ts`
 - Test: `src/lib/osk.test.ts`
 - Modify: `package.json` / `bun.lock` (`bun add fflate`)
 
 **Interfaces:**
+
 - Produces:
   - `parseSkinIni(text: string): { name: string | null; author: string | null }`
   - `readOsk(file: File): Promise<{ name: string; author: string | null }>`: throws `Error("That file isn't a valid .osk")` when not a zip
@@ -54,10 +56,14 @@
 ```ts
 describe("parseSkinIni", () => {
 	it("reads Name and Author from [General]", () => {
-		expect(parseSkinIni("[General]\nName: Blue\nAuthor: Rafis\n")).toEqual({ name: "Blue", author: "Rafis" });
+		expect(parseSkinIni("[General]\nName: Blue\nAuthor: Rafis\n")).toEqual({
+			name: "Blue",
+			author: "Rafis"
+		});
 	});
 	it("ignores key case, BOM, CRLF, comments and other sections", () => {
-		const ini = "﻿// comment\r\n[General]\r\nname:  Blue  \r\nAUTHOR:Rafis\r\n[Colours]\r\nName: nope\r\n";
+		const ini =
+			"﻿// comment\r\n[General]\r\nname:  Blue  \r\nAUTHOR:Rafis\r\n[Colours]\r\nName: nope\r\n";
 		expect(parseSkinIni(ini)).toEqual({ name: "Blue", author: "Rafis" });
 	});
 	it("returns nulls for missing or empty values", () => {
@@ -66,18 +72,32 @@ describe("parseSkinIni", () => {
 });
 
 describe("readOsk", () => {
-	it("reads skin.ini at the root", async () => { /* zip { "skin.ini": ... } → { name: "Blue", author: "Rafis" } */ });
-	it("reads skin.ini one folder deep, any case", async () => { /* "Blue/Skin.INI" */ });
-	it("falls back to the file name without .osk", async () => { /* no ini → { name: "My Skin", author: null } */ });
+	it("reads skin.ini at the root", async () => {
+		/* zip { "skin.ini": ... } → { name: "Blue", author: "Rafis" } */
+	});
+	it("reads skin.ini one folder deep, any case", async () => {
+		/* "Blue/Skin.INI" */
+	});
+	it("falls back to the file name without .osk", async () => {
+		/* no ini → { name: "My Skin", author: null } */
+	});
 	it("rejects files that aren't zips", async () => {
-		await expect(readOsk(new File(["hello"], "x.osk"))).rejects.toThrow("That file isn't a valid .osk");
+		await expect(readOsk(new File(["hello"], "x.osk"))).rejects.toThrow(
+			"That file isn't a valid .osk"
+		);
 	});
 });
 
 describe("letterFolder", () => {
 	it.each([
-		["abyss", "A"], ["Ábyss", "A"], ["  zeta", "Z"], ["- Rafis -", "-"],
-		["7th", "7"], ["'quoted", "'"], ["", "#"], ["   ", "#"]
+		["abyss", "A"],
+		["Ábyss", "A"],
+		["  zeta", "Z"],
+		["- Rafis -", "-"],
+		["7th", "7"],
+		["'quoted", "'"],
+		["", "#"],
+		["   ", "#"]
 	])("%j → %j", (name, letter) => expect(letterFolder(name)).toBe(letter));
 });
 ```
@@ -95,10 +115,12 @@ describe("letterFolder", () => {
 ### Task 2: Drive server module
 
 **Files:**
+
 - Create: `src/lib/server/drive.ts`
 - Test: `src/lib/server/drive.test.ts`
 
 **Interfaces:**
+
 - Consumes: `letterFolder` from `$lib/osk` (Task 1).
 - Produces:
   - `type DriveConfig = { clientId: string; clientSecret: string; refreshToken: string; folderId: string }`
@@ -109,6 +131,7 @@ describe("letterFolder", () => {
   - `trashDriveFile(url: string): Promise<void>`: no-op when `getDriveFileId(url)` is null; otherwise `getDrive().trash(url)`; catches and `console.error("[drive] ...")`, never throws (also when Drive isn't configured).
 
 Requests (all with `Authorization: Bearer <token>`):
+
 - token: `POST https://oauth2.googleapis.com/token`, form body `client_id, client_secret, refresh_token, grant_type=refresh_token` → `{ access_token, expires_in }`; cache until `expires_in - 60` s.
 - find folder: `GET https://www.googleapis.com/drive/v3/files?q=<q>&orderBy=createdTime&fields=files(id)&pageSize=1`, `q = "'<folderId>' in parents and name = '<escaped>' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"`, escaping `\` → `\\` then `'` → `\'`.
 - create folder: `POST https://www.googleapis.com/drive/v3/files?fields=id`, JSON `{ name, mimeType: folder, parents: [folderId] }`.
@@ -162,6 +185,7 @@ describe("trashDriveFile", () => {
 ### Task 3: Upload API routes and Drive cleanup
 
 **Files:**
+
 - Create: `src/routes/api/skins/osk/start/+server.ts`, `src/routes/api/skins/osk/finish/+server.ts`
 - Modify: `src/lib/server/schemas.ts` (add `oskSize`), `src/lib/server/schemas.test.ts`
 - Modify: `convex/skins.ts:97-108` (`remove` returns `{ images: skin.preview_images, download_url: skin.download_url }`)
@@ -169,6 +193,7 @@ describe("trashDriveFile", () => {
 - Modify: `example.env` (the four Google vars, empty)
 
 **Interfaces:**
+
 - Consumes: `getDrive`, `trashDriveFile` (Task 2); `MAX_OSK_BYTES` (Task 1).
 - Produces (HTTP):
   - `POST /api/skins/osk/start` body `{ file_name: trimmedString, size: oskSize, skin_name: v.string() }` → `200 { upload_url: string }`. Origin passed to Drive is `event.url.origin`.
@@ -188,9 +213,11 @@ describe("trashDriveFile", () => {
 ### Task 4: Setup script
 
 **Files:**
+
 - Create: `scripts/drive-setup.ts`
 
 **Interfaces:**
+
 - Produces: `bun scripts/drive-setup.ts <client_id> <client_secret>` prints `GOOGLE_REFRESH_TOKEN=<token>`.
 
 - [ ] **Step 1: Write the script.** `Bun.serve({ port: 0 })` on `127.0.0.1`; redirect URI `http://127.0.0.1:<port>`; print (and try `xdg-open`) `https://accounts.google.com/o/oauth2/v2/auth?client_id=…&redirect_uri=…&response_type=code&scope=https://www.googleapis.com/auth/drive&access_type=offline&prompt=consent`; on the callback, exchange `code` at `https://oauth2.googleapis.com/token` (`grant_type=authorization_code`), respond "Done, you can close this tab", print the refresh token (or the error), stop the server.
@@ -202,11 +229,13 @@ describe("trashDriveFile", () => {
 ### Task 5: Client upload + dropzone + New skin dialog
 
 **Files:**
+
 - Create: `src/lib/drive-upload.ts`
 - Create: `src/routes/(admin)/dashboard/osk-dropzone.svelte`
 - Modify: `src/routes/(admin)/dashboard/dialogs/skin-creator-dialog.svelte`
 
 **Interfaces:**
+
 - Consumes: `request` (`$lib/api`), `readOsk`, `MAX_OSK_BYTES` (Task 1), routes (Task 3).
 - Produces:
   - `uploadOsk(file: File, skinName: string, onProgress: (percent: number) => void): Promise<string>` (resolves the `download_url`). Steps: `request("/api/skins/osk/start", …)` → `XMLHttpRequest` `PUT upload_url` with `upload.onprogress` → parse `JSON.parse(xhr.responseText).id` on 200/201 → `request("/api/skins/osk/finish", { file_id })`. Network error / other status → `Error("Upload to Google Drive failed")`.
@@ -222,11 +251,13 @@ describe("trashDriveFile", () => {
 ### Task 6: Replace a skin's file from the editor
 
 **Files:**
+
 - Modify: `src/routes/(admin)/dashboard/skins/[id]/skin-fields.ts`, `skin-fields.test.ts`
 - Modify: `src/routes/(admin)/dashboard/skins/[id]/skin-draft.svelte.ts`
 - Modify: `src/routes/(admin)/dashboard/skins/[id]/skin-form.svelte`
 
 **Interfaces:**
+
 - Consumes: `uploadOsk` + `OskDropzone` (Task 5), `readOsk` (Task 1).
 - Produces: `SkinDraft` gains `osk: File | null` (`snapshotFromSkin` sets `null`).
 
@@ -235,18 +266,22 @@ describe("trashDriveFile", () => {
 ```ts
 it("a pending .osk makes the draft changed", () => {
 	const base = snapshotFromSkin(skin);
-	expect(draftChanged({ ...structuredClone(base), osk: new File(["x"], "a.osk") }, base)).toBe(true);
+	expect(draftChanged({ ...structuredClone(base), osk: new File(["x"], "a.osk") }, base)).toBe(
+		true
+	);
 });
 it("a pending .osk makes an invalid download link savable", () => {
 	const d = { ...snapshotFromSkin(skin), osk: new File(["x"], "a.osk") };
 	d.skin.download_url = "";
 	expect(draftError(d)).toBeNull();
 });
-it("without a .osk an invalid link is still an error", () => { /* osk null, url "" → "Enter a valid download link." */ });
+it("without a .osk an invalid link is still an error", () => {
+	/* osk null, url "" → "Enter a valid download link." */
+});
 ```
 
 - [ ] **Step 2: Run** `bunx vitest run "src/routes/(admin)/dashboard/skins/[id]/skin-fields.test.ts"`: FAIL. Implement: `draftChanged` also compares `draft.osk !== base.osk` (reference); `draftError` skips the URL check when `draft.osk`. Note `structuredClone(base)` in the draft store must still work: `osk` is `null` in `base`, and `reset()` clones `base`, so Reset drops the pending file. Run: PASS.
-- [ ] **Step 3: Save.** In `save()`, before the PATCH: if `draft.osk`, `const id = toast.loading("Uploading .osk… 0%")`, `draft.skin.download_url = await uploadOsk(draft.osk, draft.skin.name.trim(), (p) => toast.loading(\`Uploading .osk… ${p}%\`, { id }))`, then `draft.osk = null` and `toast.dismiss(id)` (also dismiss in the catch). Progress shows as an updating toast, not in the unsaved bar, so the bar stays unchanged.
+- [ ] **Step 3: Save.** In `save()`, before the PATCH: if `draft.osk`, `const id = toast.loading("Uploading .osk… 0%")`, `draft.skin.download_url = await uploadOsk(draft.osk, draft.skin.name.trim(), (p) => toast.loading(\`Uploading .osk… ${p}%\`, { id }))`, then `draft.osk = null`and`toast.dismiss(id)` (also dismiss in the catch). Progress shows as an updating toast, not in the unsaved bar, so the bar stays unchanged.
 - [ ] **Step 4: Form.** `OskDropzone bind:file={draft.osk}` under the Download link field; `onpick` fills name/author only if empty. While `draft.osk` is set, show "Replaced on save" under the link input and don't mark it invalid.
 - [ ] **Step 5: Verify** `bun run check`, `bun run lint`, `bun run test`: all pass.
 - [ ] **Step 6: Commit** `feat(dashboard): replace a skin's .osk from the editor`

@@ -103,6 +103,6 @@ export const remove = adminMutation({
 
 		await deleteRelations(ctx.db, { skin: skinId });
 		await ctx.db.delete(skinId);
-		return skin.preview_images;
+		return { images: skin.preview_images, download_url: skin.download_url };
 	}
 });

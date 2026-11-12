@@ -3,6 +3,7 @@ import { api } from "$convex/_generated/api";
 import type { Id } from "$convex/_generated/dataModel";
 import { requireAdmin } from "$lib/server/auth";
 import { convex, mutate } from "$lib/server/convex";
+import { trashDriveFile } from "$lib/server/drive";
 import { convexId, httpUrl, tags, trimmedString } from "$lib/server/schemas";
 import { deleteUploadThingImages } from "$lib/server/uploadthing";
 import { parseBody } from "$lib/server/validation";
@@ -17,7 +18,7 @@ const SkinBody = v.object({
 	player_ids: v.optional(v.array(convexId))
 });
 
-/** Saves the skin and who uses it. Images removed from the list are deleted from UploadThing afterwards. */
+/** Saves the skin and who uses it. Removed images (UploadThing) and a replaced .osk (Drive) are cleaned up afterwards. */
 export const PATCH: RequestHandler = async (event) => {
 	const admin = requireAdmin(event);
 	const { player_ids, ...fields } = await parseBody(event.request, SkinBody);
@@ -32,16 +33,21 @@ export const PATCH: RequestHandler = async (event) => {
 
 	const kept = new Set(fields.preview_images);
 	await deleteUploadThingImages(before?.preview_images.filter((url) => !kept.has(url)) ?? []);
+	// A replaced .osk goes to the Drive trash (non-Drive links are left alone).
+	if (before && before.download_url !== fields.download_url) {
+		await trashDriveFile(before.download_url);
+	}
 
 	return new Response(null, { status: 204 });
 };
 
 export const DELETE: RequestHandler = async (event) => {
 	const admin = requireAdmin(event);
-	const images = await mutate(api.skins.remove, {
+	const { images, download_url } = await mutate(api.skins.remove, {
 		actor_osu_id: admin.osu_id,
 		id: event.params.id
 	});
 	await deleteUploadThingImages(images);
+	await trashDriveFile(download_url);
 	return new Response(null, { status: 204 });
 };
