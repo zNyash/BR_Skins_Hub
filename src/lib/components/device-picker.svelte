@@ -92,7 +92,7 @@
 				<Input
 					{...props}
 					bind:value={query}
-					id={inputId ?? props.id}
+					id={inputId ?? (props.id as string | undefined)}
 					autocomplete="off"
 					oninput={() => (open = true)}
 				/>
