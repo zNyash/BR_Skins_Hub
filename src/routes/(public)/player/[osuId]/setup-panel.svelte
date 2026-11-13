@@ -17,6 +17,7 @@
 	import { Badge, type BadgeVariant } from "$comp/ui/badge";
 	import {
 		CARD_IDS,
+		displaySetup,
 		STORAGE_LABELS,
 		presentCards,
 		diagramRatio,
@@ -37,7 +38,7 @@
 		onEdit
 	}: { player: PlayerWithSkins; canEdit: boolean; onEdit: (card: CardId) => void } = $props();
 
-	const setup = $derived(player.setup ?? {});
+	const setup = $derived(displaySetup(player.setup ?? {}, player.devices));
 	// Editors get every card (empty ones offer to add data); visitors only the ones with data.
 	const layout = $derived(setupLayout(canEdit ? new Set(CARD_IDS) : presentCards(setup)));
 
@@ -88,13 +89,17 @@
 	</div>
 {/snippet}
 
-{#snippet model(id: CardId, name: string | undefined)}
+{#snippet model(id: CardId, name: string | undefined, image?: string)}
 	<div class="flex min-w-0 items-center gap-3 rounded-md bg-layer-2 p-2">
 		<span
-			class="flex h-14 w-20 shrink-0 items-center justify-center rounded-md bg-layer-3 text-text-muted"
+			class="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md bg-layer-3 text-text-muted"
 			aria-hidden="true"
 		>
-			<Icon name={CARD_INFO[id].icon} class="size-6" />
+			{#if image}
+				<img src={image} alt="" class="size-full object-cover" />
+			{:else}
+				<Icon name={CARD_INFO[id].icon} class="size-6" />
+			{/if}
 		</span>
 		<FadeText text={name || "Unknown"} class="flex-1 text-card-title trim" />
 	</div>
@@ -137,10 +142,18 @@
 				<div class="flex flex-col gap-3 @2xl:grid @2xl:grid-cols-[17.5rem_1fr]">
 					<div class="flex min-w-0 flex-col gap-3 rounded-md bg-layer-2 p-3">
 						<span
-							class="flex min-h-30 flex-1 items-center justify-center rounded-md bg-layer-3 text-text-muted @2xl:min-h-0"
+							class="flex min-h-30 flex-1 items-center justify-center overflow-hidden rounded-md bg-layer-3 text-text-muted @2xl:min-h-0"
 							aria-hidden="true"
 						>
-							<Icon name={CARD_INFO.keyboard.icon} class="size-8" />
+							{#if player.devices.keyboard?.image_url}
+								<img
+									src={player.devices.keyboard.image_url}
+									alt=""
+									class="size-full object-cover"
+								/>
+							{:else}
+								<Icon name={CARD_INFO.keyboard.icon} class="size-8" />
+							{/if}
 						</span>
 						<FadeText text={k.model || "Unknown"} class="text-section-title trim" />
 					</div>
@@ -161,7 +174,7 @@
 			{:else if id === "tablet" && setup.tablet}
 				{@const t = setup.tablet}
 				{#snippet tabletInfo()}
-					{@render model(id, t.model)}
+					{@render model(id, t.model, player.devices.tablet?.image_url)}
 					<div class="grid grid-cols-[1.4fr_1fr] gap-3">
 						{@render tile("Area", pair(t.area_w, t.area_h), "mm", { small: true })}
 						{@render tile("Rotation", t.rotation, "°")}
@@ -188,14 +201,14 @@
 				{/if}
 			{:else if id === "mouse" && setup.mouse}
 				{@const m = setup.mouse}
-				{@render model(id, m.model)}
+				{@render model(id, m.model, player.devices.mouse?.image_url)}
 				<div class="grid grid-cols-2 gap-3">
 					{@render tile("DPI", m.dpi)}
 					{@render tile("Polling rate", m.polling_hz, "Hz")}
 				</div>
 			{:else if id === "monitor" && setup.monitor}
 				{@const m = setup.monitor}
-				{@render model(id, m.model)}
+				{@render model(id, m.model, player.devices.monitor?.image_url)}
 				<div class="grid grid-cols-[1fr_1fr_1.4fr] gap-3 @max-sm:grid-cols-2">
 					{@render tile("Refresh rate", m.refresh_hz, "Hz")}
 					{@render tile("Size", m.size_in, "in")}

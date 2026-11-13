@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { cleanDevice, deleteError, deviceEditError, nameKey, type DeviceLike } from "./devices";
+import {
+	cleanDevice,
+	deleteError,
+	deviceEditError,
+	nameKey,
+	relinkNeeded,
+	type DeviceLike
+} from "./devices";
 
 const ctl: DeviceLike = {
 	_id: "d1",
@@ -92,5 +99,29 @@ describe("deleteError", () => {
 
 	it("allows hand-made devices", () => {
 		expect(deleteError(mouse)).toBeNull();
+	});
+});
+
+describe("relinkNeeded", () => {
+	it("is true for a new device", () => {
+		expect(relinkNeeded({ name: "Wacom CTL-472", type: "tablet" }, null)).toBe(true);
+	});
+
+	it("is true when the name changes", () => {
+		expect(relinkNeeded({ name: "Wacom CTL-480", type: "tablet" }, ctl)).toBe(true);
+	});
+
+	it("is false when only spacing and case change", () => {
+		expect(relinkNeeded({ name: " wacom  ctl-472 ", type: "tablet" }, ctl)).toBe(false);
+	});
+
+	it("is true when the type changes", () => {
+		expect(relinkNeeded({ name: "Logitech G Pro", type: "keyboard" }, mouse)).toBe(true);
+	});
+
+	it("is false for an image-only edit", () => {
+		expect(
+			relinkNeeded({ name: mouse.name, type: "mouse", image_url: "https://x.test/a.png" }, mouse)
+		).toBe(false);
 	});
 });

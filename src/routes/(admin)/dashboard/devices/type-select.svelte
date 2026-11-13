@@ -3,7 +3,7 @@
 	import * as Select from "$comp/ui/select";
 	import { DEVICE_TYPES, type DeviceType } from "$convex/validators";
 	import { cn } from "$lib/utils";
-	import { DEVICE_ICONS, DEVICE_LABELS } from "../derive";
+	import { DEVICE_ICONS, DEVICE_LABELS } from "$lib/devices";
 
 	let {
 		value = $bindable(),

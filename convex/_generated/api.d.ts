@@ -11,6 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
 import type * as devices from "../devices.js";
+import type * as lib_deviceMatch from "../lib/deviceMatch.js";
 import type * as lib_devices from "../lib/devices.js";
 import type * as lib_functions from "../lib/functions.js";
 import type * as lib_links from "../lib/links.js";
@@ -18,9 +19,11 @@ import type * as lib_order from "../lib/order.js";
 import type * as lib_otd from "../lib/otd.js";
 import type * as lib_relations from "../lib/relations.js";
 import type * as lib_setup from "../lib/setup.js";
+import type * as lib_setupLinks from "../lib/setupLinks.js";
 import type * as lib_usernames from "../lib/usernames.js";
 import type * as migrations from "../migrations.js";
 import type * as players from "../players.js";
+import type * as setupLinks from "../setupLinks.js";
 import type * as skins from "../skins.js";
 import type * as validators from "../validators.js";
 
@@ -34,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   crons: typeof crons;
   devices: typeof devices;
+  "lib/deviceMatch": typeof lib_deviceMatch;
   "lib/devices": typeof lib_devices;
   "lib/functions": typeof lib_functions;
   "lib/links": typeof lib_links;
@@ -41,9 +45,11 @@ declare const fullApi: ApiFromModules<{
   "lib/otd": typeof lib_otd;
   "lib/relations": typeof lib_relations;
   "lib/setup": typeof lib_setup;
+  "lib/setupLinks": typeof lib_setupLinks;
   "lib/usernames": typeof lib_usernames;
   migrations: typeof migrations;
   players: typeof players;
+  setupLinks: typeof setupLinks;
   skins: typeof skins;
   validators: typeof validators;
 }>;

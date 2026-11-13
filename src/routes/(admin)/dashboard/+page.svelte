@@ -14,8 +14,13 @@
 		type PlayerFilter,
 		type SkinFilter
 	} from "./derive";
+	import DeviceCreatorDialog from "./dialogs/device-creator-dialog.svelte";
+	import LinkDeviceDialog from "./dialogs/link-device-dialog.svelte";
 	import PlayerCreatorDialog from "./dialogs/player-creator-dialog.svelte";
 	import SkinCreatorDialog from "./dialogs/skin-creator-dialog.svelte";
+	import { linkGroups, type LinkGroup } from "./setup-link-groups";
+	import Button from "$comp/ui/button/button.svelte";
+	import { DEVICE_ICONS } from "$lib/devices";
 	import { getContext } from "svelte";
 
 	let { data } = $props();
@@ -25,6 +30,26 @@
 
 	let playerDialogOpen = $state(false);
 	let skinDialogOpen = $state(false);
+
+	let linking = $state<LinkGroup | null>(null);
+	let creatingFor = $state<LinkGroup | null>(null);
+	let deviceDialogOpen = $state(false);
+
+	const groups = $derived(linkGroups(data.players, data.devices));
+	const groupSetups = $derived(groups.reduce((sum, g) => sum + g.cards.length, 0));
+
+	function groupCaption(g: LinkGroup) {
+		const n = g.cards.length;
+		const count = `${n} ${n === 1 ? "setup" : "setups"}`;
+		if (g.allKept) return `${count} · the player removed the link, kept as typed`;
+		if (!g.closest) return `${count} · not in the catalog`;
+		return `${count} · typed as ${g.variants.map((v) => `“${v}”`).join(", ")}`;
+	}
+
+	function createFor(g: LinkGroup) {
+		creatingFor = g;
+		deviceDialogOpen = true;
+	}
 
 	const PLAYER_LABELS: Record<PlayerFilter, string> = {
 		"no-skins": "Players with no skins",
@@ -119,6 +144,77 @@
 			{/if}
 		</Card>
 
+		{#if groups.length > 0}
+			<Card title="Setups to link" icon="link" level={2}>
+				{#snippet trailing()}
+					<span class="text-caption text-text-muted">
+						{groups.length}
+						{groups.length === 1 ? "group" : "groups"} · {groupSetups}
+						{groupSetups === 1 ? "setup" : "setups"}
+					</span>
+				{/snippet}
+				<ul class="flex flex-col gap-2">
+					{#each groups as group (group.type + group.key)}
+						<li
+							class="flex flex-col gap-3 rounded-md bg-layer-2 p-3 min-[900px]:flex-row min-[900px]:items-center"
+						>
+							<div class="flex min-w-0 flex-1 items-center gap-3">
+								<div
+									class="flex size-10 shrink-0 items-center justify-center rounded-md bg-layer-3 text-text-muted"
+								>
+									<Icon name={DEVICE_ICONS[group.type]} />
+								</div>
+								<div class="flex min-w-0 flex-col gap-1">
+									<span class="truncate text-body-strong">{group.label}</span>
+									<span class="text-caption text-text-muted">{groupCaption(group)}</span>
+									{#if group.closest}
+										<span class="flex min-w-0 items-center gap-2 text-caption text-text-muted">
+											Closest:
+											<span
+												class="flex h-5 w-8 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-layer-4"
+											>
+												{#if group.closest.image_url}
+													<img
+														src={group.closest.image_url}
+														alt=""
+														class="size-full object-cover"
+													/>
+												{:else}
+													<Icon name={DEVICE_ICONS[group.type]} class="size-3" />
+												{/if}
+											</span>
+											<span class="truncate text-text">{group.closest.name}</span>
+										</span>
+									{/if}
+								</div>
+							</div>
+							<div class="flex shrink-0 gap-2">
+								{#if !group.closest}
+									<Button
+										type="button"
+										variant="ghost"
+										class="h-11 min-[900px]:h-8"
+										onclick={() => createFor(group)}
+									>
+										<Icon name="plus" />
+										Create device
+									</Button>
+								{/if}
+								<Button
+									type="button"
+									variant="secondary"
+									class="h-11 min-[900px]:h-8"
+									onclick={() => (linking = group)}
+								>
+									Choose…
+								</Button>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</Card>
+		{/if}
+
 		<Card title="Needs attention" icon="circle-alert" level={2}>
 			{#if attention.length === 0}
 				<EmptyState icon="circle-check" title="All good" />
@@ -162,4 +258,10 @@
 <SkinCreatorDialog
 	bind:open={skinDialogOpen}
 	onCreated={(id) => goto(resolve(`/dashboard/skins/${id}`))}
+/>
+<LinkDeviceDialog group={linking} devices={data.devices} onClose={() => (linking = null)} />
+<DeviceCreatorDialog
+	bind:open={deviceDialogOpen}
+	initial={creatingFor ? { name: creatingFor.variants[0], type: creatingFor.type } : undefined}
+	onCreated={(id) => goto(resolve(`/dashboard/devices/${id}`))}
 />

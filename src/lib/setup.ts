@@ -1,4 +1,7 @@
+import type { Id } from "$convex/_generated/dataModel";
 import type { Setup } from "$convex/lib/setup";
+import { normalizeModel } from "$convex/lib/deviceMatch";
+import { LINKABLE_CARDS, type LinkableCard } from "$convex/lib/setupLinks";
 
 export type { Setup };
 export type CardId = "keyboard" | "tablet" | "mouse" | "monitor" | "in_game" | "pc";
@@ -149,4 +152,56 @@ export function diagramRatio(tablet: Setup["tablet"]): number {
 	if (full_w && full_h) return full_w / full_h;
 	if (area_w && area_h) return area_w / area_h;
 	return 1;
+}
+
+export type LinkedDevice = {
+	_id: Id<"devices">;
+	name: string;
+	image_url?: string;
+	full_w?: number;
+	full_h?: number;
+};
+export type LinkedDevices = Partial<Record<LinkableCard, LinkedDevice>>;
+
+/**
+ * The setup as shown: a linked card takes its device's name, and a linked tablet its full area
+ * (only when the device has both sizes). Stored data is not touched.
+ */
+export function displaySetup(setup: Setup, devices: LinkedDevices): Setup {
+	const shown: Setup = { ...setup };
+	for (const card of LINKABLE_CARDS) {
+		const device = devices[card];
+		if (!device || !shown[card]) continue;
+		const next = { ...shown[card], model: device.name };
+		if (card === "tablet" && device.full_w !== undefined && device.full_h !== undefined) {
+			Object.assign(next, { full_w: device.full_w, full_h: device.full_h });
+		}
+		Object.assign(shown, { [card]: next });
+	}
+	return shown;
+}
+
+/** The devices a setup's cards link to, looked up in the full catalog. Missing devices count as unlinked. */
+export function linkedDevices(setup: Setup | undefined, all: LinkedDevice[]): LinkedDevices {
+	const found: LinkedDevices = {};
+	for (const card of LINKABLE_CARDS) {
+		const id = setup?.[card]?.device_id;
+		const device = id && all.find((d) => d._id === id);
+		if (device) found[card] = device;
+	}
+	return found;
+}
+
+/**
+ * The tablet card's name change when an OpenTabletDriver settings.json is imported. The file comes
+ * from the tablet's own driver, so a different name wins and the link is cleared (saving then
+ * auto-links it); the same name (the linked device's, else the typed one) changes nothing.
+ */
+export function importedTablet(
+	card: { model?: string | null; device_id?: string | null; link?: string | null },
+	linkedName: string | undefined,
+	tablet: string
+): { model: string; device_id?: undefined; link?: undefined } | null {
+	if (normalizeModel(linkedName ?? card.model ?? "") === normalizeModel(tablet)) return null;
+	return { model: tablet, device_id: undefined, link: undefined };
 }

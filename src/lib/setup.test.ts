@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+	displaySetup,
+	linkedDevices,
 	hasSetup,
+	importedTablet,
 	keyboardBody,
 	mainInputPatch,
 	rtMode,
@@ -8,7 +11,8 @@ import {
 	tabletDiagram,
 	visibleChips,
 	diagramRatio,
-	type CardId
+	type CardId,
+	type LinkedDevice
 } from "./setup";
 
 const shapes = (...ids: CardId[]) => setupLayout(new Set(ids)).map((c) => `${c.id}:${c.shape}`);
@@ -204,5 +208,84 @@ describe("diagramRatio", () => {
 
 	it("is square with neither", () => {
 		expect(diagramRatio({})).toBe(1);
+	});
+});
+
+describe("displaySetup / linkedDevices", () => {
+	const id = (s: string) => s as LinkedDevice["_id"];
+	const tabletDevice: LinkedDevice = {
+		_id: id("t1"),
+		name: "Wacom CTL-472",
+		full_w: 152,
+		full_h: 95
+	};
+	const setup = {
+		tablet: {
+			model: "my wacom",
+			full_w: 150,
+			full_h: 94,
+			area_w: 50,
+			area_h: 30,
+			device_id: id("t1")
+		},
+		mouse: { model: "G Pro" }
+	};
+
+	it("shows the linked tablet's name and full area", () => {
+		const shown = displaySetup(setup, { tablet: tabletDevice });
+		expect(shown.tablet).toMatchObject({
+			model: "Wacom CTL-472",
+			full_w: 152,
+			full_h: 95,
+			area_w: 50
+		});
+	});
+
+	it("keeps the card's own size when the device has none", () => {
+		const shown = displaySetup(setup, { tablet: { _id: id("t1"), name: "Wacom" } });
+		expect(shown.tablet).toMatchObject({ model: "Wacom", full_w: 150, full_h: 94 });
+	});
+
+	it("leaves unlinked cards unchanged", () => {
+		expect(displaySetup(setup, { tablet: tabletDevice }).mouse).toEqual({ model: "G Pro" });
+	});
+
+	it("finds linked devices and skips ids missing from the catalog", () => {
+		expect(linkedDevices(setup, [tabletDevice])).toEqual({ tablet: tabletDevice });
+		expect(linkedDevices(setup, [])).toEqual({});
+		expect(linkedDevices(undefined, [tabletDevice])).toEqual({});
+	});
+});
+
+describe("importedTablet", () => {
+	it("names an empty card after the imported tablet", () => {
+		expect(importedTablet({}, undefined, "Wacom CTL-472")).toEqual({ model: "Wacom CTL-472" });
+	});
+
+	it("changes nothing when the linked device is the imported tablet", () => {
+		const card = { model: "Wacom CTL-472", device_id: "t1" };
+		expect(importedTablet(card, "Wacom CTL-472", "Wacom CTL-472")).toBeNull();
+	});
+
+	it("changes nothing when the typed name normalizes to the imported tablet", () => {
+		expect(importedTablet({ model: "wacom ctl 472" }, undefined, "Wacom CTL-472")).toBeNull();
+	});
+
+	it("replaces a linked device with a different imported tablet", () => {
+		const card = { model: "Wacom CTL-472", device_id: "t1" };
+		expect(importedTablet(card, "Wacom CTL-472", "Huion H420")).toEqual({
+			model: "Huion H420",
+			device_id: undefined,
+			link: undefined
+		});
+	});
+
+	it("replaces a kept-as-typed name that only partly matches, clearing the flag", () => {
+		const card = { model: "ctl472", link: "manual" };
+		expect(importedTablet(card, undefined, "Wacom CTL-472")).toEqual({
+			model: "Wacom CTL-472",
+			device_id: undefined,
+			link: undefined
+		});
 	});
 });

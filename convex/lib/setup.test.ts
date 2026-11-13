@@ -1,3 +1,4 @@
+import type { Id } from "../_generated/dataModel";
 import { describe, expect, it } from "vitest";
 import { applySetupPatch } from "./setup";
 
@@ -46,5 +47,10 @@ describe("applySetupPatch", () => {
 			keyboard: { switch: "Lekker" },
 			tablet: { area_w: 80 }
 		});
+	});
+
+	it("keeps a card that holds only a device link", () => {
+		const device_id = "m1" as Id<"devices">;
+		expect(applySetupPatch(undefined, { mouse: { device_id } })).toEqual({ mouse: { device_id } });
 	});
 });

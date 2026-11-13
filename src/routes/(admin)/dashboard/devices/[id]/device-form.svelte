@@ -6,7 +6,8 @@
 	import { Input } from "$comp/ui/input";
 	import { request } from "$lib/api";
 	import type { Device } from "$lib/types";
-	import { DEVICE_ICONS, DEVICE_LABELS, formatArea } from "../../derive";
+	import { DEVICE_ICONS, DEVICE_LABELS } from "$lib/devices";
+	import { formatArea } from "../../derive";
 	import DeleteDialog from "../../dialogs/delete-dialog.svelte";
 	import EditorFrame from "../../editor-frame.svelte";
 	import { registerEditor } from "../../unsaved.svelte";
