@@ -87,9 +87,15 @@
 	onkeydown={handleKeydown}
 >
 	<Command.Root shouldFilter={false} class="gap-1 bg-transparent p-0">
-		<CommandPrimitive.Input bind:value={query}>
+		<CommandPrimitive.Input>
 			{#snippet child({ props })}
-				<Input {...props} id={inputId} autocomplete="off" />
+				<Input
+					{...props}
+					bind:value={query}
+					id={inputId ?? props.id}
+					autocomplete="off"
+					oninput={() => (open = true)}
+				/>
 			{/snippet}
 		</CommandPrimitive.Input>
 
