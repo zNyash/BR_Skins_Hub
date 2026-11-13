@@ -67,6 +67,10 @@ export const deviceFields = {
 // nothing left is removed (see applySetupPatch).
 export const keyboardCard = v.object({
 	model: v.optional(v.string()),
+	/** The catalog device this card is linked to. Cleared when that device is deleted. */
+	device_id: v.optional(v.id("devices")),
+	/** "manual" = the player chose to keep the typed model unlinked; auto-matching skips the card. */
+	link: v.optional(v.literal("manual")),
 	switch: v.optional(v.string()),
 	actuation: v.optional(v.number()),
 	rapid_trigger: v.optional(
@@ -80,6 +84,10 @@ export const keyboardCard = v.object({
 
 export const tabletCard = v.object({
 	model: v.optional(v.string()),
+	/** The catalog device this card is linked to. Cleared when that device is deleted. */
+	device_id: v.optional(v.id("devices")),
+	/** "manual" = the player chose to keep the typed model unlinked; auto-matching skips the card. */
+	link: v.optional(v.literal("manual")),
 	area_w: v.optional(v.number()),
 	area_h: v.optional(v.number()),
 	center_x: v.optional(v.number()),
@@ -101,12 +109,20 @@ export const tabletCard = v.object({
 
 export const mouseCard = v.object({
 	model: v.optional(v.string()),
+	/** The catalog device this card is linked to. Cleared when that device is deleted. */
+	device_id: v.optional(v.id("devices")),
+	/** "manual" = the player chose to keep the typed model unlinked; auto-matching skips the card. */
+	link: v.optional(v.literal("manual")),
 	dpi: v.optional(v.number()),
 	polling_hz: v.optional(v.number())
 });
 
 export const monitorCard = v.object({
 	model: v.optional(v.string()),
+	/** The catalog device this card is linked to. Cleared when that device is deleted. */
+	device_id: v.optional(v.id("devices")),
+	/** "manual" = the player chose to keep the typed model unlinked; auto-matching skips the card. */
+	link: v.optional(v.literal("manual")),
 	refresh_hz: v.optional(v.number()),
 	res_w: v.optional(v.number()),
 	res_h: v.optional(v.number()),

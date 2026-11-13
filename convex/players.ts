@@ -5,6 +5,7 @@ import { adminMutation, fail, isAdmin, serverMutation } from "./lib/functions";
 import { deleteRelations, setPlayerSkins } from "./lib/relations";
 import { sortPlayerSkins } from "./lib/order";
 import { applySetupPatch } from "./lib/setup";
+import { linkPatch } from "./lib/setup-links";
 import { mergeUsernames } from "./lib/usernames";
 import { playerFields, playerLink, profileTab, setupPatchFields } from "./validators";
 
@@ -164,8 +165,12 @@ export const updateSetup = serverMutation({
 			if (authUser?.player_id !== playerId) fail(403, "You can only edit your own setup");
 		}
 
+		const devices = await ctx.db.query("devices").collect();
+		const linked = linkPatch(patch, player.setup, devices);
+		if ("status" in linked) fail(linked.status, linked.message);
+
 		await ctx.db.patch(playerId, {
-			setup: applySetupPatch(player.setup, patch),
+			setup: applySetupPatch(player.setup, linked.patch),
 			updated_at: Date.now()
 		});
 	}

@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import type { Id } from "$convex/_generated/dataModel";
 import { MAX_OSK_BYTES } from "$lib/osk";
 import { normalizeTags } from "$lib/tags";
 
@@ -91,12 +92,25 @@ function setupNumber(min: number, max: number, integer = false) {
 const mm = setupNumber(0.01, 4);
 const tabletMm = setupNumber(0.01, 500);
 
+/** The catalog link fields shared by the four device cards. */
+const deviceLink = {
+	device_id: v.pipe(
+		v.nullish(v.pipe(v.string(), v.trim())),
+		v.transform((id) => (id || undefined) as Id<"devices"> | undefined)
+	),
+	link: v.pipe(
+		v.nullish(v.literal("manual")),
+		v.transform((l) => l ?? undefined)
+	)
+};
+
 /** A Setup tab change: each card sent replaces the stored one, null removes it. */
 export const setupPatch = v.strictObject({
 	main_input: v.nullish(v.picklist(["tablet", "mouse"])),
 	keyboard: v.nullish(
 		v.object({
 			model: setupText,
+			...deviceLink,
 			switch: setupText,
 			actuation: mm,
 			rapid_trigger: v.pipe(
@@ -110,6 +124,7 @@ export const setupPatch = v.strictObject({
 	tablet: v.nullish(
 		v.object({
 			model: setupText,
+			...deviceLink,
 			area_w: tabletMm,
 			area_h: tabletMm,
 			center_x: setupNumber(0, 500),
@@ -149,6 +164,7 @@ export const setupPatch = v.strictObject({
 	mouse: v.nullish(
 		v.object({
 			model: setupText,
+			...deviceLink,
 			dpi: setupNumber(1, 100000, true),
 			polling_hz: setupNumber(1, 10000, true)
 		})
@@ -156,6 +172,7 @@ export const setupPatch = v.strictObject({
 	monitor: v.nullish(
 		v.object({
 			model: setupText,
+			...deviceLink,
 			refresh_hz: setupNumber(1, 1000),
 			res_w: setupNumber(1, 10000, true),
 			res_h: setupNumber(1, 10000, true),
