@@ -57,7 +57,7 @@ it.
 - **The picker is on all four Model fields**, each listing only its own device type. An empty
   catalog for a type just behaves like today's text box.
 - **The catalog is fetched when a setup dialog opens**, not by the page load: `GET
-  /api/devices?type=<type>`. Kept in memory for the rest of the visit (per type). Visitors and
+/api/devices?type=<type>`. Kept in memory for the rest of the visit (per type). Visitors and
   owners who never open a dialog never load it.
 - **Auto-link on save** when the match is confident (rules below).
 - **Re-check after catalog changes**: creating or renaming a device, and every OTD sync, re-runs
@@ -69,7 +69,7 @@ it.
 - **Deleting a device** (hand-made only; OTD tablets can't be deleted) unlinks every card pointing
   at it. Their typed text stays.
 - **Changing a hand-made device's type** unlinks every card pointing at it, the same way (no flag),
-  in `devices.upsert`; the re-check then runs as for any edit. *(Spec review: my call.)*
+  in `devices.upsert`; the re-check then runs as for any edit. _(Spec review: my call.)_
 - **Only the admin links on the dashboard**; players link from their own dialog. Players can also
   unlink ("Not my tablet").
 
@@ -106,7 +106,7 @@ re-check, and the dashboard (the dashboard imports it via `$convex`).
 - **Guess**: no confident match → Fuse over the type's device names, best result above a threshold
   (builder picks the threshold; it only decides what's shown as "Closest", never links anything).
 - **Groups for the dashboard**: unlinked cards with a non-empty `model`, grouped by `(type,
-  normalized model)`. Group label: the most common typed variant, upper-cased. Each group lists the
+normalized model)`. Group label: the most common typed variant, upper-cased. Each group lists the
   distinct typed variants and the setup count.
 
 ## Save path
@@ -118,8 +118,8 @@ each device-card in the patch:
    Drop any `link`.
 2. Card has `link: "manual"`: if the stored card had no flag (the player just set it), or its
    `model` equals the stored card's `model`, keep the flag and skip matching. If the stored card was
-   already flagged and `model` changed, drop the flag and go to 3. *(Implementation ruling: a
-   brand-new card kept as typed must not be auto-linked on its first save.)*
+   already flagged and `model` changed, drop the flag and go to 3. _(Implementation ruling: a
+   brand-new card kept as typed must not be auto-linked on its first save.)_
 3. Otherwise run the confident match; if one is found, set `device_id`.
 
 The API schema (`src/lib/server/schemas.ts` `setupPatch`) accepts `device_id` (string, normalized
@@ -161,7 +161,7 @@ Route: `POST /api/setup-links` (`requireAdmin` → `parseBody` → `mutate` → 
 ## Profile
 
 - **`players.get`** also returns the linked devices: `devices: Record<cardId, { _id, name,
-  image_url, full_w, full_h }>` for cards whose `device_id` resolves. A dangling id (shouldn't
+image_url, full_w, full_h }>` for cards whose `device_id` resolves. A dangling id (shouldn't
   happen after `remove` cleans up) is treated as unlinked.
 - **Setup panel** (`setup-panel.svelte`): the `model` snippet's 80×56 box shows the device image
   (`object-cover`) when linked and the device has one; otherwise the type icon as today. The name is
@@ -184,7 +184,7 @@ Mockup artboards "Setup dialog · choosing a device" and "· linked card".
   ("152 × 95 mm"). A count caption on top ("5 tablets"). Last row: "Not listed? Keep "…" as typed",
   which closes the list, keeps the text and sets `link: "manual"`, so saving doesn't auto-link
   it: choosing it is the player saying "this isn't in your list". Closing the list with Esc or by
-  leaving the field sets no flag, so auto-link still runs on save. *(Spec review: my call.)* A hint line: "↑ ↓ move · Enter
+  leaving the field sets no flag, so auto-link still runs on save. _(Spec review: my call.)_ A hint line: "↑ ↓ move · Enter
   choose · Esc close".
 - **Picking** sets `device_id` and `model = device.name` in the draft; the field turns into the
   linked block.
@@ -201,8 +201,8 @@ Mockup artboards "Setup dialog · choosing a device" and "· linked card".
   card's current name (the linked device's name, else the typed `model`), `model` becomes the
   imported name and `device_id` and `link` are cleared; the save path's auto-link then links it
   (OTD names match the catalog exactly). Same name: model and link stay as they are. The import
-  file comes from the tablet's own driver, so it's trusted over what the card had. *(Decided in
-  spec review.)*
+  file comes from the tablet's own driver, so it's trusted over what the card had. _(Decided in
+  spec review.)_
 - Loading state while the catalog fetch is in flight: the list shows a short loading row; a failed
   fetch shows an error row and the field keeps working as free text.
 
@@ -221,7 +221,7 @@ Mockup artboard "Dashboard Home · unlinked setups".
 - **Flagged cards are listed** even when their text confidently matches a device ("confident
   matches never appear" applies to unflagged cards only). Their "Closest" may be the very device
   the player rejected; showing it is useful, and linking it anyway is the admin's call.
-  *(Spec review: my call.)*
+  _(Spec review: my call.)_
 - **Choose…** (secondary): opens a device picker dialog (the same Command list as the profile, as a
   dialog like assign-players/skins), filtered to the group's type, with the closest guess on top.
   Picking links every card in the group (`POST /api/setup-links`).

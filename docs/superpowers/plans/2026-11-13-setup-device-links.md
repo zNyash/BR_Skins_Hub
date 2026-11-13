@@ -26,7 +26,7 @@
 ## Review Focus
 
 1. **A picked device was deleted before save** → save answers 400 "That device no longer exists" and nothing is stored (test in Task 2).
-2. **A model of only punctuation/spaces** ("-", "  ") normalizes to `""` → never matches, never forms a dashboard group (tests in Tasks 1 and 7).
+2. **A model of only punctuation/spaces** ("-", " ") normalizes to `""` → never matches, never forms a dashboard group (tests in Tasks 1 and 7).
 3. **Saving a linked card after editing other fields** (area, DPI) → `device_id` stays, `model` untouched (test in Task 2).
 4. **Two OTD tablets whose vendor-less names collide** (e.g. `Huion/H420` "Huion H420" and `XP-Pen/H420` "XP-Pen H420", typed "h420") → not confident, no auto-link, shown as a guess (test in Task 1).
 5. **The catalog fetch fails or is slow** → the picker shows a loading/error row and the field still saves as free text (manual check in Task 5).
@@ -36,10 +36,12 @@
 ### Task 1: Name matching
 
 **Files:**
+
 - Create: `convex/lib/deviceMatch.ts`
 - Test: `convex/lib/deviceMatch.test.ts`
 
 **Interfaces:**
+
 - Consumes: `DeviceLike` from `convex/lib/devices.ts` (`{ _id: string; name: string; type: DeviceType; otd_path?: string }`).
 - Produces:
   - `normalizeModel(text: string): string`
@@ -49,8 +51,12 @@
 - [ ] **Step 1: Write the failing tests**
 
 ```ts
-const d = (id: string, name: string, type: DeviceType = "tablet", otd_path?: string) =>
-	({ _id: id, name, type, otd_path });
+const d = (id: string, name: string, type: DeviceType = "tablet", otd_path?: string) => ({
+	_id: id,
+	name,
+	type,
+	otd_path
+});
 const ctl = d("1", "Wacom CTL-472", "tablet", "Wacom/CTL-472");
 
 it("normalizeModel lowercases and keeps only letters and digits", () => {
@@ -111,6 +117,7 @@ git commit -m "feat(devices): match typed setup models to catalog devices"
 ### Task 2: Card link fields and the save path
 
 **Files:**
+
 - Modify: `convex/validators.ts` (the four card validators)
 - Create: `convex/lib/setupLinks.ts`
 - Test: `convex/lib/setupLinks.test.ts`
@@ -119,6 +126,7 @@ git commit -m "feat(devices): match typed setup models to catalog devices"
 - Modify: `convex/lib/setup.test.ts` (one case)
 
 **Interfaces:**
+
 - Consumes: `confidentMatch` (Task 1); `Setup`, `SetupPatch` from `convex/lib/setup.ts`.
 - Produces (in `convex/lib/setupLinks.ts`):
   - `LINKABLE_CARDS = ["keyboard", "tablet", "mouse", "monitor"] as const`, `type LinkableCard`
@@ -142,44 +150,72 @@ const ctl = { _id: "t1", name: "Wacom CTL-472", type: "tablet", otd_path: "Wacom
 const mx = { _id: "m1", name: "Logitech G Pro", type: "mouse" };
 
 it("auto-links a confident typed model", () =>
-	expect(linkPatch({ tablet: { model: "ctl 472" } }, undefined, devices))
-		.toEqual({ patch: { tablet: { model: "ctl 472", device_id: "t1" } } }));
+	expect(linkPatch({ tablet: { model: "ctl 472" } }, undefined, devices)).toEqual({
+		patch: { tablet: { model: "ctl 472", device_id: "t1" } }
+	}));
 it("keeps a picked device and drops a stray manual flag", () =>
-	expect(linkPatch({ tablet: { model: "x", device_id: "t1", link: "manual" } }, undefined, devices))
-		.toEqual({ patch: { tablet: { model: "x", device_id: "t1" } } }));
+	expect(
+		linkPatch({ tablet: { model: "x", device_id: "t1", link: "manual" } }, undefined, devices)
+	).toEqual({ patch: { tablet: { model: "x", device_id: "t1" } } }));
 it("keeps the link when other fields change", () =>
-	expect(linkPatch({ tablet: { model: "my ctl", device_id: "t1", area_w: 90 } },
-		{ tablet: { model: "my ctl", device_id: "t1", area_w: 80 } }, devices))
-		.toEqual({ patch: { tablet: { model: "my ctl", device_id: "t1", area_w: 90 } } }));
+	expect(
+		linkPatch(
+			{ tablet: { model: "my ctl", device_id: "t1", area_w: 90 } },
+			{ tablet: { model: "my ctl", device_id: "t1", area_w: 80 } },
+			devices
+		)
+	).toEqual({ patch: { tablet: { model: "my ctl", device_id: "t1", area_w: 90 } } }));
 it("400 when the picked device is gone", () =>
-	expect(linkPatch({ tablet: { device_id: "gone" } }, undefined, devices))
-		.toEqual({ status: 400, message: "That device no longer exists" }));
+	expect(linkPatch({ tablet: { device_id: "gone" } }, undefined, devices)).toEqual({
+		status: 400,
+		message: "That device no longer exists"
+	}));
 it("400 when the picked device is another type", () =>
-	expect(linkPatch({ tablet: { device_id: "m1" } }, undefined, devices))
-		.toEqual({ status: 400, message: "That device isn't a tablet" }));
+	expect(linkPatch({ tablet: { device_id: "m1" } }, undefined, devices)).toEqual({
+		status: 400,
+		message: "That device isn't a tablet"
+	}));
 it("manual flag stays while the model is unchanged", () =>
-	expect(linkPatch({ tablet: { model: "ctl472", link: "manual" } },
-		{ tablet: { model: "ctl472", link: "manual" } }, devices))
-		.toEqual({ patch: { tablet: { model: "ctl472", link: "manual" } } }));
+	expect(
+		linkPatch(
+			{ tablet: { model: "ctl472", link: "manual" } },
+			{ tablet: { model: "ctl472", link: "manual" } },
+			devices
+		)
+	).toEqual({ patch: { tablet: { model: "ctl472", link: "manual" } } }));
 it("manual flag is dropped and matching runs when the model changes", () =>
-	expect(linkPatch({ tablet: { model: "wacom ctl-472", link: "manual" } },
-		{ tablet: { model: "ctl472", link: "manual" } }, devices))
-		.toEqual({ patch: { tablet: { model: "wacom ctl-472", device_id: "t1" } } }));
+	expect(
+		linkPatch(
+			{ tablet: { model: "wacom ctl-472", link: "manual" } },
+			{ tablet: { model: "ctl472", link: "manual" } },
+			devices
+		)
+	).toEqual({ patch: { tablet: { model: "wacom ctl-472", device_id: "t1" } } }));
 it("a new manual flag (Not my tablet / keep as typed) is kept", () =>
-	expect(linkPatch({ tablet: { model: "ctl472", link: "manual" } },
-		{ tablet: { model: "ctl472", device_id: "t1" } }, devices))
-		.toEqual({ patch: { tablet: { model: "ctl472", link: "manual" } } }));
+	expect(
+		linkPatch(
+			{ tablet: { model: "ctl472", link: "manual" } },
+			{ tablet: { model: "ctl472", device_id: "t1" } },
+			devices
+		)
+	).toEqual({ patch: { tablet: { model: "ctl472", link: "manual" } } }));
 it("leaves null cards and non-linkable cards alone", () =>
-	expect(linkPatch({ tablet: null, pc: { cpu: "R7" } }, undefined, devices))
-		.toEqual({ patch: { tablet: null, pc: { cpu: "R7" } } }));
+	expect(linkPatch({ tablet: null, pc: { cpu: "R7" } }, undefined, devices)).toEqual({
+		patch: { tablet: null, pc: { cpu: "R7" } }
+	}));
 it("relinkSetup links only unlinked, unflagged cards", () => {
-	expect(relinkSetup({ tablet: { model: "ctl472" }, mouse: { model: "g pro", link: "manual" } }, devices))
-		.toEqual({ tablet: { model: "ctl472", device_id: "t1" }, mouse: { model: "g pro", link: "manual" } });
+	expect(
+		relinkSetup({ tablet: { model: "ctl472" }, mouse: { model: "g pro", link: "manual" } }, devices)
+	).toEqual({
+		tablet: { model: "ctl472", device_id: "t1" },
+		mouse: { model: "g pro", link: "manual" }
+	});
 	expect(relinkSetup({ tablet: { model: "ctl472", device_id: "t1" } }, devices)).toBeNull();
 });
 it("unlinkDevice clears only that device and sets no flag", () =>
-	expect(unlinkDevice({ tablet: { model: "x", device_id: "t1" }, mouse: { device_id: "m1" } }, "t1"))
-		.toEqual({ tablet: { model: "x" }, mouse: { device_id: "m1" } }));
+	expect(
+		unlinkDevice({ tablet: { model: "x", device_id: "t1" }, mouse: { device_id: "m1" } }, "t1")
+	).toEqual({ tablet: { model: "x" }, mouse: { device_id: "m1" } }));
 ```
 
 Case 8 is how "Not my tablet" and "Not listed? Keep as typed" reach the server: the client sends `link: "manual"`; rule 2 keeps it because the model equals the stored one. (Model unchanged + flag in patch = keep, whether or not the stored card had the flag.)
@@ -226,6 +262,7 @@ git commit -m "feat(setup): link setup cards to catalog devices on save"
 ### Task 3: Catalog hooks and API routes
 
 **Files:**
+
 - Create: `convex/setupLinks.ts`
 - Modify: `convex/devices.ts` (`upsert`, `remove`, `applyOtdBatch`; new `listByType`)
 - Modify: `convex/lib/devices.ts` + `convex/lib/devices.test.ts` (one helper)
@@ -234,6 +271,7 @@ git commit -m "feat(setup): link setup cards to catalog devices on save"
 - Modify: `src/lib/server/schemas.ts` (`setupLinkBody`)
 
 **Interfaces:**
+
 - Consumes: `relinkSetup`, `clearDeviceLinks`, `LINKABLE_CARDS`, `LinkableCard` (Task 2).
 - Produces:
   - `internal.setupLinks.relinkAll` — internalMutation, no args.
@@ -274,12 +312,14 @@ git commit -m "feat(devices): relink setups after catalog changes and add link r
 ### Task 4: Profile shows linked devices
 
 **Files:**
+
 - Modify: `convex/players.ts` (`get`)
 - Modify: `src/lib/setup.ts` + `src/lib/setup.test.ts`
 - Modify: `src/routes/(public)/player/[osuId]/setup-panel.svelte`
 - Modify: `src/routes/(admin)/dashboard/players/[id]/setup-preview.svelte`, `setup-tab.svelte`, and the editor page that renders `SetupTab` (pass `data.devices`)
 
 **Interfaces:**
+
 - Consumes: `LinkableCard`, `LINKABLE_CARDS` (Task 2).
 - Produces:
   - `players.get` result gains `devices: Partial<Record<LinkableCard, LinkedDevice>>`.
@@ -306,11 +346,13 @@ git commit -m "feat(profile): show linked device names, photos and full area"
 ### Task 5: Device picker component
 
 **Files:**
+
 - Create (generated): `src/lib/components/ui/command/*` via `bunx shadcn-svelte@latest add command`, then restyle class strings to tokens (list/popover `bg-layer-2`, highlighted item `bg-layer-3`, `rounded-md`, `shadow-float` on the floating list).
 - Create: `src/lib/device-catalog.ts` + `src/lib/device-catalog.test.ts`
 - Create: `src/lib/components/device-picker.svelte`
 
 **Interfaces:**
+
 - Produces:
   - `type PickerDevice = { _id: Id<"devices">; name: string; image_url?: string; full_w?: number; full_h?: number }`
   - `loadDevices(type: DeviceType, fetcher = fetch): Promise<PickerDevice[]>` — caches the promise per type in a module `Map`; a rejected promise is removed from the cache so the next open retries. Uses `request<PickerDevice[]>` from `$lib/api` (GET by default; throws with the backend message), with the fetcher injectable for the test.
@@ -348,10 +390,12 @@ git commit -m "feat(devices): add device picker on shadcn command"
 ### Task 6: Setup dialog uses the picker
 
 **Files:**
+
 - Modify: `src/routes/(public)/player/[osuId]/setup-dialog.svelte`
 - Modify: `src/lib/setup.ts` + its test (OTD import rule)
 
 **Interfaces:**
+
 - Consumes: `device-picker.svelte`, `loadDevices`, `PickerDevice` (Task 5); `player.devices` / `LinkedDevice` (Task 4); server rules (Task 2).
 - Produces: `importedTablet(card: { model?: string | null; device_id?: string | null; link?: string | null }, linkedName: string | undefined, tablet: string): { model: string; device_id?: undefined; link?: undefined } | null` in `src/lib/setup.ts` — null when `normalizeModel(linkedName ?? card.model ?? "") === normalizeModel(tablet)` (same tablet: change nothing), else the replacement (model = `tablet`, link fields cleared).
 
@@ -381,14 +425,17 @@ git commit -m "feat(setup): pick catalog devices in the setup dialog"
 ### Task 7: Dashboard "Setups to link"
 
 **Files:**
+
 - Create: `src/routes/(admin)/dashboard/setup-link-groups.ts` + `.test.ts`
 - Create: `src/routes/(admin)/dashboard/dialogs/link-device-dialog.svelte`
 - Modify: `src/routes/(admin)/dashboard/dialogs/device-creator-dialog.svelte` (prefill)
 - Modify: `src/routes/(admin)/dashboard/+page.svelte`
 
 **Interfaces:**
+
 - Consumes: `normalizeModel`, `confidentMatch` (Task 1); `LINKABLE_CARDS`, `LinkableCard` (Task 2); `POST /api/setup-links` (Task 3); `device-picker.svelte` (Task 5).
 - Produces:
+
   ```ts
   type LinkGroup = {
     type: LinkableCard;
@@ -401,6 +448,7 @@ git commit -m "feat(setup): pick catalog devices in the setup dialog"
   };
   linkGroups(players: Doc<"players">[], devices: Device[]): LinkGroup[]  // sorted by cards.length desc, then label
   ```
+
   `device-creator-dialog.svelte` gains `initial?: { name: string; type: DeviceType }` applied on open instead of the blank defaults.
 
 - [ ] **Step 1: Failing tests** for `linkGroups`: "ctl 4100" and "CTL4100" on two players form one group labelled "CTL 4100" with both variants; a linked card is excluded; an unflagged card whose model confidently matches is excluded; a flagged card that confidently matches is included with `allKept: true`; a model of " - " is excluded; groups are per type (the same text on a mouse and a keyboard → two groups); `closest` is the Fuse best match ("ctl 4100" → "Wacom CTL-4100WL" when that is in `devices`) and null for an empty type.
