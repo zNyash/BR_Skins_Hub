@@ -63,6 +63,18 @@ describe("linkPatch", () => {
 				devices
 			)
 		).toEqual({ patch: { tablet: { model: "ctl472", link: "manual" } } }));
+	it("keeps a new manual flag on a never-saved card", () =>
+		expect(linkPatch({ tablet: { model: "ctl472", link: "manual" } }, undefined, devices)).toEqual({
+			patch: { tablet: { model: "ctl472", link: "manual" } }
+		}));
+	it("keeps a new manual flag when the stored card had none and another model", () =>
+		expect(
+			linkPatch(
+				{ tablet: { model: "ctl472", link: "manual" } },
+				{ tablet: { model: "old" } },
+				devices
+			)
+		).toEqual({ patch: { tablet: { model: "ctl472", link: "manual" } } }));
 	it("leaves null cards and non-linkable cards alone", () =>
 		expect(linkPatch({ tablet: null, pc: { cpu: "R7" } }, undefined, devices)).toEqual({
 			patch: { tablet: null, pc: { cpu: "R7" } }

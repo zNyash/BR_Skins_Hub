@@ -14,7 +14,9 @@ type LinkFields = { model?: string; device_id?: Id<"devices">; link?: "manual" }
 /**
  * Applies the link rules to the cards of a setup change:
  * 1. a picked device must exist and be of the card's type; a stray manual flag is dropped;
- * 2. a manual flag stays only while the model is unchanged from the stored card;
+ * 2. a manual flag is kept (and matching skipped) when it is new (the stored card has none) or the
+ *    model is unchanged; it is dropped, and matching runs, only when the stored card was already
+ *    flagged and the model changed;
  * 3. otherwise a card whose typed model confidently matches one device gets linked.
  * A card already linked and still carrying its device_id keeps it (rule 1 covers it).
  */
@@ -37,7 +39,8 @@ export function linkPatch(
 			continue;
 		}
 
-		if (link === "manual" && value.model === (current?.[card] as LinkFields | undefined)?.model) {
+		const stored = current?.[card] as LinkFields | undefined;
+		if (link === "manual" && (stored?.link !== "manual" || value.model === stored.model)) {
 			next[card] = value;
 			continue;
 		}
@@ -72,7 +75,8 @@ export function unlinkDevice(setup: Setup | undefined, deviceId: Id<"devices">):
 	for (const card of LINKABLE_CARDS) {
 		const value = setup[card] as LinkFields | undefined;
 		if (value?.device_id !== deviceId) continue;
-		const { device_id: _unused, ...rest } = value;
+		const rest = { ...value };
+		delete rest.device_id;
 		next[card] = rest;
 		changed = true;
 	}
