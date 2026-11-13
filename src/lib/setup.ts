@@ -1,5 +1,6 @@
 import type { Id } from "$convex/_generated/dataModel";
 import type { Setup } from "$convex/lib/setup";
+import { normalizeModel } from "$convex/lib/deviceMatch";
 import { LINKABLE_CARDS, type LinkableCard } from "$convex/lib/setupLinks";
 
 export type { Setup };
@@ -189,4 +190,18 @@ export function linkedDevices(setup: Setup | undefined, all: LinkedDevice[]): Li
 		if (device) found[card] = device;
 	}
 	return found;
+}
+
+/**
+ * The tablet card's name change when an OpenTabletDriver settings.json is imported. The file comes
+ * from the tablet's own driver, so a different name wins and the link is cleared (saving then
+ * auto-links it); the same name (the linked device's, else the typed one) changes nothing.
+ */
+export function importedTablet(
+	card: { model?: string | null; device_id?: string | null; link?: string | null },
+	linkedName: string | undefined,
+	tablet: string
+): { model: string; device_id?: undefined; link?: undefined } | null {
+	if (normalizeModel(linkedName ?? card.model ?? "") === normalizeModel(tablet)) return null;
+	return { model: tablet, device_id: undefined, link: undefined };
 }

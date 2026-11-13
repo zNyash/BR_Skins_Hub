@@ -1,19 +1,25 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+	import DevicePicker from "$comp/device-picker.svelte";
 	import Icon from "$comp/icon.svelte";
 	import Button from "$comp/ui/button/button.svelte";
 	import * as Dialog from "$comp/ui/dialog";
 	import { Input } from "$comp/ui/input";
 	import * as Select from "$comp/ui/select";
 	import { askConfirm } from "$lib/confirm.svelte";
+	import { loadDevices, type PickerDevice } from "$lib/device-catalog";
+	import { DEVICE_ICONS } from "$lib/devices";
 	import {
+		importedTablet,
 		keyboardBody,
 		mainInputPatch,
 		STORAGE_LABELS,
 		type CardId,
+		type LinkedDevice,
 		type Setup
 	} from "$lib/setup";
+	import { LINKABLE_CARDS, type LinkableCard } from "$convex/lib/setupLinks";
 	import { humanize, otdSettingsHint, parseOtdSettings, type OtdProfile } from "$lib/otd";
 	import type { PlayerWithSkins } from "$lib/types";
 	import { cn } from "$lib/utils";
@@ -96,6 +102,8 @@
 	const setup = $derived(player.setup ?? {});
 	const isMainInputCard = (id: CardId | null): id is "tablet" | "mouse" =>
 		id === "tablet" || id === "mouse";
+	const isLinkable = (id: CardId | null): id is LinkableCard =>
+		(LINKABLE_CARDS as readonly (CardId | null)[]).includes(id);
 
 	let draft = $state<Draft>({});
 	// Selects work on strings, so these live beside the draft and are converted on save.
@@ -105,6 +113,43 @@
 	let mainInput = $state(false);
 	let initial = "";
 	let saving = $state(false);
+
+	// --- Catalog link (keyboard, tablet, mouse, monitor) ---
+	// The device the card links to, for the linked block; the draft only holds its id.
+	let linked = $state<LinkedDevice | PickerDevice | null>(null);
+	let catalog = $state<PickerDevice[] | "loading" | "error">("loading");
+	// The tablet's full area comes from the device when it has both sizes.
+	const lockedArea = $derived(
+		card === "tablet" && linked?.full_w !== undefined && linked?.full_h !== undefined
+			? { w: linked.full_w, h: linked.full_h }
+			: null
+	);
+
+	function fetchCatalog(type: LinkableCard) {
+		if (Array.isArray(catalog)) return;
+		catalog = "loading";
+		loadDevices(type).then(
+			(list) => {
+				if (card === type) catalog = list;
+			},
+			() => {
+				if (card === type) catalog = "error";
+			}
+		);
+	}
+
+	function pickDevice(device: PickerDevice) {
+		draft.device_id = device._id;
+		draft.model = device.name;
+		draft.link = null;
+		linked = device;
+	}
+
+	function unlinkDevice() {
+		draft.device_id = null;
+		draft.link = "manual";
+		linked = null;
+	}
 
 	// --- OpenTabletDriver import (read here in the browser; nothing is uploaded) ---
 	let dragging = $state(false);
@@ -126,12 +171,10 @@
 	}
 
 	function applyProfile(profile: OtdProfile) {
-		draft = {
-			...draft,
-			...profile.area,
-			model: draft.model || profile.tablet,
-			filters: profile.filters
-		};
+		// A different tablet in the file replaces the card's name and drops its link.
+		const renamed = importedTablet(draft, linked?.name, profile.tablet);
+		draft = { ...draft, ...profile.area, ...renamed, filters: profile.filters };
+		if (renamed) linked = null;
 		profiles = [];
 		const count = profile.filters.length;
 		toast.success(`Imported ${profile.tablet} with ${count} ${count === 1 ? "filter" : "filters"}`);
@@ -157,6 +200,8 @@
 				filters: saved.filters?.map((filter) => ({ ...filter, settings: [...filter.settings] }))
 			};
 			profiles = [];
+			linked = isLinkable(id) ? (player.devices[id] ?? null) : null;
+			catalog = "loading";
 			rt = setup.keyboard?.rapid_trigger ?? "";
 			rawInput =
 				setup.in_game?.raw_input === undefined ? "" : setup.in_game.raw_input ? "on" : "off";
@@ -219,6 +264,68 @@
 		send({ [card]: null, ...main });
 	}
 </script>
+
+{#snippet deviceField(type: LinkableCard)}
+	<div class="flex flex-col gap-2 sm:col-span-2">
+		{#if draft.device_id}
+			<span class="text-label">Model</span>
+			<div class="flex items-center gap-3 rounded-md bg-layer-2 p-2">
+				<div
+					class="flex h-10 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-layer-4 text-text-muted"
+				>
+					{#if linked?.image_url}
+						<img src={linked.image_url} alt="" class="size-full object-cover" />
+					{:else}
+						<Icon name={DEVICE_ICONS[type]} class="size-5" />
+					{/if}
+				</div>
+				<div class="flex min-w-0 flex-1 flex-col">
+					<span class="truncate text-body-strong">{linked?.name ?? draft.model}</span>
+					<span class="text-caption text-text-muted">
+						From the catalog{#if lockedArea}
+							· full area {lockedArea.w} × {lockedArea.h} mm{/if}
+					</span>
+				</div>
+				<Button variant="ghost" size="sm" class="hover:bg-layer-3" onclick={unlinkDevice}>
+					Not my {CARD_INFO[type].title.toLowerCase()}
+				</Button>
+			</div>
+		{:else}
+			<label for="setup-model" class="text-label">Model</label>
+			<DevicePicker
+				{type}
+				devices={catalog}
+				inputId="setup-model"
+				bind:query={
+					() => draft.model ?? "",
+					(value) => {
+						draft.model = value;
+						// Typing again takes back a "keep as typed".
+						draft.link = null;
+					}
+				}
+				onFocus={() => fetchCatalog(type)}
+				onPick={pickDevice}
+				onKeepTyped={() => (draft.link = "manual")}
+			/>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet lockedFullArea(area: { w: number; h: number })}
+	<div class="flex flex-col gap-2 sm:col-span-2">
+		<span class="text-label">Full area</span>
+		<div
+			class="flex h-11 items-center gap-2 rounded-md border border-dashed border-layer-5 px-3 text-body text-text-muted"
+		>
+			<Icon name="lock" class="size-4" />
+			{area.w} × {area.h} mm
+		</div>
+		<p class="text-caption text-text-muted">
+			The full area comes from the device, so the position diagram matches the real tablet.
+		</p>
+	</div>
+{/snippet}
 
 {#snippet field(f: Field)}
 	{@const inputId = `setup-${f.key}`}
@@ -324,7 +431,15 @@
 						{/if}
 					</fieldset>
 				{:else}
-					{#each FIELDS[card] as f (f.key)}{@render field(f)}{/each}
+					{#each FIELDS[card] as f (f.key)}
+						{#if f.key === "model" && isLinkable(card)}
+							{@render deviceField(card)}
+						{:else if lockedArea && f.key === "full_w"}
+							{@render lockedFullArea(lockedArea)}
+						{:else if !(lockedArea && f.key === "full_h")}
+							{@render field(f)}
+						{/if}
+					{/each}
 				{/if}
 
 				{#if card === "keyboard"}

@@ -3,6 +3,7 @@ import {
 	displaySetup,
 	linkedDevices,
 	hasSetup,
+	importedTablet,
 	keyboardBody,
 	mainInputPatch,
 	rtMode,
@@ -253,5 +254,34 @@ describe("displaySetup / linkedDevices", () => {
 		expect(linkedDevices(setup, [tabletDevice])).toEqual({ tablet: tabletDevice });
 		expect(linkedDevices(setup, [])).toEqual({});
 		expect(linkedDevices(undefined, [tabletDevice])).toEqual({});
+	});
+});
+
+describe("importedTablet", () => {
+	it("names an empty card after the imported tablet", () => {
+		expect(importedTablet({}, undefined, "Wacom CTL-472")).toEqual({ model: "Wacom CTL-472" });
+	});
+
+	it("changes nothing when the linked device is the imported tablet", () => {
+		const card = { model: "Wacom CTL-472", device_id: "t1" };
+		expect(importedTablet(card, "Wacom CTL-472", "Wacom CTL-472")).toBeNull();
+	});
+
+	it("replaces a linked device with a different imported tablet", () => {
+		const card = { model: "Wacom CTL-472", device_id: "t1" };
+		expect(importedTablet(card, "Wacom CTL-472", "Huion H420")).toEqual({
+			model: "Huion H420",
+			device_id: undefined,
+			link: undefined
+		});
+	});
+
+	it("replaces a kept-as-typed name that only partly matches, clearing the flag", () => {
+		const card = { model: "ctl472", link: "manual" };
+		expect(importedTablet(card, undefined, "Wacom CTL-472")).toEqual({
+			model: "Wacom CTL-472",
+			device_id: undefined,
+			link: undefined
+		});
 	});
 });
