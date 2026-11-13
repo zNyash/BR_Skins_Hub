@@ -8,6 +8,7 @@
 	import type { PickerDevice } from "$lib/device-catalog";
 	import { DEVICE_ICONS, DEVICE_LABELS } from "$lib/devices";
 	import { cn } from "$lib/utils";
+	import { normalizeModel } from "$convex/lib/deviceMatch";
 
 	let {
 		type,
@@ -24,7 +25,7 @@
 		type: DeviceType;
 		devices: PickerDevice[] | "loading" | "error";
 		query: string;
-		/** true: the list floats under the input and opens on focus. false: the list is always shown. */
+		/** true: the list sits under the input and opens on click, typing or ↑/↓. false: the list is always shown. */
 		inline?: boolean;
 		/** Shown first, e.g. the dashboard's "Closest" match. */
 		pinned?: Id<"devices">;
@@ -43,8 +44,8 @@
 
 	const matches = $derived.by(() => {
 		if (typeof devices === "string") return [];
-		const needle = query.trim().toLowerCase();
-		const found = needle ? devices.filter((d) => d.name.toLowerCase().includes(needle)) : devices;
+		const needle = normalizeModel(query);
+		const found = needle ? devices.filter((d) => normalizeModel(d.name).includes(needle)) : devices;
 		const first = found.find((d) => d._id === pinned);
 		return first ? [first, ...found.filter((d) => d !== first)] : found;
 	});
@@ -82,11 +83,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	bind:this={root}
-	class="relative"
-	onfocusin={() => {
-		open = true;
-		onFocus?.();
-	}}
+	onfocusin={() => onFocus?.()}
 	onfocusout={handleFocusout}
 	onkeydown={handleKeydown}
 >
@@ -99,7 +96,9 @@
 					id={inputId ?? (props.id as string | undefined)}
 					class={cn(props.class as string | undefined, inputClass)}
 					autocomplete="off"
+					aria-expanded={showList}
 					oninput={() => (open = true)}
+					onpointerdown={() => (open = true)}
 				/>
 			{/snippet}
 		</CommandPrimitive.Input>
@@ -108,10 +107,7 @@
 			<!-- Keeps the input focused while a row is clicked, so blur only means "clicked elsewhere". -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class={[
-					"flex flex-col gap-1 rounded-md bg-layer-2 p-1",
-					inline && "absolute inset-x-0 top-full z-50 mt-1 shadow-float"
-				]}
+				class="flex flex-col gap-1 rounded-md bg-layer-2 p-1"
 				onmousedown={(event) => event.preventDefault()}
 			>
 				{#if devices === "loading"}

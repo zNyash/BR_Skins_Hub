@@ -10,7 +10,7 @@ const d = (id: string, name: string, type: DeviceType = "tablet", otd_path?: str
 });
 const ctl = d("1", "Wacom CTL-472", "tablet", "Wacom/CTL-472");
 
-describe("device-match", () => {
+describe("deviceMatch", () => {
 	it("normalizeModel lowercases and keeps only letters and digits", () => {
 		expect(normalizeModel("Wacom CTL-472")).toBe("wacomctl472");
 		expect(normalizeModel("  ctl 472 ")).toBe("ctl472");

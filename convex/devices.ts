@@ -94,6 +94,7 @@ export const remove = adminMutation({
 		if (problem) fail(problem.status, problem.message);
 		await clearDeviceLinks(ctx.db, device._id);
 		await ctx.db.delete(device._id);
+		await ctx.scheduler.runAfter(0, internal.setupLinks.relinkAll, {});
 		return { image_url: device.image_url };
 	}
 });

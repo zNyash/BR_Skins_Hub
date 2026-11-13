@@ -72,6 +72,7 @@
 				devices={ofType}
 				bind:query
 				inline={false}
+				inputClass="bg-layer-2"
 				pinned={group.closest?._id}
 				onPick={link}
 			/>

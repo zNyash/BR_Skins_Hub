@@ -22,4 +22,19 @@ describe("DevicePicker", () => {
 		await input.fill("hui");
 		await expect.element(page.getByText("Huion H420X")).toBeVisible();
 	});
+
+	it("matches the model the way the server does", async () => {
+		render(Harness);
+		await page.getByRole("combobox").fill("ctl472");
+		await expect.element(page.getByText("Wacom CTL-472")).toBeVisible();
+	});
+
+	it("opens on click but not on focus", async () => {
+		render(Harness);
+		const input = page.getByRole("combobox");
+		(input.element() as HTMLInputElement).focus();
+		await expect.element(page.getByText("Huion H420X")).not.toBeInTheDocument();
+		await input.click();
+		await expect.element(page.getByText("Huion H420X")).toBeVisible();
+	});
 });
