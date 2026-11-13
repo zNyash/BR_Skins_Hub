@@ -116,8 +116,10 @@ each device-card in the patch:
 
 1. Card has `device_id`: check the device exists and its type equals the card's type, else 400.
    Drop any `link`.
-2. Card has `link: "manual"`: if its `model` equals the stored card's `model`, keep the flag and
-   skip matching. If `model` changed, drop the flag and go to 3.
+2. Card has `link: "manual"`: if the stored card had no flag (the player just set it), or its
+   `model` equals the stored card's `model`, keep the flag and skip matching. If the stored card was
+   already flagged and `model` changed, drop the flag and go to 3. *(Implementation ruling: a
+   brand-new card kept as typed must not be auto-linked on its first save.)*
 3. Otherwise run the confident match; if one is found, set `device_id`.
 
 The API schema (`src/lib/server/schemas.ts` `setupPatch`) accepts `device_id` (string, normalized
