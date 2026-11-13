@@ -6,7 +6,8 @@
 	const tabs = [
 		{ href: resolve("/dashboard"), label: "Home", icon: "house", exact: true },
 		{ href: resolve("/dashboard/players"), label: "Players", icon: "users" },
-		{ href: resolve("/dashboard/skins"), label: "Skins", icon: "palette" }
+		{ href: resolve("/dashboard/skins"), label: "Skins", icon: "palette" },
+		{ href: resolve("/dashboard/devices"), label: "Devices", icon: "cpu" }
 	];
 
 	const isActive = (tab: { href: string; exact?: boolean }) =>
@@ -15,7 +16,7 @@
 
 <nav
 	aria-label="Dashboard"
-	class="grid shrink-0 grid-cols-3 bg-layer-1 pb-[env(safe-area-inset-bottom)]"
+	class="grid shrink-0 grid-cols-4 bg-layer-1 pb-[env(safe-area-inset-bottom)]"
 >
 	{#each tabs as tab (tab.href)}
 		<a

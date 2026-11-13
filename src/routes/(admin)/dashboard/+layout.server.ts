@@ -7,9 +7,12 @@ export async function load({ locals, cookies, depends }) {
 	assertAdminPage(locals);
 	depends("app:skins");
 	depends("app:players");
-	const [players, skins] = await Promise.all([
+	depends("app:devices");
+	const [players, skins, devices, deviceSync] = await Promise.all([
 		convex.query(api.players.list, {}),
-		convex.query(api.skins.listWithPlayers, {})
+		convex.query(api.skins.listWithPlayers, {}),
+		convex.query(api.devices.list, {}),
+		convex.query(api.devices.lastSync, {})
 	]);
-	return { players, skins, layout: parseLayout(cookies.get(LAYOUT_COOKIE)) };
+	return { players, skins, devices, deviceSync, layout: parseLayout(cookies.get(LAYOUT_COOKIE)) };
 }

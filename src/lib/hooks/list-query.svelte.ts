@@ -1,6 +1,6 @@
 import Fuse, { type IFuseOptions } from "fuse.js";
 import type { Doc } from "$convex/_generated/dataModel";
-import type { PlayerSkin, SkinWithPlayers } from "$lib/types";
+import type { Device, PlayerSkin, SkinWithPlayers } from "$lib/types";
 
 // --- Types ---
 
@@ -131,6 +131,13 @@ const byCustom = {
 	ascIcon: "arrow-down-1-0",
 	descIcon: "arrow-up-1-0",
 	compare: (a: PlayerSkin, b: PlayerSkin) => a.order - b.order
+};
+
+export const DEVICE_LIST: ListConfig<Device> = {
+	keys: ["name", "otd_path"],
+	sortOptions: [byName, byUpdated],
+	defaultSort: "name",
+	defaultOrder: "asc"
 };
 
 export const PLAYER_SKIN_LIST: ListConfig<PlayerSkin> = {

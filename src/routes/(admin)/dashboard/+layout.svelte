@@ -78,6 +78,7 @@
 			max={RAIL.max}
 			playerCount={data.players.length}
 			skinCount={data.skins.length}
+			deviceCount={data.devices.length}
 			onResize={(px) => (layout.rail = px)}
 			onCommit={setRail}
 			onTogglePin={togglePin}

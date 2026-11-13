@@ -12,6 +12,7 @@
 		max,
 		playerCount,
 		skinCount,
+		deviceCount,
 		onResize,
 		onCommit,
 		onTogglePin
@@ -22,6 +23,7 @@
 		max: number;
 		playerCount: number;
 		skinCount: number;
+		deviceCount: number;
 		onResize: (px: number) => void;
 		onCommit: (px: number | null) => void;
 		onTogglePin: () => void;
@@ -32,7 +34,8 @@
 	const items = $derived([
 		{ href: resolve("/dashboard"), label: "Home", icon: "house", count: null, exact: true },
 		{ href: resolve("/dashboard/players"), label: "Players", icon: "users", count: playerCount },
-		{ href: resolve("/dashboard/skins"), label: "Skins", icon: "palette", count: skinCount }
+		{ href: resolve("/dashboard/skins"), label: "Skins", icon: "palette", count: skinCount },
+		{ href: resolve("/dashboard/devices"), label: "Devices", icon: "cpu", count: deviceCount }
 	]);
 
 	const isActive = (item: { href: string; exact?: boolean }) =>

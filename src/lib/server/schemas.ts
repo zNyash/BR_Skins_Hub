@@ -209,3 +209,16 @@ export const oskSize = v.pipe(
 	v.minValue(1, "must not be empty"),
 	v.maxValue(MAX_OSK_BYTES, "must be at most 300 MB")
 );
+
+export const deviceType = v.picklist(
+	["tablet", "keyboard", "mouse", "monitor"],
+	"must be tablet, keyboard, mouse or monitor"
+);
+
+/** A device size in mm (a tablet's full area). Missing = unset. */
+export const positiveMm = v.optional(
+	v.pipe(
+		v.number("must be a number"),
+		v.check((n) => n > 0, "must be a positive number")
+	)
+);
