@@ -93,7 +93,7 @@ unlinking later shows a sensible text.
 
 ## Matching
 
-A plain module, `convex/lib/device-match.ts`, with a colocated test. Used by the save path, the
+A plain module, `convex/lib/deviceMatch.ts`, with a colocated test. Used by the save path, the
 re-check, and the dashboard (the dashboard imports it via `$convex`).
 
 - **Normalize**: lowercase, then drop everything that isn't a letter or digit. `"Wacom CTL-472"` →
@@ -212,7 +212,7 @@ Mockup artboard "Dashboard Home · unlinked setups".
 
 - New card **Setups to link** (link icon), above Needs attention, only when there are groups.
   Header trailing caption: "3 groups · 8 setups". Computed client-side from the layout's `players`
-  and `devices` with `device-match.ts`; confident matches never appear (they're already linked, or
+  and `devices` with `deviceMatch.ts`; confident matches never appear (they're already linked, or
   the re-check will link them).
 - **Row per group** (layer-2 block): type icon, group label (upper-cased), caption with the setup
   count and either the typed variants ("typed as "ctl 4100", "CTL4100"") or "not in the catalog"

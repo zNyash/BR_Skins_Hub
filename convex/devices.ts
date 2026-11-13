@@ -8,8 +8,9 @@ import {
 	query,
 	type QueryCtx
 } from "./_generated/server";
-import { cleanDevice, deleteError, deviceEditError } from "./lib/devices";
+import { cleanDevice, deleteError, deviceEditError, relinkNeeded } from "./lib/devices";
 import { adminMutation, fail } from "./lib/functions";
+import { clearDeviceLinks } from "./lib/setupLinks";
 import {
 	OTD_BRANCH,
 	OTD_REPO,
@@ -19,7 +20,7 @@ import {
 	configFromBlob,
 	planOtdWrite
 } from "./lib/otd";
-import { deviceFields } from "./validators";
+import { deviceFields, deviceType } from "./validators";
 
 function normalizeDeviceId(ctx: QueryCtx, id: string): Id<"devices"> {
 	return ctx.db.normalizeId("devices", id) ?? fail(404, "Device not found");
@@ -29,6 +30,20 @@ function normalizeDeviceId(ctx: QueryCtx, id: string): Id<"devices"> {
 export const list = query({
 	args: {},
 	handler: (ctx) => ctx.db.query("devices").collect()
+});
+
+/** Devices of one type for the setup pickers: just what a card shows, sorted by name. */
+export const listByType = query({
+	args: { type: deviceType },
+	handler: async (ctx, { type }) => {
+		const devices = await ctx.db
+			.query("devices")
+			.withIndex("by_type", (q) => q.eq("type", type))
+			.collect();
+		return devices
+			.map(({ _id, name, image_url, full_w, full_h }) => ({ _id, name, image_url, full_w, full_h }))
+			.sort((a, b) => a.name.localeCompare(b.name));
+	}
 });
 
 /** The last OpenTabletDriver sync's outcome, or null before the first one. */
@@ -49,15 +64,23 @@ export const upsert = adminMutation({
 		if (problem) fail(problem.status, problem.message);
 
 		const device = { ...cleanDevice(input), updated_at: Date.now() };
-		if (!current) return await ctx.db.insert("devices", device);
-
-		// replace() drops what isn't sent (a removed image, sizes of a non-tablet); OTD bookkeeping stays.
-		await ctx.db.replace(current._id, {
-			...device,
-			otd_path: current.otd_path,
-			otd_sha: current.otd_sha
-		});
-		return current._id;
+		let deviceId: Id<"devices">;
+		if (!current) {
+			deviceId = await ctx.db.insert("devices", device);
+		} else {
+			// A card can't stay linked to a device of another type.
+			if (current.type !== input.type) await clearDeviceLinks(ctx.db, current._id);
+			// replace() drops what isn't sent (a removed image, sizes of a non-tablet); OTD bookkeeping stays.
+			await ctx.db.replace(current._id, {
+				...device,
+				otd_path: current.otd_path,
+				otd_sha: current.otd_sha
+			});
+			deviceId = current._id;
+		}
+		if (relinkNeeded(input, current))
+			await ctx.scheduler.runAfter(0, internal.setupLinks.relinkAll, {});
+		return deviceId;
 	}
 });
 
@@ -69,6 +92,7 @@ export const remove = adminMutation({
 		if (!device) fail(404, "Device not found");
 		const problem = deleteError(device);
 		if (problem) fail(problem.status, problem.message);
+		await clearDeviceLinks(ctx.db, device._id);
 		await ctx.db.delete(device._id);
 		return { image_url: device.image_url };
 	}
@@ -124,6 +148,7 @@ export const applyOtdBatch = internalMutation({
 				updated++;
 			}
 		}
+		if (added + updated > 0) await ctx.scheduler.runAfter(0, internal.setupLinks.relinkAll, {});
 		return { added, updated };
 	}
 });

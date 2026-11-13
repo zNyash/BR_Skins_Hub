@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { confidentMatch, deviceKeys, normalizeModel } from "./device-match";
+import { confidentMatch, deviceKeys, normalizeModel } from "./deviceMatch";
 import type { DeviceType } from "../validators";
 
 const d = (id: string, name: string, type: DeviceType = "tablet", otd_path?: string) => ({

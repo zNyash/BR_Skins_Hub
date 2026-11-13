@@ -65,3 +65,9 @@ export function deleteError(device: DeviceLike): { status: 409; message: string 
 		message: "Imported tablets can't be deleted; the next sync would bring them back"
 	};
 }
+
+/** Whether saving this device can change which typed models match it: a create, a rename or a type change. */
+export function relinkNeeded(next: DeviceInput, current: DeviceLike | null): boolean {
+	if (!current) return true;
+	return nameKey(next.name) !== nameKey(current.name) || next.type !== current.type;
+}

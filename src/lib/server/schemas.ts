@@ -2,6 +2,7 @@ import * as v from "valibot";
 import type { Id } from "$convex/_generated/dataModel";
 import { MAX_OSK_BYTES } from "$lib/osk";
 import { normalizeTags } from "$lib/tags";
+import { LINKABLE_CARDS } from "$convex/lib/setupLinks";
 
 /** Building blocks for request body schemas. Messages read as "<field> <message>". */
 
@@ -239,3 +240,19 @@ export const positiveMm = v.optional(
 		v.check((n) => n > 0, "must be a positive number")
 	)
 );
+
+/** Dashboard: link these players' cards to one catalog device. */
+export const setupLinkBody = v.object({
+	device_id: v.pipe(v.string("must be a string"), v.minLength(1, "must not be empty")),
+	cards: v.pipe(
+		v.array(
+			v.object({
+				player_id: v.pipe(v.string("must be a string"), v.minLength(1, "must not be empty")),
+				card: v.picklist(LINKABLE_CARDS, "must be keyboard, tablet, mouse or monitor")
+			}),
+			"must be a list"
+		),
+		v.minLength(1, "must not be empty"),
+		v.maxLength(500, "must have at most 500 items")
+	)
+});

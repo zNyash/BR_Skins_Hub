@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Id } from "../_generated/dataModel";
-import { linkPatch, relinkSetup, unlinkDevice, type LinkDevice } from "./setup-links";
+import { linkPatch, relinkSetup, unlinkDevice, type LinkDevice } from "./setupLinks";
 
 const id = (x: string) => x as Id<"devices">;
 const ctl: LinkDevice = {

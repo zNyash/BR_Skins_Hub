@@ -4,7 +4,7 @@
 
 **Goal:** Link players' keyboard/tablet/mouse/monitor Setup cards to `devices` catalog rows: a search picker in the setup dialog, auto-linking of confident name matches, a dashboard card for the rest, and device name/photo/full area on profiles.
 
-**Architecture:** Two optional fields on each linkable card (`device_id`, `link: "manual"`). All rules live in plain tested modules: `convex/lib/device-match.ts` (name matching), `convex/lib/setup-links.ts` (save-path link rules, relink, unlink), `src/lib/setup.ts` (display overlay, OTD import rule) and a dashboard helper for grouping. Convex functions and components stay thin and call those.
+**Architecture:** Two optional fields on each linkable card (`device_id`, `link: "manual"`). All rules live in plain tested modules: `convex/lib/deviceMatch.ts` (name matching), `convex/lib/setupLinks.ts` (save-path link rules, relink, unlink), `src/lib/setup.ts` (display overlay, OTD import rule) and a dashboard helper for grouping. Convex functions and components stay thin and call those.
 
 **Tech Stack:** SvelteKit 5 (runes), Convex, valibot, Fuse.js, shadcn-svelte `command` (bits-ui), vitest. Package manager: bun.
 
@@ -36,8 +36,8 @@
 ### Task 1: Name matching
 
 **Files:**
-- Create: `convex/lib/device-match.ts`
-- Test: `convex/lib/device-match.test.ts`
+- Create: `convex/lib/deviceMatch.ts`
+- Test: `convex/lib/deviceMatch.test.ts`
 
 **Interfaces:**
 - Consumes: `DeviceLike` from `convex/lib/devices.ts` (`{ _id: string; name: string; type: DeviceType; otd_path?: string }`).
@@ -87,22 +87,22 @@ it("empty or punctuation-only models never match", () => {
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `bunx vitest run convex/lib/device-match.test.ts`
+Run: `bunx vitest run convex/lib/deviceMatch.test.ts`
 Expected: FAIL, module not found.
 
-- [ ] **Step 3: Implement the three functions in `convex/lib/device-match.ts`**
+- [ ] **Step 3: Implement the three functions in `convex/lib/deviceMatch.ts`**
 
 `normalizeModel`: `text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "")`. Vendor = `otd_path.split("/")[0]`; the vendor-less key is the normalized name minus the normalized vendor prefix, added only when the name's key starts with the vendor's key and the rest is non-empty. `confidentMatch` returns null for an empty normalized model; collects devices of `type` having the key; returns the single one, else null. Doc comment on each.
 
 - [ ] **Step 4: Run to verify it passes**
 
-Run: `bunx vitest run convex/lib/device-match.test.ts`
+Run: `bunx vitest run convex/lib/deviceMatch.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add convex/lib/device-match.ts convex/lib/device-match.test.ts
+git add convex/lib/deviceMatch.ts convex/lib/deviceMatch.test.ts
 git commit -m "feat(devices): match typed setup models to catalog devices"
 ```
 
@@ -112,15 +112,15 @@ git commit -m "feat(devices): match typed setup models to catalog devices"
 
 **Files:**
 - Modify: `convex/validators.ts` (the four card validators)
-- Create: `convex/lib/setup-links.ts`
-- Test: `convex/lib/setup-links.test.ts`
+- Create: `convex/lib/setupLinks.ts`
+- Test: `convex/lib/setupLinks.test.ts`
 - Modify: `convex/players.ts` (`updateSetup`)
 - Modify: `src/lib/server/schemas.ts` (`setupPatch`, four cards)
 - Modify: `convex/lib/setup.test.ts` (one case)
 
 **Interfaces:**
 - Consumes: `confidentMatch` (Task 1); `Setup`, `SetupPatch` from `convex/lib/setup.ts`.
-- Produces (in `convex/lib/setup-links.ts`):
+- Produces (in `convex/lib/setupLinks.ts`):
   - `LINKABLE_CARDS = ["keyboard", "tablet", "mouse", "monitor"] as const`, `type LinkableCard`
   - `type LinkDevice = { _id: Id<"devices">; name: string; type: DeviceType; otd_path?: string }`
   - `linkPatch(patch: SetupPatch, current: Setup | undefined, devices: LinkDevice[]): { patch: SetupPatch } | { status: 400; message: string }`
@@ -135,7 +135,7 @@ device_id: v.optional(v.id("devices")),
 link: v.optional(v.literal("manual")),
 ```
 
-- [ ] **Step 2: Write the failing tests** in `convex/lib/setup-links.test.ts` (ids cast: `"t1" as Id<"devices">`):
+- [ ] **Step 2: Write the failing tests** in `convex/lib/setupLinks.test.ts` (ids cast: `"t1" as Id<"devices">`):
 
 ```ts
 const ctl = { _id: "t1", name: "Wacom CTL-472", type: "tablet", otd_path: "Wacom/CTL-472" };
@@ -188,14 +188,14 @@ Add to `convex/lib/setup.test.ts`: `applySetupPatch(undefined, { mouse: { device
 
 - [ ] **Step 3: Run to verify they fail**
 
-Run: `bunx vitest run convex/lib/setup-links.test.ts convex/lib/setup.test.ts`
+Run: `bunx vitest run convex/lib/setupLinks.test.ts convex/lib/setup.test.ts`
 Expected: FAIL (module missing).
 
-- [ ] **Step 4: Implement `convex/lib/setup-links.ts`** per the Interfaces and spec "Save path" rules 1–3. Device lookup by `_id` in the given list. Error copy exactly: `"That device no longer exists"`, `` `That device isn't a ${card}` ``. `clearDeviceLinks` scans `db.query("players").collect()` (few hundred rows).
+- [ ] **Step 4: Implement `convex/lib/setupLinks.ts`** per the Interfaces and spec "Save path" rules 1–3. Device lookup by `_id` in the given list. Error copy exactly: `"That device no longer exists"`, `` `That device isn't a ${card}` ``. `clearDeviceLinks` scans `db.query("players").collect()` (few hundred rows).
 
 - [ ] **Step 5: Run to verify they pass**
 
-Run: `bunx vitest run convex/lib/setup-links.test.ts convex/lib/setup.test.ts`
+Run: `bunx vitest run convex/lib/setupLinks.test.ts convex/lib/setup.test.ts`
 Expected: PASS.
 
 - [ ] **Step 6: Wire `players.updateSetup`**: load `ctx.db.query("devices").collect()`, run `linkPatch(patch, player.setup, devices)`; on the error shape `fail(status, message)`; then `applySetupPatch(player.setup, result.patch)` as today.
@@ -217,7 +217,7 @@ Expected: no new type errors; server tests pass.
 - [ ] **Step 9: Commit**
 
 ```bash
-git add convex/validators.ts convex/lib/setup-links.ts convex/lib/setup-links.test.ts convex/lib/setup.test.ts convex/players.ts src/lib/server/schemas.ts
+git add convex/validators.ts convex/lib/setupLinks.ts convex/lib/setupLinks.test.ts convex/lib/setup.test.ts convex/players.ts src/lib/server/schemas.ts
 git commit -m "feat(setup): link setup cards to catalog devices on save"
 ```
 

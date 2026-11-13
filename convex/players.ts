@@ -5,7 +5,7 @@ import { adminMutation, fail, isAdmin, serverMutation } from "./lib/functions";
 import { deleteRelations, setPlayerSkins } from "./lib/relations";
 import { sortPlayerSkins } from "./lib/order";
 import { applySetupPatch } from "./lib/setup";
-import { linkPatch } from "./lib/setup-links";
+import { linkPatch } from "./lib/setupLinks";
 import { mergeUsernames } from "./lib/usernames";
 import { playerFields, playerLink, profileTab, setupPatchFields } from "./validators";
 

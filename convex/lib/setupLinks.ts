@@ -1,7 +1,7 @@
 import type { Id } from "../_generated/dataModel";
 import type { DatabaseWriter } from "../_generated/server";
 import type { DeviceType } from "../validators";
-import { confidentMatch } from "./device-match";
+import { confidentMatch } from "./deviceMatch";
 import type { Setup, SetupPatch } from "./setup";
 
 export const LINKABLE_CARDS = ["keyboard", "tablet", "mouse", "monitor"] as const;
