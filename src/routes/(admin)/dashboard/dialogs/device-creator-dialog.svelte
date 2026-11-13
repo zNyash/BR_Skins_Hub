@@ -14,9 +14,11 @@
 	type Props = {
 		open: boolean;
 		onCreated: (deviceId: Id<"devices">) => void;
+		/** Fills the form on open instead of the blank defaults, e.g. from a setup group. */
+		initial?: { name: string; type: DeviceType };
 	};
 
-	let { open = $bindable(), onCreated }: Props = $props();
+	let { open = $bindable(), onCreated, initial }: Props = $props();
 
 	let name = $state("");
 	let type = $state<DeviceType>("tablet");
@@ -28,8 +30,8 @@
 	$effect.pre(() => {
 		if (open)
 			untrack(() => {
-				name = "";
-				type = "tablet";
+				name = initial?.name ?? "";
+				type = initial?.type ?? "tablet";
 			});
 	});
 
