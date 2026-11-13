@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { playerLink, profileTab, setup } from "./validators";
+import { deviceFields, playerLink, profileTab, setup } from "./validators";
 
 export default defineSchema({
 	/* ------- */
@@ -56,6 +56,32 @@ export default defineSchema({
 		.index("by_player", ["player_id"])
 		.index("by_skin", ["skin_id"])
 		.index("by_player_skin", ["player_id", "skin_id"]),
+
+	/* ------- */
+	/* Devices */
+	/* ------- */
+	devices: defineTable({
+		...deviceFields,
+		/** Set only on tablets imported from OpenTabletDriver: config path without ".json", e.g. "Wacom/CTL-472". */
+		otd_path: v.optional(v.string()),
+		/** Git blob sha of that config file at the last import. */
+		otd_sha: v.optional(v.string()),
+		/** Last edit by an admin. Never set by the OTD sync. */
+		updated_at: v.optional(v.number())
+	})
+		.index("by_otd_path", ["otd_path"])
+		.index("by_type", ["type"]),
+
+	/** The last OpenTabletDriver sync's outcome (one row), shown on the Devices page. */
+	deviceSync: defineTable({
+		ran_at: v.number(),
+		ok: v.boolean(),
+		added: v.number(),
+		updated: v.number(),
+		/** OTD paths that failed to parse on this run. */
+		skipped: v.array(v.string()),
+		error: v.optional(v.string())
+	}),
 
 	/* ---------- */
 	/* Auth Users */

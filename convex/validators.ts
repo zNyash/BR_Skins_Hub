@@ -36,6 +36,29 @@ export const skinFields = {
 	tags: v.optional(v.array(v.string()))
 };
 
+/* ------- */
+/* Devices */
+/* ------- */
+
+export const DEVICE_TYPES = ["tablet", "keyboard", "mouse", "monitor"] as const;
+export type DeviceType = (typeof DEVICE_TYPES)[number];
+
+export const deviceType = v.union(
+	v.literal("tablet"),
+	v.literal("keyboard"),
+	v.literal("mouse"),
+	v.literal("monitor")
+);
+
+/** Device fields an admin can edit. Sizes are the full active area in mm, tablets only. */
+export const deviceFields = {
+	name: v.string(),
+	type: deviceType,
+	full_w: v.optional(v.number()),
+	full_h: v.optional(v.number()),
+	image_url: v.optional(v.string())
+};
+
 /* ------------ */
 /* Player setup */
 /* ------------ */

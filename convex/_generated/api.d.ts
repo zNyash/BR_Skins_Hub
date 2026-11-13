@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as lib_devices from "../lib/devices.js";
 import type * as lib_functions from "../lib/functions.js";
 import type * as lib_links from "../lib/links.js";
 import type * as lib_order from "../lib/order.js";
@@ -28,6 +29,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  "lib/devices": typeof lib_devices;
   "lib/functions": typeof lib_functions;
   "lib/links": typeof lib_links;
   "lib/order": typeof lib_order;
