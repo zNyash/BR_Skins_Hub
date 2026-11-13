@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	OTD_DIR,
-	changedEntries,
-	otdEntries,
-	parseOtdConfig,
-	planOtdWrite,
-	rawUrl
-} from "./otd";
+import { OTD_DIR, changedEntries, otdEntries, parseOtdConfig, planOtdWrite, rawUrl } from "./otd";
 
 describe("otdEntries", () => {
 	const blob = (path: string, sha = "s") => ({ path, type: "blob", sha });

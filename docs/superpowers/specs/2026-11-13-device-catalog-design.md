@@ -74,31 +74,31 @@ needs a full, clean catalog to match against first.
 
 ```ts
 devices: defineTable({
-  name: v.string(),
-  type: deviceType, // v.union(v.literal("tablet"), v.literal("keyboard"), v.literal("mouse"), v.literal("monitor"))
-  /** Full active area in mm. Tablets only. */
-  full_w: v.optional(v.number()),
-  full_h: v.optional(v.number()),
-  image_url: v.optional(v.string()),
-  /** Set only on tablets imported from OTD: config path without ".json", e.g. "Wacom/CTL-472". */
-  otd_path: v.optional(v.string()),
-  /** Git blob sha of that config file at the last import. */
-  otd_sha: v.optional(v.string()),
-  updated_at: v.optional(v.number())
+	name: v.string(),
+	type: deviceType, // v.union(v.literal("tablet"), v.literal("keyboard"), v.literal("mouse"), v.literal("monitor"))
+	/** Full active area in mm. Tablets only. */
+	full_w: v.optional(v.number()),
+	full_h: v.optional(v.number()),
+	image_url: v.optional(v.string()),
+	/** Set only on tablets imported from OTD: config path without ".json", e.g. "Wacom/CTL-472". */
+	otd_path: v.optional(v.string()),
+	/** Git blob sha of that config file at the last import. */
+	otd_sha: v.optional(v.string()),
+	updated_at: v.optional(v.number())
 })
-  .index("by_otd_path", ["otd_path"])
-  .index("by_type", ["type"])
+	.index("by_otd_path", ["otd_path"])
+	.index("by_type", ["type"]);
 
 /** One row: the last OTD sync's outcome, shown on the Devices page. */
 deviceSync: defineTable({
-  ran_at: v.number(),
-  ok: v.boolean(),
-  added: v.number(),
-  updated: v.number(),
-  /** OTD paths that failed to parse on this run. */
-  skipped: v.array(v.string()),
-  error: v.optional(v.string())
-})
+	ran_at: v.number(),
+	ok: v.boolean(),
+	added: v.number(),
+	updated: v.number(),
+	/** OTD paths that failed to parse on this run. */
+	skipped: v.array(v.string()),
+	error: v.optional(v.string())
+});
 ```
 
 `full_w/full_h` are only stored when `type` is `tablet`; changing a device's type away from tablet

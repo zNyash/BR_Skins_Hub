@@ -38,12 +38,14 @@
 ### Task 1: Schema and device rules
 
 **Files:**
+
 - Modify: `convex/validators.ts` (add `deviceType`, `deviceFields`)
 - Modify: `convex/schema.ts` (add `devices`, `deviceSync`)
 - Create: `convex/lib/devices.ts`
 - Test: `convex/lib/devices.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `deviceType` validator; `DeviceType = "tablet" | "keyboard" | "mouse" | "monitor"`; `DEVICE_TYPES: readonly DeviceType[]` (in that order), all exported from `convex/validators.ts`.
   - `deviceFields = { name: v.string(), type: deviceType, full_w: v.optional(v.number()), full_h: v.optional(v.number()), image_url: v.optional(v.string()) }`.
@@ -79,10 +81,12 @@
 ### Task 2: OTD parsing and diffing
 
 **Files:**
+
 - Create: `convex/lib/otd-config.ts`
 - Test: `convex/lib/otd-config.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `OTD_REPO = "OpenTabletDriver/OpenTabletDriver"`, `OTD_BRANCH = "0.6.x"`, `OTD_DIR = "OpenTabletDriver.Configurations/Configurations/"`.
   - `type TreeEntry = { path: string; type: string; sha: string }`
@@ -109,10 +113,12 @@
 ### Task 3: Convex functions, sync action, cron
 
 **Files:**
+
 - Create: `convex/devices.ts`, `convex/crons.ts`
 - Modify: `example.env` (comment: optional `GITHUB_TOKEN` on the Convex deployment)
 
 **Interfaces:**
+
 - Consumes: Task 1 helpers and validators; Task 2 helpers; `adminMutation`, `fail` from `convex/lib/functions.ts`.
 - Produces:
   - `api.devices.list` (public query) → `Doc<"devices">[]`.
@@ -139,11 +145,13 @@
 ### Task 4: API routes
 
 **Files:**
+
 - Modify: `src/lib/server/schemas.ts` (add `deviceType`, `positiveMm`)
 - Test: `src/lib/server/schemas.test.ts`
 - Create: `src/routes/api/devices/+server.ts`, `src/routes/api/devices/[id]/+server.ts`, `src/routes/api/devices/sync/+server.ts`
 
 **Interfaces:**
+
 - Consumes: `api.devices.upsert | remove | requestSync | list`; `requireAdmin`, `parseBody`, `mutate`, `convex`, `deleteUploadThingImages`.
 - Produces:
   - `deviceType = v.picklist(["tablet","keyboard","mouse","monitor"], "must be tablet, keyboard, mouse or monitor")`.
@@ -163,6 +171,7 @@
 ### Task 5: Dashboard data, nav, list helpers
 
 **Files:**
+
 - Modify: `src/routes/(admin)/dashboard/+layout.server.ts` (load `devices.list` and `devices.lastSync`, `depends("app:devices")`)
 - Modify: `src/routes/(admin)/dashboard/+layout.svelte` (pass `deviceCount`), `shell/rail.svelte` (Devices item after Skins, icon `"cpu"`, count), `shell/bottom-tabs.svelte` (4th tab, `grid-cols-4`)
 - Modify: `src/routes/(admin)/dashboard/derive.ts`, `derive.test.ts`
@@ -170,6 +179,7 @@
 - Modify: `src/lib/types.ts` (`export type Device = Doc<"devices">`)
 
 **Interfaces:**
+
 - Produces:
   - `DEVICE_ICONS: Record<DeviceType, string>` in `derive.ts` = `{ tablet: "tablet", keyboard: "keyboard", mouse: "mouse", monitor: "monitor" }` (lucide names); rail/bottom-tab Devices icon = `"cpu"`.
   - `DeviceFilter = DeviceType`; `DEVICE_FILTERS: readonly { id: DeviceFilter; label: string; test: (d: Device) => boolean }[]` with labels `Tablets`, `Keyboards`, `Mice`, `Monitors`.
@@ -189,9 +199,11 @@
 ### Task 6: Devices list page and creator
 
 **Files:**
+
 - Create: `src/routes/(admin)/dashboard/devices/+layout.svelte`, `devices/+page.svelte` (empty-editor placeholder like `skins/+page.svelte`), `devices/device-row.svelte`, `dialogs/device-creator-dialog.svelte`
 
 **Interfaces:**
+
 - Consumes: Task 5 helpers; `ListPane`, `SearchToolbar`, `FilterChips`, `useListQuery`, `unsaved`, `request`.
 - Produces: context `"devices-list"` of type `DevicesContext = { results: Device[]; listHref: () => string }` (exported from the layout's module script, like `SkinsContext`).
 
@@ -207,10 +219,12 @@
 ### Task 7: Device editor
 
 **Files:**
+
 - Create: `src/routes/(admin)/dashboard/devices/[id]/+page.svelte`, `device-form.svelte`, `device-draft.svelte.ts`, `device-fields.ts`, `image-field.svelte`
 - Test: `src/routes/(admin)/dashboard/devices/[id]/device-fields.test.ts`
 
 **Interfaces:**
+
 - Consumes: `DevicesContext`; `registerEditor`, `EditorFrame`, `DeleteDialog`; `createUploadThing("imageUploader")`; `ImageItem` from `../../skin-images`.
 - Produces:
   - `type DeviceDraft = { name: string; type: DeviceType; full_w: string; full_h: string; image: ImageItem | null }` (sizes as strings so empty = unset).
