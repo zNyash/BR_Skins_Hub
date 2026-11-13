@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { OTD_DIR, changedEntries, otdEntries, parseOtdConfig, planOtdWrite, rawUrl } from "./otd";
+import {
+	OTD_DIR,
+	blobUrl,
+	changedEntries,
+	configFromBlob,
+	otdEntries,
+	parseOtdConfig,
+	planOtdWrite
+} from "./otd";
 
 describe("otdEntries", () => {
 	const blob = (path: string, sha = "s") => ({ path, type: "blob", sha });
@@ -60,11 +68,40 @@ describe("parseOtdConfig", () => {
 	});
 });
 
-describe("rawUrl", () => {
-	it("points at the raw file on the pinned branch", () => {
-		expect(rawUrl("Wacom/CTL-472")).toBe(
-			"https://raw.githubusercontent.com/OpenTabletDriver/OpenTabletDriver/0.6.x/OpenTabletDriver.Configurations/Configurations/Wacom/CTL-472.json"
+describe("blobUrl", () => {
+	it("points at the file's content by its sha, so it can't be a cached older version", () => {
+		expect(blobUrl("abc123")).toBe(
+			"https://api.github.com/repos/OpenTabletDriver/OpenTabletDriver/git/blobs/abc123"
 		);
+	});
+});
+
+describe("configFromBlob", () => {
+	// GitHub sends blob content as base64 with line breaks every 60 characters.
+	const blob = (text: string) => {
+		const b64 = btoa(String.fromCharCode(...new TextEncoder().encode(text)));
+		return { encoding: "base64", content: b64.replace(/(.{60})/g, "$1\n") };
+	};
+
+	it("decodes the config, including non-ASCII names", () => {
+		const json = JSON.stringify({
+			Name: "Gaomon M10K Pro – Ünïcode",
+			Specifications: { Digitizer: { Width: 254, Height: 158.75 } }
+		});
+		expect(configFromBlob(blob(json))).toEqual({
+			name: "Gaomon M10K Pro – Ünïcode",
+			full_w: 254,
+			full_h: 158.75
+		});
+	});
+
+	it("returns null for malformed JSON instead of throwing", () => {
+		expect(configFromBlob(blob("{ not json"))).toBeNull();
+	});
+
+	it("returns null for an unexpected blob shape", () => {
+		expect(configFromBlob({ encoding: "utf-8", content: "{}" })).toBeNull();
+		expect(configFromBlob(null)).toBeNull();
 	});
 });
 

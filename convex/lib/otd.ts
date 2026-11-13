@@ -40,8 +40,28 @@ export function parseOtdConfig(
 	return { name: json.Name.trim(), full_w: Width, full_h: Height };
 }
 
-export function rawUrl(otdPath: string): string {
-	return `https://raw.githubusercontent.com/${OTD_REPO}/${OTD_BRANCH}/${OTD_DIR}${encodeURI(otdPath)}.json`;
+/**
+ * Where to download one config: by its blob sha, not by branch. A branch url can be served from a
+ * cache for a few minutes, which would store an older file under the new sha.
+ */
+export function blobUrl(sha: string): string {
+	return `https://api.github.com/repos/${OTD_REPO}/git/blobs/${sha}`;
+}
+
+/**
+ * The config inside a git blob response (base64 JSON), or null when it can't be read. A broken
+ * file is skipped like an incomplete one, so one bad upstream file never fails the whole sync.
+ */
+export function configFromBlob(blob: unknown): ReturnType<typeof parseOtdConfig> {
+	if (!isRecord(blob) || blob.encoding !== "base64" || typeof blob.content !== "string") {
+		return null;
+	}
+	try {
+		const bytes = Uint8Array.from(atob(blob.content.replace(/\s/g, "")), (c) => c.charCodeAt(0));
+		return parseOtdConfig(JSON.parse(new TextDecoder().decode(bytes)));
+	} catch {
+		return null;
+	}
 }
 
 /**

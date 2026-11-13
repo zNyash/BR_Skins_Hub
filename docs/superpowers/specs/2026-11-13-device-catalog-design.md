@@ -40,7 +40,7 @@ needs a full, clean catalog to match against first.
   (`GET /repos/{owner}/{repo}/git/trees/0.6.x?recursive=1`) lists every config path with its blob
   sha. Each imported device stores `otd_path` (relative path without `.json`, e.g.
   `Wacom/CTL-472`) and `otd_sha`. Only files that are new or whose sha changed are downloaded (from
-  `raw.githubusercontent.com`). The first run is the full import; there is no separate seed step.
+  the git blobs API by sha, so a cached branch file can't be stored under a new sha). The first run is the full import; there is no separate seed step.
 - **Runs in Convex**: a Convex cron plus an action. No GitHub Actions. **A `GITHUB_TOKEN` Convex
   env var is required**: found while building, Convex's shared IPs already exhaust GitHub's
   anonymous limit (60/hour per IP). Fine-grained token, public repositories read-only, no

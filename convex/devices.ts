@@ -15,9 +15,9 @@ import {
 	OTD_REPO,
 	changedEntries,
 	otdEntries,
-	parseOtdConfig,
-	planOtdWrite,
-	rawUrl
+	blobUrl,
+	configFromBlob,
+	planOtdWrite
 } from "./lib/otd";
 import { deviceFields } from "./validators";
 
@@ -195,10 +195,15 @@ export const syncOtd = internalAction({
 			const stored = new Map(Object.entries(await ctx.runQuery(internal.devices.otdShas, {})));
 			const changed = changedEntries(otdEntries(tree), stored);
 
-			const parsed = await mapLimited(changed, DOWNLOADS_IN_FLIGHT, async (entry) => ({
-				entry,
-				config: parseOtdConfig(await fetchJson(rawUrl(entry.otdPath), headers))
-			}));
+			const api = { ...headers, Accept: "application/vnd.github+json" };
+			const parsed = await mapLimited(changed, DOWNLOADS_IN_FLIGHT, async (entry) => {
+				// One file failing (gone since the listing, a hiccup) is skipped, not the whole run.
+				try {
+					return { entry, config: configFromBlob(await fetchJson(blobUrl(entry.sha), api)) };
+				} catch {
+					return { entry, config: null };
+				}
+			});
 
 			// A file that doesn't parse is skipped: no row, or its old row and sha stay, so it's retried next run.
 			const skipped = parsed.filter((p) => !p.config).map((p) => p.entry.otdPath);
