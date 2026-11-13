@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+	displaySetup,
+	linkedDevices,
 	hasSetup,
 	keyboardBody,
 	mainInputPatch,
@@ -8,7 +10,8 @@ import {
 	tabletDiagram,
 	visibleChips,
 	diagramRatio,
-	type CardId
+	type CardId,
+	type LinkedDevice
 } from "./setup";
 
 const shapes = (...ids: CardId[]) => setupLayout(new Set(ids)).map((c) => `${c.id}:${c.shape}`);
@@ -204,5 +207,51 @@ describe("diagramRatio", () => {
 
 	it("is square with neither", () => {
 		expect(diagramRatio({})).toBe(1);
+	});
+});
+
+describe("displaySetup / linkedDevices", () => {
+	const id = (s: string) => s as LinkedDevice["_id"];
+	const tabletDevice: LinkedDevice = {
+		_id: id("t1"),
+		name: "Wacom CTL-472",
+		full_w: 152,
+		full_h: 95
+	};
+	const setup = {
+		tablet: {
+			model: "my wacom",
+			full_w: 150,
+			full_h: 94,
+			area_w: 50,
+			area_h: 30,
+			device_id: id("t1")
+		},
+		mouse: { model: "G Pro" }
+	};
+
+	it("shows the linked tablet's name and full area", () => {
+		const shown = displaySetup(setup, { tablet: tabletDevice });
+		expect(shown.tablet).toMatchObject({
+			model: "Wacom CTL-472",
+			full_w: 152,
+			full_h: 95,
+			area_w: 50
+		});
+	});
+
+	it("keeps the card's own size when the device has none", () => {
+		const shown = displaySetup(setup, { tablet: { _id: id("t1"), name: "Wacom" } });
+		expect(shown.tablet).toMatchObject({ model: "Wacom", full_w: 150, full_h: 94 });
+	});
+
+	it("leaves unlinked cards unchanged", () => {
+		expect(displaySetup(setup, { tablet: tabletDevice }).mouse).toEqual({ model: "G Pro" });
+	});
+
+	it("finds linked devices and skips ids missing from the catalog", () => {
+		expect(linkedDevices(setup, [tabletDevice])).toEqual({ tablet: tabletDevice });
+		expect(linkedDevices(setup, [])).toEqual({});
+		expect(linkedDevices(undefined, [tabletDevice])).toEqual({});
 	});
 });

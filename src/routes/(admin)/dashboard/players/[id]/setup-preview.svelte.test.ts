@@ -15,7 +15,7 @@ const columns = (el: Element) => getComputedStyle(el).gridTemplateColumns.split(
 
 describe("SetupPreview", () => {
 	it("shows only filled cards, with no edit controls", async () => {
-		render(SetupPreview, { setup });
+		render(SetupPreview, { setup, devices: {} });
 
 		await expect.element(page.getByText("Wooting 60HE")).toBeVisible();
 		await expect.element(page.getByText("In-game")).toBeVisible();
@@ -25,7 +25,7 @@ describe("SetupPreview", () => {
 	});
 
 	it("lays out by its own width, not the viewport's", async () => {
-		const { container } = render(SetupPreview, { setup });
+		const { container } = render(SetupPreview, { setup, devices: {} });
 		const grid = container.querySelector(".grid")!;
 
 		container.style.width = "400px";

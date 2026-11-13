@@ -5,7 +5,7 @@ import { adminMutation, fail, isAdmin, serverMutation } from "./lib/functions";
 import { deleteRelations, setPlayerSkins } from "./lib/relations";
 import { sortPlayerSkins } from "./lib/order";
 import { applySetupPatch } from "./lib/setup";
-import { linkPatch } from "./lib/setupLinks";
+import { LINKABLE_CARDS, linkPatch, type LinkableCard } from "./lib/setupLinks";
 import { mergeUsernames } from "./lib/usernames";
 import { playerFields, playerLink, profileTab, setupPatchFields } from "./validators";
 
@@ -51,7 +51,22 @@ export const get = query({
 			hidden: e.hidden,
 			order
 		}));
-		return { ...player, skins };
+
+		const devices: Partial<
+			Record<
+				LinkableCard,
+				{ _id: Id<"devices">; name: string; image_url?: string; full_w?: number; full_h?: number }
+			>
+		> = {};
+		for (const card of LINKABLE_CARDS) {
+			const id = player.setup?.[card]?.device_id;
+			const device = id ? await ctx.db.get(id) : null;
+			if (device) {
+				const { _id, name, image_url, full_w, full_h } = device;
+				devices[card] = { _id, name, image_url, full_w, full_h };
+			}
+		}
+		return { ...player, skins, devices };
 	}
 });
 
