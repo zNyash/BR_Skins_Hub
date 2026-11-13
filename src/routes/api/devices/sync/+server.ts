@@ -7,5 +7,5 @@ import type { RequestHandler } from "./$types";
 export const POST: RequestHandler = async (event) => {
 	const admin = requireAdmin(event);
 	await mutate(api.devices.requestSync, { actor_osu_id: admin.osu_id });
-	return new Response(null, { status: 202 });
+	return new Response(null, { status: 204 });
 };

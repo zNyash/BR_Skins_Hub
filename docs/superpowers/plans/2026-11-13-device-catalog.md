@@ -157,7 +157,7 @@
   - `deviceType = v.picklist(["tablet","keyboard","mouse","monitor"], "must be tablet, keyboard, mouse or monitor")`.
   - `positiveMm = v.optional(v.pipe(v.number("must be a number"), v.minValue(0.1, "must be a positive number")))`.
   - `DeviceBody = v.object({ name: trimmedString, type: deviceType, full_w: positiveMm, full_h: positiveMm, image_url: v.optional(httpUrl) })`.
-  - `POST /api/devices` → `201 { id }`. `PATCH /api/devices/[id]` → `204`; reads the device (from `api.devices.list`) before, and after the mutation deletes the old `image_url` if it differs. `DELETE /api/devices/[id]` → `204`, deletes the returned `image_url`. `POST /api/devices/sync` → `202`.
+  - `POST /api/devices` → `201 { id }`. `PATCH /api/devices/[id]` → `204`; reads the device (from `api.devices.list`) before, and after the mutation deletes the old `image_url` if it differs. `DELETE /api/devices/[id]` → `204`, deletes the returned `image_url`. `POST /api/devices/sync` → `204`.
   - All spread the body first, then `actor_osu_id: admin.osu_id` (and `id: event.params.id`).
 
 - [ ] **Step 1: Write failing tests** in `schemas.test.ts`: `deviceType` rejects `"pen"` with "must be tablet, keyboard, mouse or monitor"; `positiveMm` accepts `undefined` and `152`, rejects `0` and `-1` with "must be a positive number".
