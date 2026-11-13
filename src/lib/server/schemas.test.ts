@@ -1,7 +1,16 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 import { MAX_OSK_BYTES } from "$lib/osk";
-import { bio, hue, oskSize, playerSkins, setupPatch, tabOrder } from "./schemas";
+import {
+	bio,
+	deviceType,
+	hue,
+	oskSize,
+	playerSkins,
+	positiveMm,
+	setupPatch,
+	tabOrder
+} from "./schemas";
 
 describe("playerSkins", () => {
 	it("accepts ordered skins with hidden flags", () => {
@@ -174,5 +183,29 @@ describe("oskSize", () => {
 		const tooBig = v.safeParse(oskSize, MAX_OSK_BYTES + 1);
 		expect(tooBig.success).toBe(false);
 		expect(tooBig.issues?.[0].message).toBe("must be at most 300 MB");
+	});
+});
+
+describe("deviceType", () => {
+	it("accepts the four types and names them on anything else", () => {
+		expect(v.safeParse(deviceType, "mouse").success).toBe(true);
+		const result = v.safeParse(deviceType, "pen");
+		expect(result.success).toBe(false);
+		expect(result.issues?.[0].message).toBe("must be tablet, keyboard, mouse or monitor");
+	});
+});
+
+describe("positiveMm", () => {
+	it("accepts missing and positive sizes", () => {
+		expect(v.safeParse(positiveMm, undefined).success).toBe(true);
+		expect(v.safeParse(positiveMm, 152).success).toBe(true);
+	});
+
+	it("rejects zero and negative sizes", () => {
+		for (const n of [0, -1]) {
+			const result = v.safeParse(positiveMm, n);
+			expect(result.success).toBe(false);
+			expect(result.issues?.[0].message).toBe("must be a positive number");
+		}
 	});
 });
