@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { api } from "$convex/_generated/api";
-import type { Id } from "$convex/_generated/dataModel";
+import type { Doc, Id } from "$convex/_generated/dataModel";
 
 export type AuthUser = {
 	osu_id: number;
@@ -22,3 +22,6 @@ export type PlayerSkin = PlayerWithSkins["skins"][number];
 
 /** A skin with the players using it (skins.listWithPlayers). */
 export type SkinWithPlayers = FunctionReturnType<typeof api.skins.listWithPlayers>[number];
+
+/** A catalog device (devices.list). */
+export type Device = Doc<"devices">;

@@ -1,9 +1,11 @@
 import type { Doc, Id } from "$convex/_generated/dataModel";
 import { presentCards } from "$lib/setup";
-import type { SkinWithPlayers } from "$lib/types";
+import type { Device, SkinWithPlayers } from "$lib/types";
+import { DEVICE_TYPES, type DeviceType } from "$convex/validators";
 
 export type PlayerFilter = "no-skins" | "no-setup" | "not-synced";
 export type SkinFilter = "no-players" | "no-images";
+export type DeviceFilter = DeviceType;
 export type EditorTab = "profile" | "skins" | "links" | "setup";
 
 const STALE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
@@ -50,10 +52,37 @@ export const SKIN_FILTERS: readonly {
 	{ id: "no-images", label: "No images", test: (s) => s.preview_images.length === 0 }
 ];
 
+export const DEVICE_LABELS: Record<DeviceType, { one: string; many: string }> = {
+	tablet: { one: "Tablet", many: "Tablets" },
+	keyboard: { one: "Keyboard", many: "Keyboards" },
+	mouse: { one: "Mouse", many: "Mice" },
+	monitor: { one: "Monitor", many: "Monitors" }
+};
+
+/** Lucide icon per device type, shown when a device has no image. */
+export const DEVICE_ICONS: Record<DeviceType, string> = {
+	tablet: "tablet",
+	keyboard: "keyboard",
+	mouse: "mouse",
+	monitor: "monitor"
+};
+
+export const DEVICE_FILTERS: readonly {
+	id: DeviceFilter;
+	label: string;
+	test: (d: Device) => boolean;
+}[] = DEVICE_TYPES.map((type) => ({
+	id: type,
+	label: DEVICE_LABELS[type].many,
+	test: (d: Device) => d.type === type
+}));
+
 export function parseFilter(kind: "players", v: string | null): PlayerFilter | null;
 export function parseFilter(kind: "skins", v: string | null): SkinFilter | null;
-export function parseFilter(kind: "players" | "skins", v: string | null) {
-	const filters = kind === "players" ? PLAYER_FILTERS : SKIN_FILTERS;
+export function parseFilter(kind: "devices", v: string | null): DeviceFilter | null;
+export function parseFilter(kind: "players" | "skins" | "devices", v: string | null) {
+	const filters =
+		kind === "players" ? PLAYER_FILTERS : kind === "skins" ? SKIN_FILTERS : DEVICE_FILTERS;
 	return filters.find((f) => f.id === v)?.id ?? null;
 }
 
@@ -131,4 +160,23 @@ export function setParam(params: URLSearchParams, key: string, value: string | n
 function toQuery(params: URLSearchParams): string {
 	const s = params.toString();
 	return s ? `?${s}` : "";
+}
+
+/** A tablet's full area, "152 × 95 mm", or null when a size is missing. */
+export function formatArea(d: { full_w?: number; full_h?: number }): string | null {
+	return d.full_w && d.full_h ? `${d.full_w} × ${d.full_h} mm` : null;
+}
+
+/** The status line under the Devices header: how the last OpenTabletDriver sync went. */
+export function syncSummary(
+	run: Doc<"deviceSync"> | null,
+	now: number
+): { text: string; error: boolean } {
+	if (!run) return { text: "Never synced with OpenTabletDriver", error: false };
+	if (!run.ok) return { text: `Last sync failed: ${run.error ?? "unknown error"}`, error: true };
+	const skipped = run.skipped.length > 0 ? ` · ${run.skipped.length} skipped` : "";
+	return {
+		text: `Synced with OpenTabletDriver ${timeAgo(run.ran_at, now)} · ${run.added} added, ${run.updated} updated${skipped}`,
+		error: false
+	};
 }

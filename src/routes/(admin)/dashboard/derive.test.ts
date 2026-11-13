@@ -3,6 +3,8 @@ import type { Doc, Id } from "$convex/_generated/dataModel";
 import type { SkinWithPlayers } from "$lib/types";
 import {
 	PLAYER_FILTERS,
+	formatArea,
+	syncSummary,
 	SKIN_FILTERS,
 	isStale,
 	onlyTabChanged,
@@ -214,5 +216,48 @@ describe("setParam", () => {
 		expect(setParam(params, "filter", null)).toBe("?tab=links&q=x");
 		expect(setParam(new URLSearchParams("filter=a"), "filter", null)).toBe("");
 		expect(params.get("tab")).toBe("links"); // the input isn't changed
+	});
+});
+
+describe("device helpers", () => {
+	const DAY = 24 * 60 * 60 * 1000;
+	const now = 10 * DAY;
+	const run = (extra: Partial<Doc<"deviceSync">>): Doc<"deviceSync"> => ({
+		_id: "s1" as Id<"deviceSync">,
+		_creationTime: 0,
+		ran_at: now - 3 * DAY,
+		ok: true,
+		added: 2,
+		updated: 1,
+		skipped: [],
+		...extra
+	});
+
+	it("parses device filters", () => {
+		expect(parseFilter("devices", "mouse")).toBe("mouse");
+		expect(parseFilter("devices", "pen")).toBeNull();
+	});
+
+	it("formats a tablet's full area", () => {
+		expect(formatArea({ full_w: 152, full_h: 95 })).toBe("152 × 95 mm");
+		expect(formatArea({ full_w: 152 })).toBeNull();
+	});
+
+	it("summarizes the last sync", () => {
+		expect(syncSummary(run({}), now)).toEqual({
+			text: "Synced with OpenTabletDriver 3 d ago · 2 added, 1 updated",
+			error: false
+		});
+		expect(syncSummary(run({ skipped: ["A/x"] }), now)?.text).toBe(
+			"Synced with OpenTabletDriver 3 d ago · 2 added, 1 updated · 1 skipped"
+		);
+		expect(syncSummary(run({ ok: false, error: "GitHub 403 for x" }), now)).toEqual({
+			text: "Last sync failed: GitHub 403 for x",
+			error: true
+		});
+		expect(syncSummary(null, now)).toEqual({
+			text: "Never synced with OpenTabletDriver",
+			error: false
+		});
 	});
 });
