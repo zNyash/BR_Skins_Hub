@@ -1,4 +1,5 @@
 import type { Doc, Id } from "$convex/_generated/dataModel";
+import { DEVICE_LABELS } from "$lib/devices";
 import { presentCards } from "$lib/setup";
 import type { Device, SkinWithPlayers } from "$lib/types";
 import { DEVICE_TYPES, type DeviceType } from "$convex/validators";
@@ -51,21 +52,6 @@ export const SKIN_FILTERS: readonly {
 	{ id: "no-players", label: "No players", test: (s) => s.players.length === 0 },
 	{ id: "no-images", label: "No images", test: (s) => s.preview_images.length === 0 }
 ];
-
-export const DEVICE_LABELS: Record<DeviceType, { one: string; many: string }> = {
-	tablet: { one: "Tablet", many: "Tablets" },
-	keyboard: { one: "Keyboard", many: "Keyboards" },
-	mouse: { one: "Mouse", many: "Mice" },
-	monitor: { one: "Monitor", many: "Monitors" }
-};
-
-/** Lucide icon per device type, shown when a device has no image. */
-export const DEVICE_ICONS: Record<DeviceType, string> = {
-	tablet: "tablet",
-	keyboard: "keyboard",
-	mouse: "mouse",
-	monitor: "monitor"
-};
 
 export const DEVICE_FILTERS: readonly {
 	id: DeviceFilter;

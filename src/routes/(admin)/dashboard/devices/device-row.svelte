@@ -3,7 +3,8 @@
 	import ListRow from "$comp/list-row.svelte";
 	import { Badge } from "$comp/ui/badge";
 	import type { Device } from "$lib/types";
-	import { DEVICE_ICONS, DEVICE_LABELS, formatArea } from "../derive";
+	import { DEVICE_ICONS, DEVICE_LABELS } from "$lib/devices";
+	import { formatArea } from "../derive";
 
 	let { device, href, current }: { device: Device; href: string; current: boolean } = $props();
 
