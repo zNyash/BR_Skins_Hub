@@ -267,6 +267,10 @@ describe("importedTablet", () => {
 		expect(importedTablet(card, "Wacom CTL-472", "Wacom CTL-472")).toBeNull();
 	});
 
+	it("changes nothing when the typed name normalizes to the imported tablet", () => {
+		expect(importedTablet({ model: "wacom ctl 472" }, undefined, "Wacom CTL-472")).toBeNull();
+	});
+
 	it("replaces a linked device with a different imported tablet", () => {
 		const card = { model: "Wacom CTL-472", device_id: "t1" };
 		expect(importedTablet(card, "Wacom CTL-472", "Huion H420")).toEqual({

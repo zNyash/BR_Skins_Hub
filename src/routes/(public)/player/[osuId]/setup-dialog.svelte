@@ -118,6 +118,8 @@
 	// The device the card links to, for the linked block; the draft only holds its id.
 	let linked = $state<LinkedDevice | PickerDevice | null>(null);
 	let catalog = $state<PickerDevice[] | "loading" | "error">("loading");
+	// The model text the player chose to keep unlinked; typing back to it restores the flag.
+	let keptModel: string | null = null;
 	// The tablet's full area comes from the device when it has both sizes.
 	const lockedArea = $derived(
 		card === "tablet" && linked?.full_w !== undefined && linked?.full_h !== undefined
@@ -142,12 +144,14 @@
 		draft.device_id = device._id;
 		draft.model = device.name;
 		draft.link = null;
+		keptModel = null;
 		linked = device;
 	}
 
 	function unlinkDevice() {
 		draft.device_id = null;
 		draft.link = "manual";
+		keptModel = draft.model ?? "";
 		linked = null;
 	}
 
@@ -174,7 +178,10 @@
 		// A different tablet in the file replaces the card's name and drops its link.
 		const renamed = importedTablet(draft, linked?.name, profile.tablet);
 		draft = { ...draft, ...profile.area, ...renamed, filters: profile.filters };
-		if (renamed) linked = null;
+		if (renamed) {
+			linked = null;
+			keptModel = null;
+		}
 		profiles = [];
 		const count = profile.filters.length;
 		toast.success(`Imported ${profile.tablet} with ${count} ${count === 1 ? "filter" : "filters"}`);
@@ -202,6 +209,7 @@
 			profiles = [];
 			linked = isLinkable(id) ? (player.devices[id] ?? null) : null;
 			catalog = "loading";
+			keptModel = draft.link === "manual" ? (draft.model ?? "") : null;
 			rt = setup.keyboard?.rapid_trigger ?? "";
 			rawInput =
 				setup.in_game?.raw_input === undefined ? "" : setup.in_game.raw_input ? "on" : "off";
@@ -296,17 +304,21 @@
 				{type}
 				devices={catalog}
 				inputId="setup-model"
+				inputClass="bg-layer-2"
 				bind:query={
 					() => draft.model ?? "",
 					(value) => {
 						draft.model = value;
-						// Typing again takes back a "keep as typed".
-						draft.link = null;
+						// Changing the kept text takes back a "keep as typed"; typing back to it restores it.
+						if (keptModel !== null) draft.link = value === keptModel ? "manual" : null;
 					}
 				}
 				onFocus={() => fetchCatalog(type)}
 				onPick={pickDevice}
-				onKeepTyped={() => (draft.link = "manual")}
+				onKeepTyped={() => {
+					draft.link = "manual";
+					keptModel = draft.model ?? "";
+				}}
 			/>
 		{/if}
 	</div>

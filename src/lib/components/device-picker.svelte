@@ -7,6 +7,7 @@
 	import type { DeviceType } from "$convex/validators";
 	import type { PickerDevice } from "$lib/device-catalog";
 	import { DEVICE_ICONS, DEVICE_LABELS } from "$lib/devices";
+	import { cn } from "$lib/utils";
 
 	let {
 		type,
@@ -17,7 +18,8 @@
 		onPick,
 		onKeepTyped,
 		onFocus,
-		inputId
+		inputId,
+		inputClass
 	}: {
 		type: DeviceType;
 		devices: PickerDevice[] | "loading" | "error";
@@ -31,6 +33,8 @@
 		onKeepTyped?: () => void;
 		onFocus?: () => void;
 		inputId?: string;
+		/** Extra classes for the input, e.g. the fill it needs on a dialog. */
+		inputClass?: string;
 	} = $props();
 
 	let open = $state(false);
@@ -93,6 +97,7 @@
 					{...props}
 					bind:value={query}
 					id={inputId ?? (props.id as string | undefined)}
+					class={cn(props.class as string | undefined, inputClass)}
 					autocomplete="off"
 					oninput={() => (open = true)}
 				/>
