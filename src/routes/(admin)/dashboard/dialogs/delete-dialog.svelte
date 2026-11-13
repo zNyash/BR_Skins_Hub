@@ -8,7 +8,7 @@
 	type Props = {
 		open: boolean;
 		name: string;
-		kind: "player" | "skin";
+		kind: "player" | "skin" | "device";
 		/** Closes the dialog when it resolves; a rejection is shown as a toast and keeps it open. */
 		onConfirm: () => Promise<void>;
 	};

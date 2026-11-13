@@ -24,7 +24,14 @@
 		subtitle: string;
 		avatar: Snippet;
 		cover?: string;
-		menu: { label: string; onSelect: () => void; destructive?: boolean }[];
+		/** A disabled item shows `hint` as its tooltip, saying why. */
+		menu: {
+			label: string;
+			onSelect: () => void;
+			destructive?: boolean;
+			disabled?: boolean;
+			hint?: string;
+		}[];
 		tabs?: { id: EditorTab; label: string }[];
 		tab?: EditorTab;
 		actions?: Snippet;
@@ -80,9 +87,11 @@
 				{#each menu as item (item.label)}
 					<button
 						type="button"
-						class="min-h-11 rounded-md px-3 text-left text-body hover:bg-layer-3 min-[900px]:min-h-9 {item.destructive
+						class="min-h-11 rounded-md px-3 text-left text-body hover:bg-layer-3 disabled:opacity-50 disabled:hover:bg-transparent min-[900px]:min-h-9 {item.destructive
 							? 'text-error'
 							: ''}"
+						disabled={item.disabled}
+						title={item.hint}
 						onclick={(e) => select(e, item.onSelect)}
 					>
 						{item.label}
