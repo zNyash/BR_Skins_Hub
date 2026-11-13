@@ -6,7 +6,7 @@ import {
 	parseOtdConfig,
 	planOtdWrite,
 	rawUrl
-} from "./otd-config";
+} from "./otd";
 
 describe("otdEntries", () => {
 	const blob = (path: string, sha = "s") => ({ path, type: "blob", sha });

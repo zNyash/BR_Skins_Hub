@@ -9,10 +9,13 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
+import type * as devices from "../devices.js";
 import type * as lib_devices from "../lib/devices.js";
 import type * as lib_functions from "../lib/functions.js";
 import type * as lib_links from "../lib/links.js";
 import type * as lib_order from "../lib/order.js";
+import type * as lib_otd from "../lib/otd.js";
 import type * as lib_relations from "../lib/relations.js";
 import type * as lib_setup from "../lib/setup.js";
 import type * as lib_usernames from "../lib/usernames.js";
@@ -29,10 +32,13 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  crons: typeof crons;
+  devices: typeof devices;
   "lib/devices": typeof lib_devices;
   "lib/functions": typeof lib_functions;
   "lib/links": typeof lib_links;
   "lib/order": typeof lib_order;
+  "lib/otd": typeof lib_otd;
   "lib/relations": typeof lib_relations;
   "lib/setup": typeof lib_setup;
   "lib/usernames": typeof lib_usernames;

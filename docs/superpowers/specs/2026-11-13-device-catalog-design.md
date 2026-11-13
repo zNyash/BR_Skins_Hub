@@ -41,9 +41,10 @@ needs a full, clean catalog to match against first.
   sha. Each imported device stores `otd_path` (relative path without `.json`, e.g.
   `Wacom/CTL-472`) and `otd_sha`. Only files that are new or whose sha changed are downloaded (from
   `raw.githubusercontent.com`). The first run is the full import; there is no separate seed step.
-- **Runs in Convex**: a Convex cron plus an action. No GitHub Actions, no tokens needed (public
-  repo; one API call per run is far under the unauthenticated limit). Optional `GITHUB_TOKEN`
-  Convex env var is read if present, for rate-limit headroom; not required.
+- **Runs in Convex**: a Convex cron plus an action. No GitHub Actions. **A `GITHUB_TOKEN` Convex
+  env var is required**: found while building, Convex's shared IPs already exhaust GitHub's
+  anonymous limit (60/hour per IP). Fine-grained token, public repositories read-only, no
+  permissions. Sent on the tree call and the raw downloads.
 - **Weekly schedule**: Mondays 06:00 UTC (03:00 Brasília). OTD's config folder changed on ~7–8 days
   a month over the last year, mostly single-tablet additions; a week's delay is fine, and the
   "Sync now" button covers the rest.
